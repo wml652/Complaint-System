@@ -1,0 +1,357 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignalR Test Client - Student Complaint Portal</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .status.connected {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.connecting {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        #messageLog {
+            height: 400px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 8px;
+            background-color: white;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+        }
+        .notification {
+            border-left-color: #28a745;
+        }
+        .error {
+            border-left-color: #dc3545;
+        }
+        .timestamp {
+            color: #6c757d;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔌 SignalR Test Client</h1>
+    
+    <div class="section">
+        <h2>Connection Settings</h2>
+        <div class="input-group">
+            <label for="hubUrl">Hub URL:</label>
+            <input type="text" id="hubUrl" value="https://localhost:7001/hubs/chat" />
+        </div>
+        
+        <div class="input-group">
+            <label for="userType">Login As:</label>
+            <select id="userType">
+                <option value="student">Student (student@test.com)</option>
+                <option value="admin">Admin (admin@test.com)</option>
+            </select>
+        </div>
+        
+        <button id="loginBtn" onclick="login()">Login & Get Token</button>
+        <button id="connectBtn" onclick="connect()" disabled>Connect to Hub</button>
+        <button id="disconnectBtn" onclick="disconnect()" disabled>Disconnect</button>
+    </div>
+
+    <div class="section">
+        <div id="connectionStatus" class="status disconnected">
+            Status: Disconnected
+        </div>
+        
+        <div id="tokenInfo" style="display:none; margin-bottom: 15px;">
+            <strong>Token:</strong> <span id="tokenDisplay" style="word-break: break-all; font-size: 11px;"></span>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Actions</h2>
+        
+        <div class="input-group">
+            <label for="complaintId">Complaint ID:</label>
+            <input type="number" id="complaintId" value="1" />
+        </div>
+        
+        <button id="joinGroupBtn" onclick="joinGroup()" disabled>Join Complaint Group</button>
+        
+        <div class="input-group" style="margin-top: 15px;">
+            <label for="messageContent">Message:</label>
+            <input type="text" id="messageContent" placeholder="Type your message..." />
+        </div>
+        
+        <button id="sendMessageBtn" onclick="sendMessage()" disabled>Send Message</button>
+    </div>
+
+    <div class="section">
+        <h2>Message Log</h2>
+        <button onclick="clearLog()" style="float: right; background-color: #6c757d;">Clear Log</button>
+        <div id="messageLog"></div>
+    </div>
+
+    <script>
+        let connection = null;
+        let currentToken = null;
+        const apiBaseUrl = 'https://localhost:7001';
+
+        // Login and get JWT token
+        async function login() {
+            const userType = document.getElementById('userType').value;
+            const email = userType === 'student' ? 'student@test.com' : 'admin@test.com';
+            const password = userType === 'student' ? 'Student123!' : 'Admin123!';
+
+            try {
+                updateStatus('Logging in...', 'connecting');
+                
+                const response = await fetch(${apiBaseUrl}/api/v1/auth/login, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (!response.ok) {
+                    throw new Error(Login failed: );
+                }
+
+                const data = await response.json();
+                currentToken = data.token;
+                
+                document.getElementById('tokenDisplay').textContent = currentToken.substring(0, 50) + '...';
+                document.getElementById('tokenInfo').style.display = 'block';
+                document.getElementById('connectBtn').disabled = false;
+                
+                logMessage(✅ Logged in as  (), 'message');
+                updateStatus('Logged in - Ready to connect', 'disconnected');
+            } catch (error) {
+                logMessage(❌ Login error: , 'error');
+                updateStatus('Login failed', 'disconnected');
+            }
+        }
+
+        // Connect to SignalR hub
+        async function connect() {
+            if (!currentToken) {
+                alert('Please login first!');
+                return;
+            }
+
+            const hubUrl = document.getElementById('hubUrl').value;
+
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl(hubUrl, {
+                    accessTokenFactory: () => currentToken
+                })
+                .withAutomaticReconnect()
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+
+            // Register event handlers
+            connection.on('ReceiveMessage', (message) => {
+                logMessage(📩 Message received: , 'message');
+            });
+
+            connection.on('ReceiveNotification', (notification) => {
+                logMessage(🔔 Notification received: , 'notification');
+            });
+
+            connection.on('JoinedGroup', (complaintId) => {
+                logMessage(✅ Successfully joined complaint group , 'message');
+            });
+
+            connection.onclose((error) => {
+                updateStatus('Disconnected', 'disconnected');
+                document.getElementById('connectBtn').disabled = false;
+                document.getElementById('disconnectBtn').disabled = true;
+                document.getElementById('joinGroupBtn').disabled = true;
+                document.getElementById('sendMessageBtn').disabled = true;
+                if (error) {
+                    logMessage(❌ Connection closed with error: , 'error');
+                }
+            });
+
+            connection.onreconnecting((error) => {
+                updateStatus('Reconnecting...', 'connecting');
+                logMessage(⚠️ Reconnecting..., 'message');
+            });
+
+            connection.onreconnected((connectionId) => {
+                updateStatus('Reconnected', 'connected');
+                logMessage(✅ Reconnected with connection ID: , 'message');
+            });
+
+            try {
+                updateStatus('Connecting...', 'connecting');
+                await connection.start();
+                updateStatus('Connected', 'connected');
+                logMessage(✅ Connected to SignalR hub!, 'message');
+                
+                document.getElementById('connectBtn').disabled = true;
+                document.getElementById('disconnectBtn').disabled = false;
+                document.getElementById('joinGroupBtn').disabled = false;
+                document.getElementById('sendMessageBtn').disabled = false;
+            } catch (error) {
+                updateStatus('Connection failed', 'disconnected');
+                logMessage(❌ Connection error: , 'error');
+            }
+        }
+
+        // Disconnect from hub
+        async function disconnect() {
+            if (connection) {
+                await connection.stop();
+                logMessage(🔌 Disconnected from hub, 'message');
+            }
+        }
+
+        // Join complaint group
+        async function joinGroup() {
+            if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+                alert('Not connected to hub!');
+                return;
+            }
+
+            const complaintId = parseInt(document.getElementById('complaintId').value);
+            
+            try {
+                await connection.invoke('JoinComplaintGroup', complaintId);
+                logMessage(📝 Joining complaint group ..., 'message');
+            } catch (error) {
+                logMessage(❌ Error joining group: , 'error');
+            }
+        }
+
+        // Send message
+        async function sendMessage() {
+            if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+                alert('Not connected to hub!');
+                return;
+            }
+
+            const complaintId = parseInt(document.getElementById('complaintId').value);
+            const content = document.getElementById('messageContent').value;
+
+            if (!content) {
+                alert('Please enter a message!');
+                return;
+            }
+
+            try {
+                await connection.invoke('SendMessage', complaintId, content);
+                logMessage(📤 Sent message: "", 'message');
+                document.getElementById('messageContent').value = '';
+            } catch (error) {
+                logMessage(❌ Error sending message: , 'error');
+            }
+        }
+
+        // Update connection status
+        function updateStatus(text, statusClass) {
+            const statusDiv = document.getElementById('connectionStatus');
+            statusDiv.textContent = Status: ;
+            statusDiv.className = status ;
+        }
+
+        // Log message to display
+        function logMessage(text, type = 'message') {
+            const log = document.getElementById('messageLog');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = message ;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            messageDiv.innerHTML = <span class="timestamp">[]</span> ;
+            
+            log.appendChild(messageDiv);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // Clear message log
+        function clearLog() {
+            document.getElementById('messageLog').innerHTML = '';
+        }
+
+        // Allow Enter key to send message
+        document.getElementById('messageContent').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !document.getElementById('sendMessageBtn').disabled) {
+                sendMessage();
+            }
+        });
+
+        // Initial log message
+        logMessage('🚀 SignalR Test Client initialized. Please login to begin.', 'message');
+    </script>
+</body>
+</html>

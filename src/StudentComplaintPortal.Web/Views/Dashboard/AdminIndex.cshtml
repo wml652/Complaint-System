@@ -1,0 +1,77 @@
+@model IEnumerable<StudentComplaintPortal.Application.DTOs.ComplaintDto>
+@{
+    ViewData["Title"] = "All Complaints";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>All Complaints</h2>
+    <div>
+        <label for="statusFilter" class="me-2">Filter by Status:</label>
+        <select id="statusFilter" class="form-select d-inline-block w-auto">
+            <option value="All">All</option>
+            <option value="Open">Open</option>
+            <option value="InProgress">In Progress</option>
+            <option value="Resolved">Resolved</option>
+            <option value="Closed">Closed</option>
+        </select>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        <p class="mb-0">No complaints have been submitted yet.</p>
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Student</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="complaintsTableBody">
+                @foreach (var complaint in Model.OrderByDescending(c => c.CreatedAt))
+                {
+                    <tr data-status="@complaint.Status">
+                        <td>@complaint.Id</td>
+                        <td>@complaint.Title</td>
+                        <td><span class="badge bg-secondary">@complaint.Category</span></td>
+                        <td><span class="badge @(complaint.Status == "Open" ? "bg-success" : complaint.Status == "InProgress" ? "bg-warning text-dark" : "bg-secondary")">@complaint.Status</span></td>
+                        <td>@complaint.StudentName</td>
+                        <td>@complaint.CreatedAt.ToString("MMM dd, yyyy")</td>
+                        <td>
+                            <a asp-controller="Complaint" asp-action="Detail" asp-route-id="@complaint.Id" class="btn btn-sm btn-outline-primary">View</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        document.getElementById('statusFilter').addEventListener('change', function() {
+            const filterValue = this.value;
+            const rows = document.querySelectorAll('#complaintsTableBody tr');
+
+            rows.forEach(row => {
+                const status = row.getAttribute('data-status');
+                if (filterValue === 'All' || status === filterValue) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    </script>
+}

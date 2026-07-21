@@ -1,0 +1,38 @@
+@model IEnumerable<StudentComplaintPortal.Application.DTOs.ComplaintDto>
+@{
+    ViewData["Title"] = "My Complaints";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>My Complaints</h2>
+    <a asp-action="NewComplaint" class="btn btn-primary">+ New Complaint</a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        <p class="mb-0">You haven't submitted any complaints yet. Click "New Complaint" to get started.</p>
+    </div>
+}
+else
+{
+    <div class="row">
+        @foreach (var complaint in Model.OrderByDescending(c => c.CreatedAt))
+        {
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">@complaint.Title</h5>
+                        <p class="card-text text-muted small">@complaint.Description.Substring(0, Math.Min(100, complaint.Description.Length))@(complaint.Description.Length > 100 ? "..." : "")</p>
+                        <div class="mb-2">
+                            <span class="badge bg-secondary">@complaint.Category</span>
+                            <span class="badge @(complaint.Status == "Open" ? "bg-success" : complaint.Status == "InProgress" ? "bg-warning" : "bg-secondary")">@complaint.Status</span>
+                        </div>
+                        <p class="card-text small text-muted">Created: @complaint.CreatedAt.ToString("MMM dd, yyyy")</p>
+                        <a asp-controller="Complaint" asp-action="Detail" asp-route-id="@complaint.Id" class="btn btn-sm btn-outline-primary">View & Chat</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
