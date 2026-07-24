@@ -12,6 +12,7 @@
 @inject IJSRuntime JS
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @implements IAsyncDisposable
+@inject MessageBufferService BufferService
 
 <div class="chat-container">
     <div class="messages-area" id="messagesArea" style="height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; background-color: #f9f9f9;">
@@ -111,7 +112,6 @@
     [Parameter]
     public int ComplaintId { get; set; }
 
-    private HubConnection? hubConnection;
     private List<MessageDto> messages = new();
     private string currentMessage = string.Empty;
     private string? userId;
@@ -132,6 +132,9 @@
                 errorMessage = "You must be logged in to view this chat.";
                 return;
             }
+
+            // 1. SUBSCRIBE TO THE SINGLETON EVENT
+            BufferService.OnMessageBroadcast += HandleNewMessage;
         }
         catch (Exception ex)
         {
@@ -145,113 +148,53 @@
         {
             try
             {
-                // Load message history after first render when we have full context
-                try
-                {
-                    var messageList = await MessageService.GetConversationAsync(ComplaintId);
-                    messages = messageList.ToList();
-                    await InvokeAsync(StateHasChanged);
-                }
-                catch (Exception ex)
-                {
-                    errorMessage = $"Failed to load messages: {ex.Message}";
-                    await InvokeAsync(StateHasChanged);
-                }
-
-                // Setup SignalR connection with authentication
-                hubConnection = new HubConnectionBuilder()
-                    .WithUrl(Navigation.ToAbsoluteUri("/hubs/chat"), options =>
-                    {
-                        options.UseDefaultCredentials = true;
-                        options.Cookies = new System.Net.CookieContainer();
-                    })
-                    .WithAutomaticReconnect()
-                    .Build();
-
-                hubConnection.Closed += async (error) =>
-                {
-                    errorMessage = $"Connection closed: {error?.Message ?? "Unknown reason"}";
-                    await InvokeAsync(StateHasChanged);
-                };
-
-                hubConnection.Reconnecting += async (error) =>
-                {
-                    errorMessage = "Reconnecting...";
-                    await InvokeAsync(StateHasChanged);
-                };
-
-                hubConnection.Reconnected += async (connectionId) =>
-                {
-                    errorMessage = null;
-                    try
-                    {
-                        await hubConnection.SendAsync("JoinComplaintGroup", ComplaintId);
-                    }
-                    catch (Exception ex)
-                    {
-                        errorMessage = $"Failed to rejoin group: {ex.Message}";
-                    }
-                    await InvokeAsync(StateHasChanged);
-                };
-
-                hubConnection.On<MessageDto>("ReceiveMessage", async (message) =>
-                {
-                    if (message.ComplaintId == ComplaintId)
-                    {
-                        messages.Add(message);
-                        await InvokeAsync(StateHasChanged);
-                        await ScrollToBottom();
-                    }
-                });
-
-                hubConnection.On<int>("JoinedGroup", async (complaintId) =>
-                {
-                    // Successfully joined group
-                    uploadStatus = $"Connected to chat for complaint #{complaintId}";
-                    await InvokeAsync(StateHasChanged);
-                    await Task.Delay(2000);
-                    uploadStatus = null;
-                    await InvokeAsync(StateHasChanged);
-                });
-
-                try
-                {
-                    await hubConnection.StartAsync();
-                    uploadStatus = "Connecting to chat...";
-                    await InvokeAsync(StateHasChanged);
-
-                    await hubConnection.SendAsync("JoinComplaintGroup", ComplaintId);
-                    await ScrollToBottom();
-                }
-                catch (Exception ex)
-                {
-                    errorMessage = $"Failed to connect to chat: {ex.Message}. Please refresh the page.";
-                    await InvokeAsync(StateHasChanged);
-                }
+                // 2. Load the initial chat history (DB + Buffer)
+                var messageList = await MessageService.GetConversationAsync(ComplaintId);
+                messages = messageList.ToList();
+                await InvokeAsync(StateHasChanged);
+                await ScrollToBottom();
             }
             catch (Exception ex)
             {
-                errorMessage = $"Failed to initialize chat: {ex.Message}";
+                errorMessage = $"Failed to load messages: {ex.Message}";
                 await InvokeAsync(StateHasChanged);
             }
         }
     }
 
+    // 3. THE EVENT HANDLER THAT INSTANTLY UPDATES THE SCREEN
+    private async void HandleNewMessage(int complaintId, MessageDto message)
+    {
+        // Only update if it belongs to this chat room AND came from the OTHER person
+        if (complaintId == ComplaintId && message.SenderId != userId)
+        {
+            // InvokeAsync is required for thread-safety in Blazor Server
+            await InvokeAsync(async () =>
+            {
+                messages.Add(message);
+                StateHasChanged();
+                await ScrollToBottom();
+            });
+        }
+    }
+
     private async Task SendTextMessage()
     {
-        if (string.IsNullOrWhiteSpace(currentMessage))
-            return;
+        if (string.IsNullOrWhiteSpace(currentMessage)) return;
 
         var messageToSend = currentMessage;
-        currentMessage = string.Empty; // Clear immediately for better UX
+        currentMessage = string.Empty;
 
         try
         {
-            // Use MessageService directly instead of SignalR to bypass authentication issues
             var messageDto = await MessageService.SendMessageAsync(ComplaintId, userId!, messageToSend, null);
 
-            // Add the new message to the local list
+            // Add to our own screen
             messages.Add(messageDto);
+
+            // 4. INSTANTLY NOTIFY THE OTHER PERSON VIA C# EVENT
+            BufferService.BroadcastToClients(ComplaintId, messageDto);
+
             errorMessage = null;
             await InvokeAsync(StateHasChanged);
             await ScrollToBottom();
@@ -259,25 +202,19 @@
         catch (Exception ex)
         {
             errorMessage = $"Failed to send message: {ex.Message}";
-            currentMessage = messageToSend; // Restore message if failed
+            currentMessage = messageToSend;
             await InvokeAsync(StateHasChanged);
         }
     }
 
     private async Task OnPhotoSelected(InputFileChangeEventArgs e)
     {
-        if (e.FileCount > 0)
-        {
-            await UploadFile(e.File, "Photo");
-        }
+        if (e.FileCount > 0) await UploadFile(e.File, "Photo");
     }
 
     private async Task OnVideoSelected(InputFileChangeEventArgs e)
     {
-        if (e.FileCount > 0)
-        {
-            await UploadFile(e.File, "Video");
-        }
+        if (e.FileCount > 0) await UploadFile(e.File, "Video");
     }
 
     private async Task UploadFile(IBrowserFile file, string fileType)
@@ -289,20 +226,21 @@
 
         try
         {
-            // Parse file type enum
             if (!Enum.TryParse<FileType>(fileType, true, out var parsedFileType))
             {
                 errorMessage = $"Invalid file type: {fileType}";
                 return;
             }
 
-            // Use service directly instead of HTTP API to preserve authentication context
-            using var fileStream = file.OpenReadStream(maxAllowedSize: 52428800); // 50MB limit
+            using var fileStream = file.OpenReadStream(maxAllowedSize: 52428800);
             var messageDto = await AttachmentService.CreateMessageWithAttachmentAsync(
                 ComplaintId, userId!, fileStream, file.Name, file.ContentType, parsedFileType, null);
 
-            // Add the new message to the local list and notify via SignalR
             messages.Add(messageDto);
+
+            // NOTIFY THE OTHER PERSON VIA EVENT
+            BufferService.BroadcastToClients(ComplaintId, messageDto);
+
             uploadStatus = null;
             errorMessage = null;
             await InvokeAsync(StateHasChanged);
@@ -323,14 +261,8 @@
 
     private async Task ToggleRecording()
     {
-        if (isRecording)
-        {
-            await StopRecording();
-        }
-        else
-        {
-            await StartRecording();
-        }
+        if (isRecording) await StopRecording();
+        else await StartRecording();
     }
 
     private async Task StartRecording()
@@ -358,14 +290,16 @@
 
             var audioData = await JS.InvokeAsync<byte[]>("audioRecorder.stop");
 
-            // Use service directly instead of HTTP API to preserve authentication context
             using var memoryStream = new MemoryStream(audioData);
             var fileName = $"voice-{DateTime.UtcNow.Ticks}.webm";
             var messageDto = await AttachmentService.CreateMessageWithAttachmentAsync(
                 ComplaintId, userId!, memoryStream, fileName, "audio/webm", FileType.VoiceNote, null);
 
-            // Add the new message to the local list
             messages.Add(messageDto);
+
+            // NOTIFY THE OTHER PERSON VIA EVENT
+            BufferService.BroadcastToClients(ComplaintId, messageDto);
+
             uploadStatus = null;
             errorMessage = null;
             await InvokeAsync(StateHasChanged);
@@ -386,18 +320,12 @@
 
     private async Task ScrollToBottom()
     {
-        try
-        {
-            await JS.InvokeVoidAsync("scrollToBottom", "messagesArea");
-        }
-        catch { }
+        try { await JS.InvokeVoidAsync("scrollToBottom", "messagesArea"); } catch { }
     }
 
     public async ValueTask DisposeAsync()
     {
-        if (hubConnection != null)
-        {
-            await hubConnection.DisposeAsync();
-        }
+        // 5. UNSUBSCRIBE TO PREVENT MEMORY LEAKS
+        BufferService.OnMessageBroadcast -= HandleNewMessage;
     }
 }
