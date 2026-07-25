@@ -106,6 +106,10 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddSingleton<StudentComplaintPortal.Application.Services.MessageBufferService>();
+
+builder.Services.AddHostedService<StudentComplaintPortal.Web.Services.MessageFlushWorker>();
+
 // Phase 2: Add SignalR
 builder.Services.AddSignalR();
 

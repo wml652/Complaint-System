@@ -1,6 +1,0 @@
-{
-  "StudentComplaintPortal.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Application",
-  "StudentComplaintPortal.Data, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Data",
-  "StudentComplaintPortal.Domain, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Domain",
-  "StudentComplaintPortal.Web, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Web"
-}
