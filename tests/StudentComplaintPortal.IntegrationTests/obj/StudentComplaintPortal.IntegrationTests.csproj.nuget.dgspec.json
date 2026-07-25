@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\tests\\StudentComplaintPortal.IntegrationTests\\StudentComplaintPortal.IntegrationTests.csproj": {}
+    "D:\\Internship\\ChatApp\\Complaint-System\\tests\\StudentComplaintPortal.IntegrationTests\\StudentComplaintPortal.IntegrationTests.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Application\\StudentComplaintPortal.Application.csproj": {
+    "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Application\\StudentComplaintPortal.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Application\\StudentComplaintPortal.Application.csproj",
+        "projectUniqueName": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Application\\StudentComplaintPortal.Application.csproj",
         "projectName": "StudentComplaintPortal.Application",
-        "projectPath": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Application\\StudentComplaintPortal.Application.csproj",
-        "packagesPath": "C:\\Users\\Waqar Musa Loon\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Application\\obj\\",
+        "projectPath": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Application\\StudentComplaintPortal.Application.csproj",
+        "packagesPath": "C:\\Users\\p c\\.nuget\\packages\\",
+        "outputPath": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Application\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Waqar Musa Loon\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\p c\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -26,19 +26,17 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
-            "framework": "net8.0",
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj": {
-                "projectPath": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj"
+              "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj": {
+                "projectPath": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj"
               },
-              "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj": {
-                "projectPath": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj"
+              "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj": {
+                "projectPath": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj"
               }
             }
           }
@@ -53,11 +51,10 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "10.0.300"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
-          "framework": "net8.0",
           "targetAlias": "net8.0",
           "imports": [
             "net461",
@@ -75,24 +72,24 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.301/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj": {
+    "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj",
+        "projectUniqueName": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj",
         "projectName": "StudentComplaintPortal.Data",
-        "projectPath": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj",
-        "packagesPath": "C:\\Users\\Waqar Musa Loon\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Data\\obj\\",
+        "projectPath": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj",
+        "packagesPath": "C:\\Users\\p c\\.nuget\\packages\\",
+        "outputPath": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Data\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Waqar Musa Loon\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\p c\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -101,16 +98,14 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
-            "framework": "net8.0",
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj": {
-                "projectPath": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj"
+              "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj": {
+                "projectPath": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj"
               }
             }
           }
@@ -125,11 +120,10 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "10.0.300"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
-          "framework": "net8.0",
           "targetAlias": "net8.0",
           "dependencies": {
             "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
@@ -163,24 +157,24 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.301/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj": {
+    "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj",
+        "projectUniqueName": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj",
         "projectName": "StudentComplaintPortal.Domain",
-        "projectPath": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj",
-        "packagesPath": "C:\\Users\\Waqar Musa Loon\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Domain\\obj\\",
+        "projectPath": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj",
+        "packagesPath": "C:\\Users\\p c\\.nuget\\packages\\",
+        "outputPath": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Waqar Musa Loon\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\p c\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -189,12 +183,10 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
-            "framework": "net8.0",
             "targetAlias": "net8.0",
             "projectReferences": {}
           }
@@ -209,11 +201,10 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "10.0.300"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
-          "framework": "net8.0",
           "targetAlias": "net8.0",
           "dependencies": {
             "Microsoft.Extensions.Identity.Stores": {
@@ -237,24 +228,24 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.301/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Web\\StudentComplaintPortal.Web.csproj": {
+    "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Web\\StudentComplaintPortal.Web.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Web\\StudentComplaintPortal.Web.csproj",
+        "projectUniqueName": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Web\\StudentComplaintPortal.Web.csproj",
         "projectName": "StudentComplaintPortal.Web",
-        "projectPath": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Web\\StudentComplaintPortal.Web.csproj",
-        "packagesPath": "C:\\Users\\Waqar Musa Loon\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Web\\obj\\",
+        "projectPath": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Web\\StudentComplaintPortal.Web.csproj",
+        "packagesPath": "C:\\Users\\p c\\.nuget\\packages\\",
+        "outputPath": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Web\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Waqar Musa Loon\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\p c\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -263,19 +254,17 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
-            "framework": "net8.0",
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Application\\StudentComplaintPortal.Application.csproj": {
-                "projectPath": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Application\\StudentComplaintPortal.Application.csproj"
+              "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Application\\StudentComplaintPortal.Application.csproj": {
+                "projectPath": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Application\\StudentComplaintPortal.Application.csproj"
               },
-              "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj": {
-                "projectPath": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj"
+              "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj": {
+                "projectPath": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj"
               }
             }
           }
@@ -290,11 +279,10 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "10.0.300"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
-          "framework": "net8.0",
           "targetAlias": "net8.0",
           "dependencies": {
             "Microsoft.AspNetCore.Authentication.JwtBearer": {
@@ -339,24 +327,24 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.301/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\tests\\StudentComplaintPortal.IntegrationTests\\StudentComplaintPortal.IntegrationTests.csproj": {
+    "D:\\Internship\\ChatApp\\Complaint-System\\tests\\StudentComplaintPortal.IntegrationTests\\StudentComplaintPortal.IntegrationTests.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\tests\\StudentComplaintPortal.IntegrationTests\\StudentComplaintPortal.IntegrationTests.csproj",
+        "projectUniqueName": "D:\\Internship\\ChatApp\\Complaint-System\\tests\\StudentComplaintPortal.IntegrationTests\\StudentComplaintPortal.IntegrationTests.csproj",
         "projectName": "StudentComplaintPortal.IntegrationTests",
-        "projectPath": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\tests\\StudentComplaintPortal.IntegrationTests\\StudentComplaintPortal.IntegrationTests.csproj",
-        "packagesPath": "C:\\Users\\Waqar Musa Loon\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\tests\\StudentComplaintPortal.IntegrationTests\\obj\\",
+        "projectPath": "D:\\Internship\\ChatApp\\Complaint-System\\tests\\StudentComplaintPortal.IntegrationTests\\StudentComplaintPortal.IntegrationTests.csproj",
+        "packagesPath": "C:\\Users\\p c\\.nuget\\packages\\",
+        "outputPath": "D:\\Internship\\ChatApp\\Complaint-System\\tests\\StudentComplaintPortal.IntegrationTests\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Waqar Musa Loon\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\p c\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -365,16 +353,14 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
-            "framework": "net8.0",
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Web\\StudentComplaintPortal.Web.csproj": {
-                "projectPath": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Web\\StudentComplaintPortal.Web.csproj"
+              "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Web\\StudentComplaintPortal.Web.csproj": {
+                "projectPath": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Web\\StudentComplaintPortal.Web.csproj"
               }
             }
           }
@@ -389,11 +375,10 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "10.0.300"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
-          "framework": "net8.0",
           "targetAlias": "net8.0",
           "dependencies": {
             "Microsoft.AspNetCore.Mvc.Testing": {
@@ -445,7 +430,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.301/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

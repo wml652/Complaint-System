@@ -9,6 +9,7 @@ public class ComplaintDto
     public string Description { get; set; } = string.Empty;
     public string Category { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
+    public string? Priority { get; set; }
     public string StudentId { get; set; } = string.Empty;
     public string StudentName { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }

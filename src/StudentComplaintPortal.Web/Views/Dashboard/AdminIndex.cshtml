@@ -1,23 +1,71 @@
-@model IEnumerable<StudentComplaintPortal.Application.DTOs.ComplaintDto>
+@model StudentComplaintPortal.Web.Models.AdminDashboardViewModel
 @{
     ViewData["Title"] = "All Complaints";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>All Complaints</h2>
-    <div>
-        <label for="statusFilter" class="me-2">Filter by Status:</label>
-        <select id="statusFilter" class="form-select d-inline-block w-auto">
+</div>
+
+<div class="row mb-4 g-3">
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-num">@Model.TotalCount</div>
+            <div class="stat-label">Total</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-num">@Model.PendingCount</div>
+            <div class="stat-label">Pending</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-num">@Model.InProgressCount</div>
+            <div class="stat-label">In Progress</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-num">@Model.ResolvedCount</div>
+            <div class="stat-label">Resolved</div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-3 g-2">
+    <div class="col-md-4">
+        <label for="categoryFilter" class="form-label small mb-1">Filter by category</label>
+        <select id="categoryFilter" class="form-select form-select-sm">
             <option value="All">All</option>
-            <option value="Open">Open</option>
+            <option value="Academic">Academic</option>
+            <option value="Hostel">Hostel</option>
+            <option value="Administrative">Administrative</option>
+            <option value="Other">Other</option>
+        </select>
+    </div>
+    <div class="col-md-4">
+        <label for="statusFilter" class="form-label small mb-1">Filter by status</label>
+        <select id="statusFilter" class="form-select form-select-sm">
+            <option value="All">All</option>
+            <option value="Open">Pending</option>
             <option value="InProgress">In Progress</option>
             <option value="Resolved">Resolved</option>
             <option value="Closed">Closed</option>
         </select>
     </div>
+    <div class="col-md-4">
+        <label for="priorityFilter" class="form-label small mb-1">Filter by priority</label>
+        <select id="priorityFilter" class="form-select form-select-sm">
+            <option value="All">All</option>
+            <option value="Urgent">Urgent</option>
+            <option value="Normal">Normal</option>
+        </select>
+    </div>
 </div>
 
-@if (!Model.Any())
+@if (!Model.Complaints.Any())
 {
     <div class="alert alert-info">
         <p class="mb-0">No complaints have been submitted yet.</p>
@@ -26,27 +74,47 @@
 else
 {
     <div class="table-responsive">
-        <table class="table table-hover">
+        <table class="table table-hover bg-white">
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Title</th>
-                    <th>Category</th>
-                    <th>Status</th>
                     <th>Student</th>
-                    <th>Created</th>
-                    <th>Actions</th>
+                    <th>Category</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Submitted</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody id="complaintsTableBody">
-                @foreach (var complaint in Model.OrderByDescending(c => c.CreatedAt))
+                @{
+                    // Urgent first, then Normal, then complaints with no priority set yet
+                    // (nothing assigns Priority today - see note above the table).
+                    var orderedComplaints = Model.Complaints
+                    .OrderBy(c => c.Priority == "Urgent" ? 0 : c.Priority == "Normal" ? 1 : 2)
+                    .ThenByDescending(c => c.CreatedAt);
+                }
+                @foreach (var complaint in orderedComplaints)
                 {
-                    <tr data-status="@complaint.Status">
-                        <td>@complaint.Id</td>
-                        <td>@complaint.Title</td>
-                        <td><span class="badge bg-secondary">@complaint.Category</span></td>
-                        <td><span class="badge @(complaint.Status == "Open" ? "bg-success" : complaint.Status == "InProgress" ? "bg-warning text-dark" : "bg-secondary")">@complaint.Status</span></td>
+                    <tr data-status="@complaint.Status" data-category="@complaint.Category" data-priority="@(complaint.Priority ?? "")">
+                        <td>#@complaint.Id</td>
                         <td>@complaint.StudentName</td>
+                        <td><span class="badge bg-secondary">@complaint.Category</span></td>
+                        <td>
+                            @if (complaint.Priority == "Urgent")
+                            {
+                                <span class="badge bg-danger">Urgent</span>
+                            }
+                            else if (complaint.Priority == "Normal")
+                            {
+                                <span class="badge bg-info text-dark">Normal</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted small">Not set</span>
+                            }
+                        </td>
+                        <td><span class="badge @(complaint.Status == "Open" ? "bg-success" : complaint.Status == "InProgress" ? "bg-warning text-dark" : "bg-secondary")">@(complaint.Status == "Open" ? "Pending" : complaint.Status)</span></td>
                         <td>@complaint.CreatedAt.ToString("MMM dd, yyyy")</td>
                         <td>
                             <a asp-controller="Complaint" asp-action="Detail" asp-route-id="@complaint.Id" class="btn btn-sm btn-outline-primary">View</a>
@@ -56,22 +124,45 @@ else
             </tbody>
         </table>
     </div>
+    <div class="note text-muted small">
+        Sorted by priority by default (Urgent first), then newest first.
+    </div>
 }
 
 @section Scripts {
     <script>
-        document.getElementById('statusFilter').addEventListener('change', function() {
-            const filterValue = this.value;
+        (function () {
+            const statusFilter = document.getElementById('statusFilter');
+            const categoryFilter = document.getElementById('categoryFilter');
+            const priorityFilter = document.getElementById('priorityFilter');
             const rows = document.querySelectorAll('#complaintsTableBody tr');
 
-            rows.forEach(row => {
-                const status = row.getAttribute('data-status');
-                if (filterValue === 'All' || status === filterValue) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        });
+            // Pre-select status filter if the sidebar linked here with ?status=
+            const preselectedStatus = '@Model.SelectedStatus';
+            if (preselectedStatus && preselectedStatus !== 'All') {
+                statusFilter.value = preselectedStatus;
+            }
+
+            function applyFilters() {
+                const statusValue = statusFilter.value;
+                const categoryValue = categoryFilter.value;
+                const priorityValue = priorityFilter.value;
+
+                rows.forEach(row => {
+                    const status = row.getAttribute('data-status');
+                    const category = row.getAttribute('data-category');
+                    const priority = row.getAttribute('data-priority');
+                    const statusMatch = statusValue === 'All' || status === statusValue;
+                    const categoryMatch = categoryValue === 'All' || category === categoryValue;
+                    const priorityMatch = priorityValue === 'All' || priority === priorityValue;
+                    row.style.display = (statusMatch && categoryMatch && priorityMatch) ? '' : 'none';
+                });
+            }
+
+            statusFilter.addEventListener('change', applyFilters);
+            categoryFilter.addEventListener('change', applyFilters);
+            priorityFilter.addEventListener('change', applyFilters);
+            applyFilters();
+        })();
     </script>
 }

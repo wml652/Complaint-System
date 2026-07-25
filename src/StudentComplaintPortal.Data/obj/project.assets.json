@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 3,
   "targets": {
     "net8.0": {
       "Azure.Core/1.35.0": {
@@ -4298,23 +4298,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Waqar Musa Loon\\.nuget\\packages\\": {},
+    "C:\\Users\\p c\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj",
+      "projectUniqueName": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj",
       "projectName": "StudentComplaintPortal.Data",
-      "projectPath": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj",
-      "packagesPath": "C:\\Users\\Waqar Musa Loon\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Data\\obj\\",
+      "projectPath": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj",
+      "packagesPath": "C:\\Users\\p c\\.nuget\\packages\\",
+      "outputPath": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Data\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\Waqar Musa Loon\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\p c\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -4323,16 +4323,14 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net8.0": {
-          "framework": "net8.0",
           "targetAlias": "net8.0",
           "projectReferences": {
-            "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj": {
-              "projectPath": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj"
+            "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj": {
+              "projectPath": "D:\\Internship\\ChatApp\\Complaint-System\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj"
             }
           }
         }
@@ -4347,11 +4345,10 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "10.0.300"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net8.0": {
-        "framework": "net8.0",
         "targetAlias": "net8.0",
         "dependencies": {
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
@@ -4385,7 +4382,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.301/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudentComplaintPortal.Application.DTOs;
 using StudentComplaintPortal.Application.Services;
+using StudentComplaintPortal.Web.Models;
 using System.Security.Claims;
 
 namespace StudentComplaintPortal.Web.Controllers.Mvc;
@@ -17,7 +18,7 @@ public class DashboardController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string status = "All")
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var role = User.FindFirst(ClaimTypes.Role)?.Value;
@@ -34,8 +35,21 @@ public class DashboardController : Controller
         }
         else if (role == "Admin")
         {
-            var complaints = await _complaintService.GetAllAsync();
-            return View("AdminIndex", complaints);
+            var complaints = (await _complaintService.GetAllAsync()).ToList();
+
+            // Wireframe stat cards. "Pending" in the wireframe maps to our
+            // ComplaintStatus.Open value - no new status is being introduced.
+            var viewModel = new AdminDashboardViewModel
+            {
+                Complaints = complaints,
+                TotalCount = complaints.Count,
+                PendingCount = complaints.Count(c => c.Status == "Open"),
+                InProgressCount = complaints.Count(c => c.Status == "InProgress"),
+                ResolvedCount = complaints.Count(c => c.Status == "Resolved"),
+                SelectedStatus = status
+            };
+
+            return View("AdminIndex", viewModel);
         }
 
         return Forbid();

@@ -9,6 +9,7 @@ public class Complaint
     public required string Description { get; set; }
     public ComplaintCategory Category { get; set; }
     public ComplaintStatus Status { get; set; }
+    public Priority? Priority { get; set; }
     public required string StudentId { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
