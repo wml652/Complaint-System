@@ -115,6 +115,7 @@ public class ComplaintService : IComplaintService
             Description = complaint.Description,
             Category = complaint.Category.ToString(),
             Status = complaint.Status.ToString(),
+            Priority = complaint.Priority?.ToString(),
             StudentId = complaint.StudentId,
             StudentName = complaint.Student?.FullName ?? "Unknown Student",
             CreatedAt = complaint.CreatedAt,
