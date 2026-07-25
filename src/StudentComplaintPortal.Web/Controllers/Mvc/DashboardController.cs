@@ -81,4 +81,25 @@ public class DashboardController : Controller
         var complaint = await _complaintService.CreateComplaintAsync(userId, model);
         return RedirectToAction("Detail", "Complaint", new { id = complaint.Id });
     }
+
+    [HttpGet]
+    [Authorize(Roles = "Admin")]
+    public IActionResult CategoryManagement()
+    {
+        return View();
+    }
+
+    [HttpGet]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> MyAssignedComplaints()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Forbid();
+        }
+
+        var complaints = await _complaintService.GetAssignedComplaintsAsync(userId);
+        return View(complaints);
+    }
 }
