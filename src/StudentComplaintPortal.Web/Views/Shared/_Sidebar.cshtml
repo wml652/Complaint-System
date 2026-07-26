@@ -10,6 +10,8 @@
             <a class="sidebar-item" asp-controller="Dashboard" asp-action="Index" asp-route-status="Open">Pending</a>
             <a class="sidebar-item" asp-controller="Dashboard" asp-action="Index" asp-route-status="InProgress">In Progress</a>
             <a class="sidebar-item" asp-controller="Dashboard" asp-action="Index" asp-route-status="Resolved">Resolved</a>
+            <a class="sidebar-item @(ViewContext.RouteData.Values["action"]?.ToString() == "MyAssignedComplaints" ? "active" : "")" asp-controller="Dashboard" asp-action="MyAssignedComplaints">My Assigned Complaints</a>
+            <a class="sidebar-item @(ViewContext.RouteData.Values["action"]?.ToString() == "CategoryManagement" ? "active" : "")" asp-controller="Dashboard" asp-action="CategoryManagement">Category Management</a>
             @* TODO: Reports and Staff Accounts screens are not built yet (separate wireframe screens, not scoped to this pass) *@
         }
         else if (User.IsInRole("Student"))

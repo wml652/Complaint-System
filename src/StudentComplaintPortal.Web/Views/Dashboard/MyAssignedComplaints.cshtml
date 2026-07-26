@@ -1,0 +1,122 @@
+@model IEnumerable<StudentComplaintPortal.Application.DTOs.ComplaintDto>
+@{
+    ViewData["Title"] = "My Assigned Complaints";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>My Assigned Complaints</h2>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        <strong>No assigned complaints</strong>
+        <p class="mb-0 mt-2">You currently have no assigned complaints. New complaints will appear here when students submit issues in your assigned categories.</p>
+    </div>
+}
+else
+{
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-briefcase me-2"></i>
+                        You have <strong>@Model.Count()</strong> complaint(s) assigned to you based on your category assignments.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover bg-white">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Student</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Submitted</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var complaint in Model.OrderByDescending(c => c.CreatedAt))
+                {
+                    <tr>
+                        <td><strong>#@complaint.Id</strong></td>
+                        <td>
+                            <div class="text-truncate" style="max-width: 250px;" title="@complaint.Title">
+                                @complaint.Title
+                            </div>
+                        </td>
+                        <td>@complaint.StudentName</td>
+                        <td>
+                            <span class="badge bg-primary">@complaint.Category</span>
+                        </td>
+                        <td>
+                            @if (complaint.Status == "Open")
+                            {
+                                <span class="badge bg-success">Pending</span>
+                            }
+                            else if (complaint.Status == "InProgress")
+                            {
+                                <span class="badge bg-warning text-dark">In Progress</span>
+                            }
+                            else if (complaint.Status == "Resolved")
+                            {
+                                <span class="badge bg-info text-dark">Resolved</span>
+                            }
+                            else if (complaint.Status == "Closed")
+                            {
+                                <span class="badge bg-secondary">Closed</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">@complaint.Status</span>
+                            }
+                        </td>
+                        <td>
+                            @if (complaint.Priority == "Urgent")
+                            {
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>Urgent
+                                </span>
+                            }
+                            else if (complaint.Priority == "Normal")
+                            {
+                                <span class="badge bg-info text-dark">Normal</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted small">Not set</span>
+                            }
+                        </td>
+                        <td>
+                            <small>@complaint.CreatedAt.ToString("MMM dd, yyyy")</small>
+                            <br />
+                            <small class="text-muted">@complaint.CreatedAt.ToString("hh:mm tt")</small>
+                        </td>
+                        <td>
+                            <a asp-controller="Complaint" asp-action="Detail" asp-route-id="@complaint.Id"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye me-1"></i>View
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-3">
+        <small class="text-muted">
+            <i class="bi bi-info-circle me-1"></i>
+            Showing complaints from categories you're assigned to. Sorted by newest first.
+        </small>
+    </div>
+}

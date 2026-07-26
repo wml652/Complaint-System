@@ -39,10 +39,6 @@
         <label for="categoryFilter" class="form-label small mb-1">Filter by category</label>
         <select id="categoryFilter" class="form-select form-select-sm">
             <option value="All">All</option>
-            <option value="Academic">Academic</option>
-            <option value="Hostel">Hostel</option>
-            <option value="Administrative">Administrative</option>
-            <option value="Other">Other</option>
         </select>
     </div>
     <div class="col-md-4">
@@ -131,6 +127,26 @@ else
 
 @section Scripts {
     <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            // Fetch categories dynamically for the filter dropdown
+            try {
+                const response = await fetch('/api/categories');
+                if (response.ok) {
+                    const categories = await response.json();
+                    const filterSelect = document.getElementById('categoryFilter');
+                    categories.forEach(cat => {
+                        const option = document.createElement('option');
+                        // The table rows use data-category attribute, which maps to the category Name
+                        option.value = cat.name;
+                        option.textContent = cat.name;
+                        filterSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching categories for filter:', error);
+            }
+        });
+
         (function () {
             const statusFilter = document.getElementById('statusFilter');
             const categoryFilter = document.getElementById('categoryFilter');

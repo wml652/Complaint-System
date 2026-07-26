@@ -134,6 +134,7 @@ builder.Services.AddHttpClient();
 
 // Register application services
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IComplaintService, ComplaintService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
@@ -188,6 +189,21 @@ if (app.Environment.IsDevelopment())
     await SeedTestUsers(userManager);
 }
 
+// Seed categories and initial data
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        await StudentComplaintPortal.Data.Seeding.DbSeeder.SeedDataAsync(services);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while seeding the database.");
+    }
+}
+
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
@@ -224,6 +240,7 @@ app.MapControllerRoute(
 app.Run();
 
 // Seed test users method
+// Seed test users method
 static async Task SeedTestUsers(UserManager<AppUser> userManager)
 {
     // Seed Student
@@ -255,7 +272,34 @@ static async Task SeedTestUsers(UserManager<AppUser> userManager)
         };
         await userManager.CreateAsync(admin, "Admin123!");
     }
-}
 
-// Make Program class accessible for integration tests
+    // ADD YOUR TEAM MEMBERS HERE:
+    var teamMembers = new[]
+    {
+        new { Name = "Mahnoor Fatima", Email = "mahnoor@test.com" },
+        new { Name = "Muskan", Email = "muskan@test.com" },
+        new { Name = "Faizan", Email = "faizan@test.com" },
+        new { Name = "Ahmed", Email = "ahmed@test.com" },
+        new { Name = "Faraz", Email = "faraz@test.com" },
+        new { Name = "Bisma", Email = "bisma@test.com" }
+    };
+
+    foreach (var member in teamMembers)
+    {
+        if (await userManager.FindByEmailAsync(member.Email) == null)
+        {
+            var user = new AppUser
+            {
+                UserName = member.Email,
+                Email = member.Email,
+                FullName = member.Name,
+                Role = UserRole.Admin, // Allows them to manage categories and assigned complaints
+                CreatedAt = DateTime.UtcNow,
+                EmailConfirmed = true
+            };
+            // This automatically generates the secure password hash for "Staff123!"
+            await userManager.CreateAsync(user, "Staff123!");
+        }
+    }
+}// Make Program class accessible for integration tests
 public partial class Program { }
