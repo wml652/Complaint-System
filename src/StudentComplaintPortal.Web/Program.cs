@@ -273,6 +273,21 @@ static async Task SeedTestUsers(UserManager<AppUser> userManager)
         await userManager.CreateAsync(admin, "Admin123!");
     }
 
+    // Seed a dedicated Staff test account (redirects to the Staff Dashboard on login)
+    if (await userManager.FindByEmailAsync("staff@test.com") == null)
+    {
+        var staff = new AppUser
+        {
+            UserName = "staff@test.com",
+            Email = "staff@test.com",
+            FullName = "Test Staff",
+            Role = UserRole.Staff,
+            CreatedAt = DateTime.UtcNow,
+            EmailConfirmed = true
+        };
+        await userManager.CreateAsync(staff, "Staff123!");
+    }
+
     // ADD YOUR TEAM MEMBERS HERE:
     var teamMembers = new[]
     {
@@ -293,7 +308,7 @@ static async Task SeedTestUsers(UserManager<AppUser> userManager)
                 UserName = member.Email,
                 Email = member.Email,
                 FullName = member.Name,
-                Role = UserRole.Admin, // Allows them to manage categories and assigned complaints
+                Role = UserRole.Staff, // Category-assigned staff members - redirected to the Staff Dashboard
                 CreatedAt = DateTime.UtcNow,
                 EmailConfirmed = true
             };
