@@ -20,10 +20,18 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllers();
 
-// Phase 3: Add MVC with Views and Blazor Server
+// Phase 3: Add MVC with Views and Blazor Server with Increased Message Limits for Voice/Media
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
+
+builder.Services.AddServerSideBlazor(options =>
+{
+    options.DetailedErrors = true;
+}).AddHubOptions(options =>
+{
+    options.MaximumReceiveMessageSize = 10 * 1024 * 1024; // 10 MB limit for voice/media streams
+    options.EnableDetailedErrors = true;
+});
 
 // Configure Database
 builder.Services.AddDbContext<AppDbContext>(options =>

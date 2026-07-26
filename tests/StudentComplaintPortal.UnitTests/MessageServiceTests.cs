@@ -17,6 +17,7 @@ public class MessageServiceTests
     private readonly Mock<IMessageRepository> _mockMessageRepo;
     private readonly Mock<IComplaintRepository> _mockComplaintRepo;
     private readonly Mock<INotificationService> _mockNotificationService;
+    private readonly MessageBufferService _bufferService; // 1. Added field here
     private readonly MessageService _service;
 
     public MessageServiceTests()
@@ -25,9 +26,13 @@ public class MessageServiceTests
         _mockMessageRepo = new Mock<IMessageRepository>();
         _mockComplaintRepo = new Mock<IComplaintRepository>();
         _mockNotificationService = new Mock<INotificationService>();
+        _bufferService = new MessageBufferService(); // 2. Instantiated here
+
         _mockUnitOfWork.Setup(u => u.Messages).Returns(_mockMessageRepo.Object);
         _mockUnitOfWork.Setup(u => u.Complaints).Returns(_mockComplaintRepo.Object);
-        _service = new MessageService(_mockUnitOfWork.Object, _mockNotificationService.Object);
+
+        // 3. Passed _bufferService as third argument:
+        _service = new MessageService(_mockUnitOfWork.Object, _mockNotificationService.Object, _bufferService);
     }
 
     [Fact]
@@ -150,4 +155,3 @@ public class MessageServiceTests
         Assert.Empty(result);
     }
 }
-*/
