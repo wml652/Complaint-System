@@ -81,36 +81,51 @@
     }
 
     <div class="input-area">
-        <div class="mb-2">
-            <textarea @bind="currentMessage" @bind:event="oninput" class="form-control" rows="2" placeholder="Type your message..." disabled="@isUploading"></textarea>
-        </div>
-        <div class="d-flex gap-2 flex-wrap">
-            <button type="button" class="btn btn-primary" @onclick="SendTextMessage" @onclick:preventDefault="true" disabled="@(isUploading || string.IsNullOrWhiteSpace(currentMessage))">Send</button>
-            <InputFile OnChange="OnPhotoSelected" accept="image/*" id="photoInput" style="display:none;" disabled="@isUploading" />
-            <label for="photoInput" class="btn btn-secondary @(isUploading ? "disabled" : "")">
-                📷 Photo
-            </label>
-            <InputFile OnChange="OnVideoSelected" accept="video/*" id="videoInput" style="display:none;" disabled="@isUploading" />
-            <label for="videoInput" class="btn btn-secondary @(isUploading ? "disabled" : "")">
-                🎥 Video
-            </label>
-            <button type="button" class="btn btn-secondary" @onclick="ToggleRecording" @onclick:preventDefault="true" disabled="@isUploading">
-                @if (isRecording)
-                {
-                    <span>⏹ Stop</span>
-                }
-                else
-                {
-                    <span>🎤 Voice</span>
-                }
-            </button>
-        </div>
+        @if (IsClosed)
+        {
+            <div class="alert alert-warning mb-0 d-flex align-items-center gap-2">
+                <span>🔒</span>
+                <span>This complaint is closed. The conversation is read-only.</span>
+            </div>
+        }
+        else
+        {
+            <div class="mb-2">
+                <textarea @bind="currentMessage" @bind:event="oninput" class="form-control" rows="2" placeholder="Type your message..." disabled="@isUploading"></textarea>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <button type="button" class="btn btn-primary" @onclick="SendTextMessage" @onclick:preventDefault="true" disabled="@(isUploading || string.IsNullOrWhiteSpace(currentMessage))">Send</button>
+                <InputFile OnChange="OnPhotoSelected" accept="image/*" id="photoInput" style="display:none;" disabled="@isUploading" />
+                <label for="photoInput" class="btn btn-secondary @(isUploading ? "disabled" : "")">
+                    📷 Photo
+                </label>
+                <InputFile OnChange="OnVideoSelected" accept="video/*" id="videoInput" style="display:none;" disabled="@isUploading" />
+                <label for="videoInput" class="btn btn-secondary @(isUploading ? "disabled" : "")">
+                    🎥 Video
+                </label>
+                <button type="button" class="btn btn-secondary" @onclick="ToggleRecording" @onclick:preventDefault="true" disabled="@isUploading">
+                    @if (isRecording)
+                    {
+                        <span>⏹ Stop</span>
+                    }
+                    else
+                    {
+                        <span>🎤 Voice</span>
+                    }
+                </button>
+            </div>
+        }
     </div>
 </div>
 
 @code {
     [Parameter]
     public int ComplaintId { get; set; }
+
+    [Parameter]
+    public string? ComplaintStatus { get; set; }
+
+    private bool IsClosed => ComplaintStatus == "Closed";
 
     private List<MessageDto> messages = new();
     private string currentMessage = string.Empty;
