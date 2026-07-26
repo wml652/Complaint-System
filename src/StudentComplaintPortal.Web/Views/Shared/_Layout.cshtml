@@ -11,7 +11,11 @@
     <link rel="stylesheet" href="~/StudentComplaintPortal.Web.styles.css" asp-append-version="true" />
 </head>
 <body>
-    @if (User.Identity?.IsAuthenticated == true)
+    @{
+        var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+        var showSidebar = User.Identity?.IsAuthenticated == true && currentController != "Account";
+    }
+    @if (showSidebar)
     {
         <div class="app-shell">
             <partial name="_Sidebar" />

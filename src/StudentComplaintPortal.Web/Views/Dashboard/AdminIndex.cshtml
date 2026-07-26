@@ -87,7 +87,8 @@ else
                     // Urgent first, then Normal, then complaints with no priority set yet
                     // (nothing assigns Priority today - see note above the table).
                     var orderedComplaints = Model.Complaints
-                    .OrderBy(c => c.Priority == "Urgent" ? 0 : c.Priority == "Normal" ? 1 : 2)
+                    .OrderBy(c => c.Status == "Closed" ? 1 : 0)
+                    .ThenBy(c => c.Priority == "Urgent" ? 0 : c.Priority == "Normal" ? 1 : 2)
                     .ThenByDescending(c => c.CreatedAt);
                 }
                 @foreach (var complaint in orderedComplaints)

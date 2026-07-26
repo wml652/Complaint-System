@@ -1,4 +1,4 @@
-@using Microsoft.AspNetCore.SignalR.Client
+﻿@using Microsoft.AspNetCore.SignalR.Client
 @using StudentComplaintPortal.Application.DTOs
 @using StudentComplaintPortal.Application.Services
 @using StudentComplaintPortal.Domain.Enums
@@ -88,7 +88,14 @@
 
     <!-- WhatsApp Style Input Bar -->
     <div class="chat-input-wrapper">
-        @if (isRecording)
+        @if (IsClosed)
+        {
+            <div class="alert alert-warning mb-0 d-flex align-items-center gap-2">
+                <span>🔒</span>
+                <span>This complaint is closed. The conversation is read-only.</span>
+            </div>
+        }
+        else if (isRecording)
         {
             <div class="recording-bar">
                 <button type="button" class="icon-btn trash-btn" title="Cancel Recording" @onclick="CancelRecording">
@@ -181,6 +188,11 @@
 @code {
     [Parameter]
     public int ComplaintId { get; set; }
+
+    [Parameter]
+    public string? ComplaintStatus { get; set; }
+
+    private bool IsClosed => ComplaintStatus == "Closed";
 
     private List<MessageDto> messages = new();
     private string currentMessage = string.Empty;
