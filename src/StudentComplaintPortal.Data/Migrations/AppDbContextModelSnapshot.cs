@@ -265,6 +265,88 @@ namespace StudentComplaintPortal.Data.Migrations
                     b.ToTable("Attachments");
                 });
 
+            modelBuilder.Entity("StudentComplaintPortal.Domain.Entities.Category", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("StudentComplaintPortal.Domain.Entities.CategoryAssignee", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AppUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppUserId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("CategoryAssignees");
+                });
+
+            modelBuilder.Entity("StudentComplaintPortal.Domain.Entities.CategoryAttachmentRule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FileType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("MaxFileCount")
+                        .HasColumnType("int");
+
+                    b.Property<long>("MaxFileSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("CategoryAttachmentRules");
+                });
+
             modelBuilder.Entity("StudentComplaintPortal.Domain.Entities.Complaint", b =>
                 {
                     b.Property<int>("Id")
@@ -273,9 +355,8 @@ namespace StudentComplaintPortal.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -305,6 +386,8 @@ namespace StudentComplaintPortal.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
 
                     b.HasIndex("CreatedAt");
 
@@ -447,13 +530,51 @@ namespace StudentComplaintPortal.Data.Migrations
                     b.Navigation("Message");
                 });
 
+            modelBuilder.Entity("StudentComplaintPortal.Domain.Entities.CategoryAssignee", b =>
+                {
+                    b.HasOne("StudentComplaintPortal.Domain.Entities.AppUser", "AppUser")
+                        .WithMany()
+                        .HasForeignKey("AppUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("StudentComplaintPortal.Domain.Entities.Category", "Category")
+                        .WithMany("Assignees")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AppUser");
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("StudentComplaintPortal.Domain.Entities.CategoryAttachmentRule", b =>
+                {
+                    b.HasOne("StudentComplaintPortal.Domain.Entities.Category", "Category")
+                        .WithMany("AttachmentRules")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
             modelBuilder.Entity("StudentComplaintPortal.Domain.Entities.Complaint", b =>
                 {
+                    b.HasOne("StudentComplaintPortal.Domain.Entities.Category", "Category")
+                        .WithMany("Complaints")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("StudentComplaintPortal.Domain.Entities.AppUser", "Student")
                         .WithMany("Complaints")
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Category");
 
                     b.Navigation("Student");
                 });
@@ -495,6 +616,15 @@ namespace StudentComplaintPortal.Data.Migrations
                     b.Navigation("Messages");
 
                     b.Navigation("Notifications");
+                });
+
+            modelBuilder.Entity("StudentComplaintPortal.Domain.Entities.Category", b =>
+                {
+                    b.Navigation("Assignees");
+
+                    b.Navigation("AttachmentRules");
+
+                    b.Navigation("Complaints");
                 });
 
             modelBuilder.Entity("StudentComplaintPortal.Domain.Entities.Complaint", b =>

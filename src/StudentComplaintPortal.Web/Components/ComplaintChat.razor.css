@@ -1,0 +1,405 @@
+﻿/* ===================================================================
+   Complaint Chat — White & Blue Theme (matches dark navy sidebar)
+   =================================================================== */
+
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    max-width: 900px;
+    margin: 0 auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ---------------- Messages Area ---------------- */
+.messages-area {
+    height: 500px;
+    overflow-y: auto;
+    border-radius: 16px;
+    padding: 20px;
+    background-color: #f4f7fb;
+    margin-bottom: 12px;
+    border: 1px solid #e3e9f2;
+}
+
+.message {
+    display: flex;
+    margin-bottom: 14px;
+}
+
+    .message.from-me {
+        justify-content: flex-end;
+    }
+
+    .message.from-them {
+        justify-content: flex-start;
+    }
+
+.bubble {
+    max-width: 72%;
+    padding: 10px 14px;
+    border-radius: 16px;
+    box-shadow: 0 1px 2px rgba(16, 30, 54, 0.08);
+    position: relative;
+}
+
+    .bubble.from-me {
+        background: #2f6fed;
+        color: #ffffff;
+        border-bottom-right-radius: 4px;
+    }
+
+    .bubble.from-them {
+        background: #ffffff;
+        color: #1c2b3a;
+        border: 1px solid #e3e9f2;
+        border-bottom-left-radius: 4px;
+    }
+
+    .bubble .sender-name {
+        font-size: 0.72rem;
+        font-weight: 700;
+        opacity: 0.85;
+        display: block;
+        margin-bottom: 2px;
+    }
+
+    .bubble.from-me .sender-name {
+        color: #dce8ff;
+    }
+
+    .bubble.from-them .sender-name {
+        color: #2f6fed;
+    }
+
+    .bubble p {
+        margin: 0 0 2px 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 0.93rem;
+        line-height: 1.4;
+    }
+
+    .bubble .msg-time {
+        display: block;
+        text-align: right;
+        font-size: 0.68rem;
+        margin-top: 2px;
+    }
+
+    .bubble.from-me .msg-time {
+        color: rgba(255, 255, 255, 0.75);
+    }
+
+    .bubble.from-them .msg-time {
+        color: #93a3b8;
+    }
+
+    .bubble img.attachment-media,
+    .bubble video.attachment-media {
+        max-width: 280px;
+        border-radius: 10px;
+        margin-top: 4px;
+        display: block;
+    }
+
+/* ---------------- Voice Note Bubble (custom player) ---------------- */
+.voice-bubble {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 2px;
+    min-width: 210px;
+}
+
+.voice-play-btn {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.bubble.from-me .voice-play-btn {
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+}
+
+.bubble.from-them .voice-play-btn {
+    background: #eaf0fe;
+    color: #2f6fed;
+}
+
+.voice-play-btn:hover {
+    filter: brightness(1.08);
+}
+
+.voice-play-btn .icon-pause {
+    display: none;
+}
+
+.voice-play-btn.playing .icon-play {
+    display: none;
+}
+
+.voice-play-btn.playing .icon-pause {
+    display: block;
+}
+
+.voice-progress-track {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+}
+
+.bubble.from-me .voice-progress-track {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.voice-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: currentColor;
+    border-radius: 2px;
+}
+
+.bubble.from-me .voice-progress-fill {
+    background: #ffffff;
+}
+
+.bubble.from-them .voice-progress-fill {
+    background: #2f6fed;
+}
+
+.voice-duration {
+    font-size: 0.7rem;
+    flex-shrink: 0;
+    min-width: 32px;
+    text-align: right;
+}
+
+.bubble.from-me .voice-duration {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.bubble.from-them .voice-duration {
+    color: #93a3b8;
+}
+
+/* ---------------- Status banners ---------------- */
+.status-banner {
+    font-size: 0.85rem;
+    border-radius: 10px;
+    padding: 8px 14px;
+    margin-bottom: 8px;
+}
+
+    .status-banner.info {
+        background: #eaf0fe;
+        color: #2f6fed;
+    }
+
+    .status-banner.error {
+        background: #fdeaea;
+        color: #d0342c;
+    }
+
+/* ---------------- Input Bar ---------------- */
+.chat-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #e3e9f2;
+    border-radius: 28px;
+    padding: 6px 8px;
+    gap: 8px;
+    box-shadow: 0 1px 3px rgba(16, 30, 54, 0.06);
+}
+
+    .chat-input-wrapper:focus-within {
+        border-color: #2f6fed;
+        box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.12);
+    }
+
+.chat-textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #1c2b3a;
+    resize: none;
+    max-height: 100px;
+    outline: none !important;
+    box-shadow: none !important;
+    font-size: 0.95rem;
+    padding: 8px 4px;
+}
+
+    .chat-textarea::placeholder {
+        color: #93a3b8;
+    }
+
+/* ---------------- Icon Buttons ---------------- */
+.icon-btn {
+    background: transparent;
+    border: none;
+    color: #6b7d97;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    flex-shrink: 0;
+}
+
+    .icon-btn:hover:not(:disabled) {
+        background: #eaf0fe;
+        color: #2f6fed;
+    }
+
+    .icon-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+.send-btn-circle {
+    background: #2f6fed !important;
+    color: #ffffff !important;
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+}
+
+    .send-btn-circle:hover:not(:disabled) {
+        background: #1d5ce0 !important;
+        color: #ffffff !important;
+    }
+
+.mic-btn-circle {
+    background: #2f6fed !important;
+    color: #ffffff !important;
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+}
+
+    .mic-btn-circle:hover:not(:disabled) {
+        background: #1d5ce0 !important;
+        color: #ffffff !important;
+    }
+
+/* ---------------- Recording UI (lives inside the input bar) ---------------- */
+.recording-bar {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 10px;
+    color: #1c2b3a;
+}
+
+.red-dot {
+    width: 9px;
+    height: 9px;
+    background-color: #e0433b;
+    border-radius: 50%;
+    animation: blink 1s infinite;
+    flex-shrink: 0;
+}
+
+@keyframes blink {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.25;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.recording-timer {
+    font-size: 0.85rem;
+    color: #6b7d97;
+    flex-shrink: 0;
+    min-width: 34px;
+    font-variant-numeric: tabular-nums;
+}
+
+.trash-btn {
+    color: #93a3b8;
+}
+
+    .trash-btn:hover {
+        background: #fdeaea !important;
+        color: #d0342c !important;
+    }
+
+/* Live waveform shown in place of the textarea while recording */
+.waveform-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    height: 34px;
+    padding: 0 4px;
+    overflow: hidden;
+}
+
+.wave-bar {
+    width: 3px;
+    min-height: 3px;
+    height: 6px;
+    border-radius: 2px;
+    background: #2f6fed;
+    transition: height 0.06s ease;
+}
+
+/* ---------------- Attachment Popover ---------------- */
+.attachment-popover {
+    position: absolute;
+    bottom: 56px;
+    left: 8px;
+    background: #ffffff;
+    border: 1px solid #e3e9f2;
+    border-radius: 12px;
+    padding: 6px 0;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 6px 24px rgba(16, 30, 54, 0.14);
+    z-index: 100;
+    width: 190px;
+}
+
+.popover-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    color: #1c2b3a;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.15s;
+}
+
+    .popover-item:hover {
+        background: #eaf0fe;
+        color: #2f6fed;
+    }
+
+    .popover-item svg {
+        color: #2f6fed;
+        flex-shrink: 0;
+    }
