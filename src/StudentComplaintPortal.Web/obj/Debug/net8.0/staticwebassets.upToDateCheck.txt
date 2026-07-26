@@ -1,0 +1,8 @@
+wwwroot\css\site.css
+wwwroot\js\audioRecorder.js
+wwwroot\js\notifications.js
+wwwroot\uploads\1002\a3c6ca3b-3663-4c5c-816f-0f7bdd914e8b-Gemini_Generated_Image_4bk5304bk5304bk5.png
+wwwroot\uploads\4\b0494f85-318f-4c6e-80d7-30e287abe6c1-WhatsApp Image 2026-06-16 at 3.19.56 AM (3).jpeg
+wwwroot\uploads\4\cdde171a-f775-4553-a6d3-241bc16071fd-WhatsApp Image 2026-06-07 at 3.02.53 PM.jpeg
+wwwroot\uploads\5\048859da-1ce8-40f3-9979-ad79231764db-Gemini_Generated_Image_jzztxjzztxjzztxj.png
+wwwroot\uploads\5\9d7f8622-595c-4647-8d33-fe147fc32ebf-PixVerse_V6_Image_Text_360P_Scene_Description_.mp4
