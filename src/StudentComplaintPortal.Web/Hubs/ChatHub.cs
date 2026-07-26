@@ -67,14 +67,6 @@ public class ChatHub : Hub
         await Clients.Caller.SendAsync("JoinedGroup", complaintId);
     }
 
-    public async Task NotifyNewMessage(int complaintId, MessageDto message)
-    {
-        // ADD THIS LINE:
-        Console.WriteLine($"[SIGNALR HUB] Broadcasting message to complaint-{complaintId}");
-
-        await Clients.OthersInGroup($"complaint-{complaintId}").SendAsync("ReceiveMessage", message);
-    }
-
     public async Task SendMessage(int complaintId, string content)
     {
         var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
