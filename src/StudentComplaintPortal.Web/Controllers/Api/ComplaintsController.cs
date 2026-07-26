@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using StudentComplaintPortal.Application.DTOs;
 using StudentComplaintPortal.Application.Exceptions;
 using StudentComplaintPortal.Application.Services;
-using StudentComplaintPortal.Domain.Enums;
 using System.Security.Claims;
 
 namespace StudentComplaintPortal.Web.Controllers.Api;

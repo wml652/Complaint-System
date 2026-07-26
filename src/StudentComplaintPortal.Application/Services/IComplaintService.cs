@@ -10,4 +10,5 @@ public interface IComplaintService
     Task<IEnumerable<ComplaintDto>> GetByStudentAsync(string studentId);
     Task<IEnumerable<ComplaintDto>> GetAllAsync();
     Task<ComplaintDto> UpdateStatusAsync(int id, ComplaintStatus newStatus);
+    Task<IEnumerable<ComplaintDto>> GetAssignedComplaintsAsync(string staffUserId);
 }

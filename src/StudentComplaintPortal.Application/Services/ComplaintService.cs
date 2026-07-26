@@ -10,20 +10,32 @@ public class ComplaintService : IComplaintService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationService _notificationService;
+    private readonly ICategoryService _categoryService;
 
-    public ComplaintService(IUnitOfWork unitOfWork, INotificationService notificationService)
+    public ComplaintService(IUnitOfWork unitOfWork, INotificationService notificationService, ICategoryService categoryService)
     {
         _unitOfWork = unitOfWork;
         _notificationService = notificationService;
+        _categoryService = categoryService;
     }
 
     public async Task<ComplaintDto> CreateComplaintAsync(string studentId, CreateComplaintDto dto)
     {
+        // Validate category
+        var category = await _categoryService.GetCategoryByIdAsync(dto.CategoryId);
+        if (category == null || !category.IsActive)
+        {
+            throw new NotFoundException("Selected category is invalid or inactive.");
+        }
+
+        // TODO: Implement attachment validation when attachments are added to CreateComplaintDto
+        // This will validate file types, counts, and sizes against category.AttachmentRules
+
         var complaint = new Complaint
         {
             Title = dto.Title,
             Description = dto.Description,
-            Category = dto.Category,
+            CategoryId = dto.CategoryId,
             Status = ComplaintStatus.Open,
             StudentId = studentId,
             CreatedAt = DateTime.UtcNow,
@@ -32,6 +44,19 @@ public class ComplaintService : IComplaintService
 
         await _unitOfWork.Complaints.AddAsync(complaint);
         await _unitOfWork.SaveChangesAsync();
+
+        // Send targeted notifications to assigned staff members
+        if (category.AssigneeIds != null && category.AssigneeIds.Any())
+        {
+            foreach (var assigneeId in category.AssigneeIds)
+            {
+                await _notificationService.NotifyAsync(
+                    assigneeId,
+                    $"New complaint '{complaint.Title}' requires your attention in the {category.Name} category.",
+                    NotificationType.NewComplaint
+                );
+            }
+        }
 
         // Reload with student info
         var created = await _unitOfWork.Complaints.GetByIdAsync(complaint.Id);
@@ -53,6 +78,14 @@ public class ComplaintService : IComplaintService
     public async Task<IEnumerable<ComplaintDto>> GetAllAsync()
     {
         var complaints = await _unitOfWork.Complaints.GetAllAsync();
+        return complaints.Select(MapToDto);
+    }
+
+    public async Task<IEnumerable<ComplaintDto>> GetAssignedComplaintsAsync(string staffUserId)
+    {
+        // Query complaints where the category has an assignee matching the staffUserId
+        var complaints = await _unitOfWork.Complaints.FindAsync(c =>
+            c.Category.Assignees.Any(a => a.AppUserId == staffUserId));
         return complaints.Select(MapToDto);
     }
 
@@ -113,8 +146,9 @@ public class ComplaintService : IComplaintService
             Id = complaint.Id,
             Title = complaint.Title,
             Description = complaint.Description,
-            Category = complaint.Category.ToString(),
+            Category = complaint.Category?.Name ?? "Unknown",
             Status = complaint.Status.ToString(),
+            Priority = complaint.Priority?.ToString(),
             StudentId = complaint.StudentId,
             StudentName = complaint.Student?.FullName ?? "Unknown Student",
             CreatedAt = complaint.CreatedAt,

@@ -1,4 +1,4 @@
-@using Microsoft.AspNetCore.SignalR.Client
+﻿@using Microsoft.AspNetCore.SignalR.Client
 @using StudentComplaintPortal.Application.DTOs
 @using StudentComplaintPortal.Application.Services
 @using StudentComplaintPortal.Domain.Enums
@@ -12,9 +12,10 @@
 @inject IJSRuntime JS
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @implements IAsyncDisposable
+@inject MessageBufferService BufferService
 
 <div class="chat-container">
-    <div class="messages-area" id="messagesArea" style="height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; background-color: #f9f9f9;">
+    <div class="messages-area" id="messagesArea">
         @if (messages == null)
         {
             <p class="text-center text-muted">Loading conversation...</p>
@@ -27,43 +28,49 @@
         {
             @foreach (var msg in messages)
             {
-                <div class="message mb-3 @(msg.SenderId == userId ? "text-end" : "text-start")">
-                    <div class="d-inline-block" style="max-width: 70%;">
-                        <div class="@(msg.SenderId == userId ? "bg-primary text-white" : "bg-light") p-2 rounded">
-                            <strong>@msg.SenderName</strong>
-                            @if (!string.IsNullOrEmpty(msg.Content))
+                var isMe = msg.SenderId == userId;
+                <div class="message @(isMe ? "from-me" : "from-them")">
+                    <div class="bubble @(isMe ? "from-me" : "from-them")">
+                        <span class="sender-name">@msg.SenderName</span>
+                        @if (!string.IsNullOrEmpty(msg.Content))
+                        {
+                            <p>@msg.Content</p>
+                        }
+                        @if (msg.Attachments.Any())
+                        {
+                            @foreach (var attachment in msg.Attachments)
                             {
-                                <p class="mb-1">@msg.Content</p>
+                                @if (attachment.FileType == "Photo")
+                                {
+                                    <img src="@attachment.FileUrl" alt="Photo" class="attachment-media" />
+                                }
+                                else if (attachment.FileType == "Video")
+                                {
+                                    <video controls class="attachment-media">
+                                        <source src="@attachment.FileUrl" type="video/mp4" />
+                                    </video>
+                                }
+                                else if (attachment.FileType == "VoiceNote")
+                                {
+                                    <div class="voice-bubble">
+                                        <button type="button" class="voice-play-btn" title="Play">
+                                            <svg class="icon-play" width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                                                <path d="M3 2.5a.5.5 0 0 1 .77-.422l9 5.5a.5.5 0 0 1 0 .844l-9 5.5A.5.5 0 0 1 3 13.5v-11z" />
+                                            </svg>
+                                            <svg class="icon-pause" width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                                                <path d="M5 3.5A1.5 1.5 0 0 1 6.5 2h1A1.5 1.5 0 0 1 9 3.5v9A1.5 1.5 0 0 1 7.5 14h-1A1.5 1.5 0 0 1 5 12.5v-9zm5 0A1.5 1.5 0 0 1 11.5 2h1A1.5 1.5 0 0 1 14 3.5v9a1.5 1.5 0 0 1-1.5 1.5h-1A1.5 1.5 0 0 1 10 12.5v-9z" />
+                                            </svg>
+                                        </button>
+                                        <div class="voice-progress-track">
+                                            <div class="voice-progress-fill"></div>
+                                        </div>
+                                        <span class="voice-duration">0:00</span>
+                                        <audio src="@attachment.FileUrl" preload="metadata" style="display:none;"></audio>
+                                    </div>
+                                }
                             }
-                            @if (msg.Attachments.Any())
-                            {
-                                <div class="attachments mt-2">
-                                    @foreach (var attachment in msg.Attachments)
-                                    {
-                                        @if (attachment.FileType == "Photo")
-                                        {
-                                            <img src="@attachment.FileUrl" alt="Photo" class="img-fluid rounded mb-1" style="max-width: 300px;" />
-                                        }
-                                        else if (attachment.FileType == "Video")
-                                        {
-                                            <video controls class="w-100 rounded mb-1" style="max-width: 300px;">
-                                                <source src="@attachment.FileUrl" type="video/mp4" />
-                                                Your browser does not support the video tag.
-                                            </video>
-                                        }
-                                        else if (attachment.FileType == "VoiceNote")
-                                        {
-                                            <audio controls class="w-100 mb-1">
-                                                <source src="@attachment.FileUrl" type="audio/webm" />
-                                                <source src="@attachment.FileUrl" type="audio/wav" />
-                                                Your browser does not support the audio element.
-                                            </audio>
-                                        }
-                                    }
-                                </div>
-                            }
-                            <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">@msg.SentAt.ToString("hh:mm tt")</small>
-                        </div>
+                        }
+                        <span class="msg-time">@msg.SentAt.ToString("hh:mm tt")</span>
                     </div>
                 </div>
             }
@@ -72,38 +79,109 @@
 
     @if (!string.IsNullOrEmpty(uploadStatus))
     {
-        <div class="alert alert-info">@uploadStatus</div>
+        <div class="status-banner info">@uploadStatus</div>
     }
     @if (!string.IsNullOrEmpty(errorMessage))
     {
-        <div class="alert alert-danger">@errorMessage</div>
+        <div class="status-banner error">@errorMessage</div>
     }
 
-    <div class="input-area">
-        <div class="mb-2">
-            <textarea @bind="currentMessage" @bind:event="oninput" class="form-control" rows="2" placeholder="Type your message..." disabled="@isUploading"></textarea>
-        </div>
-        <div class="d-flex gap-2 flex-wrap">
-            <button type="button" class="btn btn-primary" @onclick="SendTextMessage" @onclick:preventDefault="true" disabled="@(isUploading || string.IsNullOrWhiteSpace(currentMessage))">Send</button>
-            <InputFile OnChange="OnPhotoSelected" accept="image/*" id="photoInput" style="display:none;" disabled="@isUploading" />
-            <label for="photoInput" class="btn btn-secondary @(isUploading ? "disabled" : "")">
-                📷 Photo
-            </label>
-            <InputFile OnChange="OnVideoSelected" accept="video/*" id="videoInput" style="display:none;" disabled="@isUploading" />
-            <label for="videoInput" class="btn btn-secondary @(isUploading ? "disabled" : "")">
-                🎥 Video
-            </label>
-            <button type="button" class="btn btn-secondary" @onclick="ToggleRecording" @onclick:preventDefault="true" disabled="@isUploading">
-                @if (isRecording)
-                {
-                    <span>⏹ Stop</span>
-                }
-                else
-                {
-                    <span>🎤 Voice</span>
-                }
+    <!-- WhatsApp Style Input Bar -->
+    <div class="chat-input-wrapper">
+        @if (IsClosed)
+        {
+            <div class="alert alert-warning mb-0 d-flex align-items-center gap-2">
+                <span>🔒</span>
+                <span>This complaint is closed. The conversation is read-only.</span>
+            </div>
+        }
+        else if (isRecording)
+        {
+            <div class="recording-bar">
+                <button type="button" class="icon-btn trash-btn" title="Cancel Recording" @onclick="CancelRecording">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+                        <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z" />
+                    </svg>
+                </button>
+
+                <div class="red-dot"></div>
+
+                <div class="waveform-container" id="waveformBars">
+                    @for (int i = 0; i < 28; i++)
+                    {
+                        <span class="wave-bar"></span>
+                    }
+                </div>
+
+                <span class="recording-timer" id="recordingTimer">0:00</span>
+
+                <button type="button" class="icon-btn send-btn-circle" title="Send Voice Note" @onclick="StopAndSendRecording">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083l6-15Zm-1.833 1.89L6.637 10.07l-.215-.138L2.088 7.28 14.13 2.576Zm-1.557 1.558L7.87 14.17l-2.652-4.334 4.81-4.81Z" />
+                    </svg>
+                </button>
+            </div>
+        }
+        else
+        {
+            <button type="button" class="icon-btn" title="Attach" @onclick="ToggleAttachmentMenu" disabled="@isUploading">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+                </svg>
             </button>
-        </div>
+
+            @if (showAttachmentMenu)
+            {
+                <div class="attachment-popover">
+                    <label for="photoInput" class="popover-item mb-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+                            <path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z" />
+                        </svg>
+                        Photo
+                    </label>
+                    <label for="videoInput" class="popover-item mb-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M0 4a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm10.5 1.5v5l4.5 2.5V3l-4.5 2.5z" />
+                        </svg>
+                        Video
+                    </label>
+                </div>
+            }
+
+            <InputFile OnChange="OnPhotoSelected" accept="image/*" id="photoInput" style="display:none;" disabled="@isUploading" />
+            <InputFile OnChange="OnVideoSelected" accept="video/*" id="videoInput" style="display:none;" disabled="@isUploading" />
+
+            <!-- Message Input Area with Native Enter Handler -->
+            <textarea id="chatInputArea"
+                      @bind="currentMessage"
+                      @bind:event="oninput"
+                      @onkeydown="HandleKeyDown"
+                      onkeypress="if(event.keyCode==13 && !event.shiftKey){ event.preventDefault(); }"
+                      class="chat-textarea"
+                      rows="1"
+                      placeholder="Type a message"
+                      disabled="@isUploading"></textarea>
+
+            @if (!string.IsNullOrWhiteSpace(currentMessage))
+            {
+                <button type="button" class="icon-btn send-btn-circle" title="Send Message" @onclick="SendTextMessage" disabled="@isUploading">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083l6-15Zm-1.833 1.89L6.637 10.07l-.215-.138L2.088 7.28 14.13 2.576Zm-1.557 1.558L7.87 14.17l-2.652-4.334 4.81-4.81Z" />
+                    </svg>
+                </button>
+            }
+            else
+            {
+                <button type="button" class="icon-btn mic-btn-circle" title="Record Voice" @onclick="StartRecording" disabled="@isUploading">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z" />
+                        <path d="M10 8a2 2 0 1 0-4 0V3a2 2 0 1 0 4 0v5z" />
+                    </svg>
+                </button>
+            }
+        }
     </div>
 </div>
 
@@ -111,7 +189,11 @@
     [Parameter]
     public int ComplaintId { get; set; }
 
-    private HubConnection? hubConnection;
+    [Parameter]
+    public string? ComplaintStatus { get; set; }
+
+    private bool IsClosed => ComplaintStatus == "Closed";
+
     private List<MessageDto> messages = new();
     private string currentMessage = string.Empty;
     private string? userId;
@@ -119,6 +201,9 @@
     private string? errorMessage;
     private bool isUploading = false;
     private bool isRecording = false;
+    private bool recordingVisualsPending = false;
+    private bool showAttachmentMenu = false;
+    private DotNetObjectReference<ComplaintChat>? objectRef;
 
     protected override async Task OnInitializedAsync()
     {
@@ -132,6 +217,8 @@
                 errorMessage = "You must be logged in to view this chat.";
                 return;
             }
+
+            BufferService.OnMessageBroadcast += HandleNewMessage;
         }
         catch (Exception ex)
         {
@@ -145,113 +232,82 @@
         {
             try
             {
-                // Load message history after first render when we have full context
-                try
-                {
-                    var messageList = await MessageService.GetConversationAsync(ComplaintId);
-                    messages = messageList.ToList();
-                    await InvokeAsync(StateHasChanged);
-                }
-                catch (Exception ex)
-                {
-                    errorMessage = $"Failed to load messages: {ex.Message}";
-                    await InvokeAsync(StateHasChanged);
-                }
+                var messageList = await MessageService.GetConversationAsync(ComplaintId);
+                messages = messageList.ToList();
 
-                // Setup SignalR connection with authentication
-                hubConnection = new HubConnectionBuilder()
-                    .WithUrl(Navigation.ToAbsoluteUri("/hubs/chat"), options =>
-                    {
-                        options.UseDefaultCredentials = true;
-                        options.Cookies = new System.Net.CookieContainer();
-                    })
-                    .WithAutomaticReconnect()
-                    .Build();
+                objectRef = DotNetObjectReference.Create(this);
+                try { await JS.InvokeVoidAsync("attachEnterKeyHandler", "chatInputArea", objectRef); } catch { }
 
-                hubConnection.Closed += async (error) =>
-                {
-                    errorMessage = $"Connection closed: {error?.Message ?? "Unknown reason"}";
-                    await InvokeAsync(StateHasChanged);
-                };
-
-                hubConnection.Reconnecting += async (error) =>
-                {
-                    errorMessage = "Reconnecting...";
-                    await InvokeAsync(StateHasChanged);
-                };
-
-                hubConnection.Reconnected += async (connectionId) =>
-                {
-                    errorMessage = null;
-                    try
-                    {
-                        await hubConnection.SendAsync("JoinComplaintGroup", ComplaintId);
-                    }
-                    catch (Exception ex)
-                    {
-                        errorMessage = $"Failed to rejoin group: {ex.Message}";
-                    }
-                    await InvokeAsync(StateHasChanged);
-                };
-
-                hubConnection.On<MessageDto>("ReceiveMessage", async (message) =>
-                {
-                    if (message.ComplaintId == ComplaintId)
-                    {
-                        messages.Add(message);
-                        await InvokeAsync(StateHasChanged);
-                        await ScrollToBottom();
-                    }
-                });
-
-                hubConnection.On<int>("JoinedGroup", async (complaintId) =>
-                {
-                    // Successfully joined group
-                    uploadStatus = $"Connected to chat for complaint #{complaintId}";
-                    await InvokeAsync(StateHasChanged);
-                    await Task.Delay(2000);
-                    uploadStatus = null;
-                    await InvokeAsync(StateHasChanged);
-                });
-
-                try
-                {
-                    await hubConnection.StartAsync();
-                    uploadStatus = "Connecting to chat...";
-                    await InvokeAsync(StateHasChanged);
-
-                    await hubConnection.SendAsync("JoinComplaintGroup", ComplaintId);
-                    await ScrollToBottom();
-                }
-                catch (Exception ex)
-                {
-                    errorMessage = $"Failed to connect to chat: {ex.Message}. Please refresh the page.";
-                    await InvokeAsync(StateHasChanged);
-                }
+                await InvokeAsync(StateHasChanged);
+                await ScrollToBottom();
             }
             catch (Exception ex)
             {
-                errorMessage = $"Failed to initialize chat: {ex.Message}";
+                errorMessage = $"Failed to load messages: {ex.Message}";
                 await InvokeAsync(StateHasChanged);
             }
+        }
+
+        // Wire up the live waveform + timer right after the recording UI has rendered.
+        if (recordingVisualsPending)
+        {
+            recordingVisualsPending = false;
+            try { await JS.InvokeVoidAsync("audioRecorder.attachVisualizer", "waveformBars", "recordingTimer"); } catch { }
+        }
+
+        // Idempotent: only binds play/pause behaviour to voice bubbles that aren't bound yet.
+        try { await JS.InvokeVoidAsync("voicePlayer.setup"); } catch { }
+    }
+
+    [JSInvokable]
+    public async Task SubmitMessageFromEnter()
+    {
+        if (!string.IsNullOrWhiteSpace(currentMessage) && !isUploading)
+        {
+            await SendTextMessage();
+        }
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey)
+        {
+            await SendTextMessage();
+        }
+    }
+
+    private void ToggleAttachmentMenu()
+    {
+        showAttachmentMenu = !showAttachmentMenu;
+    }
+
+    private async void HandleNewMessage(int complaintId, MessageDto message)
+    {
+        if (complaintId == ComplaintId && message.SenderId != userId)
+        {
+            await InvokeAsync(async () =>
+            {
+                messages.Add(message);
+                StateHasChanged();
+                await ScrollToBottom();
+            });
         }
     }
 
     private async Task SendTextMessage()
     {
-        if (string.IsNullOrWhiteSpace(currentMessage))
-            return;
+        if (string.IsNullOrWhiteSpace(currentMessage)) return;
 
         var messageToSend = currentMessage;
-        currentMessage = string.Empty; // Clear immediately for better UX
+        currentMessage = string.Empty;
+        showAttachmentMenu = false;
 
         try
         {
-            // Use MessageService directly instead of SignalR to bypass authentication issues
             var messageDto = await MessageService.SendMessageAsync(ComplaintId, userId!, messageToSend, null);
-
-            // Add the new message to the local list
             messages.Add(messageDto);
+            BufferService.BroadcastToClients(ComplaintId, messageDto);
+
             errorMessage = null;
             await InvokeAsync(StateHasChanged);
             await ScrollToBottom();
@@ -259,25 +315,21 @@
         catch (Exception ex)
         {
             errorMessage = $"Failed to send message: {ex.Message}";
-            currentMessage = messageToSend; // Restore message if failed
+            currentMessage = messageToSend;
             await InvokeAsync(StateHasChanged);
         }
     }
 
     private async Task OnPhotoSelected(InputFileChangeEventArgs e)
     {
-        if (e.FileCount > 0)
-        {
-            await UploadFile(e.File, "Photo");
-        }
+        showAttachmentMenu = false;
+        if (e.FileCount > 0) await UploadFile(e.File, "Photo");
     }
 
     private async Task OnVideoSelected(InputFileChangeEventArgs e)
     {
-        if (e.FileCount > 0)
-        {
-            await UploadFile(e.File, "Video");
-        }
+        showAttachmentMenu = false;
+        if (e.FileCount > 0) await UploadFile(e.File, "Video");
     }
 
     private async Task UploadFile(IBrowserFile file, string fileType)
@@ -289,20 +341,19 @@
 
         try
         {
-            // Parse file type enum
             if (!Enum.TryParse<FileType>(fileType, true, out var parsedFileType))
             {
                 errorMessage = $"Invalid file type: {fileType}";
                 return;
             }
 
-            // Use service directly instead of HTTP API to preserve authentication context
-            using var fileStream = file.OpenReadStream(maxAllowedSize: 52428800); // 50MB limit
+            using var fileStream = file.OpenReadStream(maxAllowedSize: 52428800);
             var messageDto = await AttachmentService.CreateMessageWithAttachmentAsync(
                 ComplaintId, userId!, fileStream, file.Name, file.ContentType, parsedFileType, null);
 
-            // Add the new message to the local list and notify via SignalR
             messages.Add(messageDto);
+            BufferService.BroadcastToClients(ComplaintId, messageDto);
+
             uploadStatus = null;
             errorMessage = null;
             await InvokeAsync(StateHasChanged);
@@ -321,24 +372,14 @@
         }
     }
 
-    private async Task ToggleRecording()
-    {
-        if (isRecording)
-        {
-            await StopRecording();
-        }
-        else
-        {
-            await StartRecording();
-        }
-    }
-
     private async Task StartRecording()
     {
         try
         {
-            await JS.InvokeVoidAsync("audioRecorder.start");
+            showAttachmentMenu = false;
+            await JS.InvokeVoidAsync("audioRecorder.startCapture");
             isRecording = true;
+            recordingVisualsPending = true;
             errorMessage = null;
         }
         catch (Exception ex)
@@ -347,25 +388,36 @@
         }
     }
 
-    private async Task StopRecording()
+    private async Task CancelRecording()
+    {
+        try
+        {
+            isRecording = false;
+            await JS.InvokeVoidAsync("audioRecorder.cancel");
+            errorMessage = null;
+        }
+        catch { }
+    }
+
+    private async Task StopAndSendRecording()
     {
         try
         {
             isRecording = false;
             isUploading = true;
-            uploadStatus = "Processing voice note...";
+            uploadStatus = "Sending voice note...";
             StateHasChanged();
 
             var audioData = await JS.InvokeAsync<byte[]>("audioRecorder.stop");
 
-            // Use service directly instead of HTTP API to preserve authentication context
             using var memoryStream = new MemoryStream(audioData);
             var fileName = $"voice-{DateTime.UtcNow.Ticks}.webm";
             var messageDto = await AttachmentService.CreateMessageWithAttachmentAsync(
                 ComplaintId, userId!, memoryStream, fileName, "audio/webm", FileType.VoiceNote, null);
 
-            // Add the new message to the local list
             messages.Add(messageDto);
+            BufferService.BroadcastToClients(ComplaintId, messageDto);
+
             uploadStatus = null;
             errorMessage = null;
             await InvokeAsync(StateHasChanged);
@@ -386,18 +438,13 @@
 
     private async Task ScrollToBottom()
     {
-        try
-        {
-            await JS.InvokeVoidAsync("scrollToBottom", "messagesArea");
-        }
-        catch { }
+        try { await JS.InvokeVoidAsync("scrollToBottom", "messagesArea"); } catch { }
     }
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
-        if (hubConnection != null)
-        {
-            await hubConnection.DisposeAsync();
-        }
+        BufferService.OnMessageBroadcast -= HandleNewMessage;
+        objectRef?.Dispose();
+        return ValueTask.CompletedTask;
     }
 }
