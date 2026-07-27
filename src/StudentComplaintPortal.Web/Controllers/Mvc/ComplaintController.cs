@@ -37,7 +37,7 @@ public class ComplaintController : Controller
             }
 
             // Students can only view their own complaints
-            if (role == "Student" && complaint.StudentId != userId)
+            if (User.IsInRole("Student") && complaint.StudentId != userId)
             {
                 return Forbid();
             }
@@ -52,8 +52,8 @@ public class ComplaintController : Controller
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
     [ValidateAntiForgeryToken]
+    [Authorize(Policy = "Permission:Complaints.ChangeStatus")]
     public async Task<IActionResult> UpdateStatus(int id, ComplaintStatus newStatus)
     {
         try

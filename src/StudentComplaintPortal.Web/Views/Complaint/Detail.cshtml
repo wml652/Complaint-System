@@ -31,7 +31,7 @@
             <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
         }
 
-        @if (User.IsInRole("Admin"))
+        @if (User.IsInRole("Admin") || User.HasClaim("Permission", "Complaints.ChangeStatus"))
         {
             <hr />
             <div class="d-flex align-items-center">

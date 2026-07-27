@@ -30,12 +30,12 @@ public class DashboardController : Controller
             return Forbid();
         }
 
-        if (role == "Student")
+        if (User.IsInRole("Student"))
         {
             var complaints = await _complaintService.GetByStudentAsync(userId);
             return View("StudentIndex", complaints);
         }
-        else if (role == "Admin")
+        else if (User.IsInRole("Admin"))
         {
             var complaints = (await _complaintService.GetAllAsync()).ToList();
 
@@ -53,8 +53,24 @@ public class DashboardController : Controller
 
             return View("AdminIndex", viewModel);
         }
-        else if (role == "Staff")
+        else if (User.IsInRole("Staff"))
         {
+            //if staff explicitly has the permission "view all" then give admin view 
+            if (User.HasClaim("Permission", "Complaints.ViewAll"))
+            {
+                var allComplaints = (await _complaintService.GetAllAsync()).ToList();
+                var adminStyleViewModel = new AdminDashboardViewModel
+                {
+                    Complaints = allComplaints,
+                    TotalCount = allComplaints.Count,
+                    PendingCount = allComplaints.Count(c => c.Status == "Open"),
+                    InProgressCount = allComplaints.Count(c => c.Status == "InProgress"),
+                    ResolvedCount = allComplaints.Count(c => c.Status == "Resolved"),
+                    SelectedStatus = status
+                };
+                return View("AdminIndex", adminStyleViewModel);
+            }
+
             var categories = (await _categoryService.GetCategoriesForStaffAsync(userId)).ToList();
             var allAssigned = (await _complaintService.GetAssignedComplaintsAsync(userId)).ToList();
 
