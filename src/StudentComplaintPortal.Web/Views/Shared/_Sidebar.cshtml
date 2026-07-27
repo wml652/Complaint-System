@@ -6,27 +6,32 @@
         @if (User.IsInRole("Admin"))
         {
             <div class="sidebar-item sidebar-parent dropdown">
-    <a class="sidebar-item-label" asp-controller="Dashboard" asp-action="Index" asp-route-status="All">Dashboard</a>
-    <button class="sidebar-caret-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Show Dashboard submenu">
-        <span class="caret">&#9662;</span>
-    </button>
-    <ul class="dropdown-menu sidebar-dropdown-menu">
-        <li class="dropdown-item">
-            <a class="dropdown-item dropdown-submenu-toggle" asp-controller="Dashboard" asp-action="Index" asp-route-status="All">
-                All Complaints <span class="submenu-caret">&#9656;</span>
-            </a>
-            <ul class="dropdown-menu sidebar-dropdown-menu submenu">
-                <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Index" asp-route-status="Open">Pending</a></li>
-                <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Index" asp-route-status="InProgress">In Progress</a></li>
-                <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Index" asp-route-status="Resolved">Resolved</a></li>
-                <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Index" asp-route-status="Closed">Closed</a></li>
-            </ul>
-        </li>
-        <li><a class="dropdown-item @(ViewContext.RouteData.Values["action"]?.ToString() == "MyAssignedComplaints" ? "active" : "")" asp-controller="Dashboard" asp-action="MyAssignedComplaints">My Assigned Complaints</a></li>
-        <li><a class="dropdown-item @(ViewContext.RouteData.Values["action"]?.ToString() == "CategoryManagement" ? "active" : "")" asp-controller="Dashboard" asp-action="CategoryManagement">Category Management</a></li>
-    </ul>
-</div>
+                <a class="sidebar-item-label" asp-controller="Dashboard" asp-action="Index" asp-route-status="All">Dashboard</a>
+                <button class="sidebar-caret-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Show Dashboard submenu">
+                    <span class="caret">&#9662;</span>
+                </button>
+                <ul class="dropdown-menu sidebar-dropdown-menu">
+                    <li class="dropdown-item dropdown-submenu">
+                        <a class="dropdown-item dropdown-submenu-toggle" asp-controller="Dashboard" asp-action="Index" asp-route-status="All">
+                            All Complaints <span class="submenu-caret">&#9656;</span>
+                        </a>
+                        <ul class="dropdown-menu sidebar-dropdown-menu submenu">
+                            <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Index" asp-route-status="Open">Pending</a></li>
+                            <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Index" asp-route-status="InProgress">In Progress</a></li>
+                            <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Index" asp-route-status="Resolved">Resolved</a></li>
+                            <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Index" asp-route-status="Closed">Closed</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <a class="sidebar-item @(ViewContext.RouteData.Values["action"]?.ToString() == "MyAssignedComplaints" ? "active" : "")" asp-controller="Dashboard" asp-action="MyAssignedComplaints">My Assigned Complaints</a>
+            <a class="sidebar-item @(ViewContext.RouteData.Values["action"]?.ToString() == "CategoryManagement" ? "active" : "")" asp-controller="Dashboard" asp-action="CategoryManagement">Category Management</a>
             @* TODO: Reports and Staff Accounts screens are not built yet (separate wireframe screens, not scoped to this pass) *@
+        }
+        else if (User.IsInRole("Staff"))
+        {
+            <a class="sidebar-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+            <a class="sidebar-item @(ViewContext.RouteData.Values["action"]?.ToString() == "MyAssignedComplaints" ? "active" : "")" asp-controller="Dashboard" asp-action="MyAssignedComplaints">My Assigned Complaints</a>
         }
         else if (User.IsInRole("Student"))
         {

@@ -11,14 +11,16 @@ namespace StudentComplaintPortal.Web.Controllers.Mvc;
 public class DashboardController : Controller
 {
     private readonly IComplaintService _complaintService;
+    private readonly ICategoryService _categoryService;
 
-    public DashboardController(IComplaintService complaintService)
+    public DashboardController(IComplaintService complaintService, ICategoryService categoryService)
     {
         _complaintService = complaintService;
+        _categoryService = categoryService;
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(string status = "All")
+    public async Task<IActionResult> Index(string status = "All", int? categoryId = null)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var role = User.FindFirst(ClaimTypes.Role)?.Value;
@@ -50,6 +52,52 @@ public class DashboardController : Controller
             };
 
             return View("AdminIndex", viewModel);
+        }
+        else if (role == "Staff")
+        {
+            var categories = (await _categoryService.GetCategoriesForStaffAsync(userId)).ToList();
+            var allAssigned = (await _complaintService.GetAssignedComplaintsAsync(userId)).ToList();
+
+            int? selectedCategoryId = null;
+            string selectedCategoryName = "My";
+            List<ComplaintDto> scopedComplaints = new();
+
+            if (categories.Count > 0)
+            {
+                // Step 1: session mein pehle se koi selection saved hai?
+                int? rememberedCategoryId = HttpContext.Session.GetInt32("StaffCategoryId");
+
+                // Step 2: agar dropdown se abhi nayi category select hui hai, wo priority lega
+                if (categoryId != null)
+                {
+                    rememberedCategoryId = categoryId;
+                }
+
+                // Step 3: wo category dhoondo, na mile to pehli le lo
+                var selectedCategory = categories.FirstOrDefault(c => c.Id == rememberedCategoryId) ?? categories[0];
+
+                // Step 4: save kar do taake agle page pe bhi yaad rahe
+                HttpContext.Session.SetInt32("StaffCategoryId", selectedCategory.Id);
+
+                selectedCategoryId = selectedCategory.Id;
+                selectedCategoryName = selectedCategory.Name;
+                scopedComplaints = allAssigned.Where(c => c.Category == selectedCategoryName).ToList();
+            }
+
+            var viewModel = new StaffDashboardViewModel
+            {
+                Complaints = scopedComplaints,
+                TotalCount = scopedComplaints.Count,
+                PendingCount = scopedComplaints.Count(c => c.Status == "Open"),
+                InProgressCount = scopedComplaints.Count(c => c.Status == "InProgress"),
+                ResolvedCount = scopedComplaints.Count(c => c.Status == "Resolved"),
+                SelectedStatus = status,
+                AssignedCategories = categories,
+                SelectedCategoryId = selectedCategoryId,
+                SelectedCategoryName = selectedCategoryName
+            };
+
+            return View("StaffIndex", viewModel);
         }
 
         return Forbid();
@@ -90,7 +138,7 @@ public class DashboardController : Controller
     }
 
     [HttpGet]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Staff")]
     public async Task<IActionResult> MyAssignedComplaints()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);

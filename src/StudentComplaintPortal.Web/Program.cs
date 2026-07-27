@@ -114,6 +114,10 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddDistributedMemoryCache();
+
+builder.Services.AddSession();
+
 builder.Services.AddSingleton<StudentComplaintPortal.Application.Services.MessageBufferService>();
 
 builder.Services.AddHostedService<StudentComplaintPortal.Web.Services.MessageFlushWorker>();
@@ -220,7 +224,10 @@ app.UseStaticFiles();
 
 app.UseWebSockets();
 
+app.UseSession();
+
 app.UseAuthentication();
+
 app.UseAuthorization();
 
 // Map API controllers
