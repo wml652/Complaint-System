@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -122,6 +123,10 @@ builder.Services.AddSingleton<StudentComplaintPortal.Application.Services.Messag
 
 builder.Services.AddHostedService<StudentComplaintPortal.Web.Services.MessageFlushWorker>();
 
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, StudentComplaintPortal.Web.Security.PermissionPolicyProvider>();
+builder.Services.AddScoped<IAuthorizationHandler, StudentComplaintPortal.Web.Security.PermissionAuthorizationHandler>();
+builder.Services.AddScoped<IRoleManagementService, StudentComplaintPortal.Application.Services.RoleManagementService>();
+
 // Phase 2: Add SignalR
 builder.Services.AddSignalR();
 
@@ -199,6 +204,9 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
+        await StudentComplaintPortal.Data.Seeding.PermissionSeeder.SeedAsync(
+            services.GetRequiredService<AppDbContext>());
+
         await StudentComplaintPortal.Data.Seeding.DbSeeder.SeedDataAsync(services);
     }
     catch (Exception ex)
@@ -207,7 +215,6 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "An error occurred while seeding the database.");
     }
 }
-
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {

@@ -26,7 +26,7 @@
             </div>
             <a class="sidebar-item @(ViewContext.RouteData.Values["action"]?.ToString() == "MyAssignedComplaints" ? "active" : "")" asp-controller="Dashboard" asp-action="MyAssignedComplaints">My Assigned Complaints</a>
             <a class="sidebar-item @(ViewContext.RouteData.Values["action"]?.ToString() == "CategoryManagement" ? "active" : "")" asp-controller="Dashboard" asp-action="CategoryManagement">Category Management</a>
-            @* TODO: Reports and Staff Accounts screens are not built yet (separate wireframe screens, not scoped to this pass) *@
+            <a class="sidebar-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" && ViewContext.RouteData.Values["controller"]?.ToString() == "RoleManagement" ? "active" : "")" asp-controller="RoleManagement" asp-action="Index">Assign Roles</a>
         }
         else if (User.IsInRole("Staff"))
         {
