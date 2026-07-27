@@ -60,7 +60,7 @@ public class CategoriesController : ControllerBase
     public async Task<IActionResult> GetStaffUsers()
     {
         var staffUsers = await _context.Users
-            .Where(u => u.Role == UserRole.Admin)
+            .Where(u => u.Role == UserRole.Staff)
             .Select(u => new { u.Id, u.FullName, u.Email })
             .ToListAsync();
 

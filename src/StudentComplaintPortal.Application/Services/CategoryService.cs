@@ -95,4 +95,15 @@ public class CategoryService : ICategoryService
             AssigneeIds = category.Assignees.Select(a => a.AppUserId).ToList()
         };
     }
+
+    public async Task<IEnumerable<CategoryDto>> GetCategoriesForStaffAsync(string staffUserId)
+    {
+        var categories = await _context.Categories
+            .Where(c => c.Assignees.Any(a => a.AppUserId == staffUserId))
+            .Include(c => c.AttachmentRules)
+            .Include(c => c.Assignees)
+            .ToListAsync();
+
+        return categories.Select(MapToDto);
+    }
 }
