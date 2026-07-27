@@ -83,9 +83,8 @@ public class ComplaintService : IComplaintService
 
     public async Task<IEnumerable<ComplaintDto>> GetAssignedComplaintsAsync(string staffUserId)
     {
-        // Query complaints where the category has an assignee matching the staffUserId
-        var complaints = await _unitOfWork.Complaints.FindAsync(c =>
-            c.Category.Assignees.Any(a => a.AppUserId == staffUserId));
+        // Uses the dedicated repository method so Student/Category are eager-loaded correctly
+        var complaints = await _unitOfWork.Complaints.GetAssignedToStaffAsync(staffUserId);
         return complaints.Select(MapToDto);
     }
 
