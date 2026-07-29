@@ -31,7 +31,6 @@ public class ChatWorkspaceController : Controller
 
     // Students tab ke liye — complaint-based chats
     [HttpGet]
-    [HttpGet]
     public async Task<IActionResult> GetStudentChats()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -66,6 +65,7 @@ public class ChatWorkspaceController : Controller
                 studentId = complaint.StudentId,
                 isSupportTeamView = User.IsInRole("Student"),   // naya flag
                 title = complaint.Title,
+                status = complaint.Status,
                 lastMessagePreview = lastMessage?.Content,
                 lastMessageAt = lastMessage?.SentAt,
                 unreadCount

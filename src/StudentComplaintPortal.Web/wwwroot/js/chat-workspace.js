@@ -71,31 +71,34 @@
     }
 
     function renderStudentList(chats) {
-        const container = document.getElementById('listStudents');
-        container.innerHTML = '';
+    const container = document.getElementById('listStudents');
+    container.innerHTML = '';
 
-        chats.forEach(chat => {
-            const item = document.createElement('div');
-            item.className = 'chat-list-item';
-            item.dataset.userId = chat.studentId;
-            item.onclick = () => openComplaintChat(chat.complaintId, chat.studentName, chat.studentId);
+    chats.forEach(chat => {
+        const item = document.createElement('div');
+        item.className = 'chat-list-item';
+        item.dataset.userId = chat.studentId;
+        item.onclick = () => openComplaintChat(chat.complaintId, chat.studentName, chat.studentId, chat.title);
 
-            item.innerHTML = `
-            <div class="chat-avatar-small">
-                ${chat.isSupportTeamView ? '' : '<span class="online-dot"></span>'}
+        item.innerHTML = `
+        <div class="chat-avatar-small">
+            ${chat.isSupportTeamView ? '' : '<span class="online-dot"></span>'}
+        </div>
+        <div style="flex:1; min-width:0;">
+            <div class="chat-list-row-top">
+                <span class="chat-list-name">${escapeHtml(chat.title)}</span>
+                <span class="chat-list-time">${formatTime(chat.lastMessageAt)}</span>
             </div>
-            <div style="flex:1; min-width:0;">
-                <div class="chat-list-row-top">
-                    <span class="chat-list-name">${escapeHtml(chat.studentName)}</span>
-                    <span class="chat-list-time">${formatTime(chat.lastMessageAt)}</span>
-                </div>
-                <div class="chat-list-preview">${escapeHtml(chat.lastMessagePreview || chat.title)}</div>
+            <div class="chat-list-preview">
+                <span class="status-pill status-${chat.status}">${escapeHtml(chat.status)}</span>
+                ${escapeHtml(chat.lastMessagePreview || chat.studentName)}
             </div>
-        ${chat.unreadCount > 0 ? `<div class="unread-badge">${chat.unreadCount}</div>` : ''}
-    `;
-            container.appendChild(item);
-        });
-    }
+        </div>
+    ${chat.unreadCount > 0 ? `<div class="unread-badge">${chat.unreadCount}</div>` : ''}
+`;
+        container.appendChild(item);
+    });
+}
 
     function renderTeamList(chats) {
         const container = document.getElementById('listStaff');
@@ -126,7 +129,7 @@
         });
     }
 
-    function openComplaintChat(complaintId, studentName, studentId) {
+    function openComplaintChat(complaintId, studentName, studentId, complaintTitle) {
         currentChatType = 'complaint';
         currentChatId = complaintId;
         currentOtherUserId = studentId;

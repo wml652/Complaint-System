@@ -223,3 +223,32 @@
     color: #adb5bd;
     margin-bottom: 2px;
 }
+.status-pill {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 8px;
+    margin-right: 6px;
+    text-transform: uppercase;
+}
+
+.status-Open {
+    background: #d1e7dd;
+    color: #0f5132;
+}
+
+.status-InProgress {
+    background: #fff3cd;
+    color: #664d03;
+}
+
+.status-Resolved {
+    background: #cff4fc;
+    color: #055160;
+}
+
+.status-Closed {
+    background: #e2e3e5;
+    color: #41464b;
+}
