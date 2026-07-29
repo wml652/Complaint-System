@@ -10,10 +10,13 @@ namespace StudentComplaintPortal.Web.Controllers.Mvc;
 public class ComplaintController : Controller
 {
     private readonly IComplaintService _complaintService;
+    private readonly IMessageService _messageService;
 
-    public ComplaintController(IComplaintService complaintService)
+    public ComplaintController(IComplaintService complaintService, IMessageService messageService)
     {
         _complaintService = complaintService;
+        _messageService = messageService;
+
     }
 
     [HttpGet]
@@ -67,5 +70,11 @@ public class ComplaintController : Controller
         }
 
         return RedirectToAction("Detail", new { id });
+    }
+    [HttpGet]
+    public async Task<IActionResult> GetMessages(int complaintId)
+    {
+        var messages = await _messageService.GetConversationAsync(complaintId);
+        return Json(messages);
     }
 }

@@ -9,5 +9,6 @@ public class MessageDto
     public string? Content { get; set; }
     public DateTime SentAt { get; set; }
     public bool IsRead { get; set; }
+    public DateTime? ReadAt { get; set; }
     public List<AttachmentDto> Attachments { get; set; } = new List<AttachmentDto>();
 }

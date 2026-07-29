@@ -1,0 +1,53 @@
+﻿@{
+    ViewData["Title"] = "Messages";
+    bool isStaffOrAdmin = User.IsInRole("Admin") || User.IsInRole("Staff");
+}
+
+<div class="chat-workspace">
+    <div class="chat-list-column" id="chatListColumn">
+        @if (isStaffOrAdmin)
+        {
+            <div class="chat-tabs">
+                <div class="chat-tab active" id="tabStudents" onclick="ChatWorkspace.showTab('students')" title="Students">
+                    <i class="bi bi-mortarboard"></i>
+                </div>
+                <div class="chat-tab" id="tabStaff" onclick="ChatWorkspace.showTab('staff')" title="Team">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+            </div>
+        }
+
+        <div class="chat-list" id="listStudents"></div>
+
+        @if (isStaffOrAdmin)
+        {
+            <div class="chat-list" id="listStaff" style="display:none;"></div>
+        }
+    </div>
+
+    <div class="chat-main-column">
+        <div class="chat-header" id="chatHeader" style="display:none;">
+            <div class="chat-avatar" id="chatAvatar"></div>
+            <div class="chat-header-info">
+                <div class="chat-header-name" id="chatName"></div>
+                <div class="chat-header-status" id="chatStatus"></div>
+            </div>
+            <i class="bi bi-info-circle chat-info-toggle" id="infoToggle" onclick="ChatWorkspace.toggleInfo()"></i>
+        </div>
+
+        <div class="chat-body" id="chatBody"></div>
+
+        <div class="chat-input-bar" id="chatInputBar" style="display:none;">
+            <input type="text" id="messageInput" class="form-control" placeholder="Type a message" />
+            <button class="btn btn-primary" id="sendButton" onclick="ChatWorkspace.sendMessage()">
+                <i class="bi bi-send"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="chat-info-panel" id="infoPanel" style="display:none;"></div>
+</div>
+
+@section Scripts {
+    <script src="~/js/chat-workspace.js"></script>
+}
