@@ -129,23 +129,29 @@
         });
     }
 
-    function openComplaintChat(complaintId, studentName, studentId, complaintTitle) {
-        currentChatType = 'complaint';
-        currentChatId = complaintId;
-        currentOtherUserId = studentId;
+   function openComplaintChat(complaintId, studentName, studentId, complaintTitle) {
+    currentChatType = 'complaint';
+    currentChatId = complaintId;
+    currentOtherUserId = studentId;
 
-        setHeader(studentName, studentId);
-        showChatUi();
+    setHeader(studentName, studentId);
+    showChatUi();
+    setInfoPanelLoading();
 
-        connection.invoke("JoinComplaintGroup", complaintId).catch(err => console.error(err));
+    connection.invoke("JoinComplaintGroup", complaintId).catch(err => console.error(err));
 
-        fetch(`/Complaint/GetMessages?complaintId=${complaintId}`)
-            .then(res => res.json())
-            .then(messages => {
-                renderMessages(messages, false);
-                connection.invoke("MarkAsRead", complaintId).catch(err => console.error(err));
-            });
-    }
+    fetch(`/Complaint/GetMessages?complaintId=${complaintId}`)
+        .then(res => res.json())
+        .then(messages => {
+            renderMessages(messages, false);
+            connection.invoke("MarkAsRead", complaintId).catch(err => console.error(err));
+        });
+
+    fetch(`/ChatWorkspace/GetComplaintDetails?complaintId=${complaintId}`)
+        .then(res => res.json())
+        .then(details => renderInfoPanel(details))
+        .catch(err => console.error("Failed to load complaint details:", err));
+}
 
     function openInternalChat(conversationId, name, otherUserId, isGroup) {
         currentChatType = 'internal';
@@ -296,6 +302,57 @@
         }
     }
 
+
+function setInfoPanelLoading() {
+    document.getElementById('infoPanel').innerHTML = `<div class="chat-info-panel-field">Loading...</div>`;
+}
+
+function renderInfoPanel(details) {
+    document.getElementById('infoPanel').innerHTML = `
+        <div style="font-weight:500; margin-bottom:12px;">Complaint details</div>
+        <div class="chat-info-panel-field">
+            <div class="chat-info-panel-label">Title</div>
+            <div>${escapeHtml(details.title)}</div>
+        </div>
+        <div class="chat-info-panel-field">
+            <div class="chat-info-panel-label">Description</div>
+            <div style="color:#6c757d;">${escapeHtml(details.description || 'No description provided')}</div>
+        </div>
+        <div class="chat-info-panel-field">
+            <div class="chat-info-panel-label">Status</div>
+            <select id="statusSelect" class="form-select form-select-sm">
+                <option value="Open" ${details.status === 'Open' ? 'selected' : ''}>Open</option>
+                <option value="InProgress" ${details.status === 'InProgress' ? 'selected' : ''}>In Progress</option>
+                <option value="Resolved" ${details.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+                <option value="Closed" ${details.status === 'Closed' ? 'selected' : ''}>Closed</option>
+            </select>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="ChatWorkspace.updateStatus()">Update Status</button>
+    `;
+}
+
+function updateStatus() {
+    const select = document.getElementById('statusSelect');
+    const newStatus = select.value;
+    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+    fetch('/Complaint/UpdateStatus', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: `id=${currentChatId}&newStatus=${newStatus}&__RequestVerificationToken=${encodeURIComponent(token)}`
+    })
+        .then(res => {
+            if (res.ok) {
+                loadStudentChats();
+            } else {
+                console.error('Failed to update status, HTTP status:', res.status);
+            }
+        })
+        .catch(err => console.error(err));
+}
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
@@ -304,5 +361,5 @@
 
     document.addEventListener('DOMContentLoaded', init);
 
-    return { showTab, sendMessage, toggleInfo };
+    return { showTab, sendMessage, toggleInfo, updateStatus };
 })();

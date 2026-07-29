@@ -85,4 +85,18 @@ public class ChatWorkspaceController : Controller
         var conversations = await _conversationService.GetConversationsForUserAsync(userId);
         return Json(conversations);
     }
+    //4th panel i.e info
+    [HttpGet]
+    public async Task<IActionResult> GetComplaintDetails(int complaintId)
+    {
+        var complaint = await _complaintService.GetByIdAsync(complaintId);
+        if (complaint == null) return NotFound();
+
+        return Json(new
+        {
+            title = complaint.Title,
+            status = complaint.Status,
+            description = complaint.Description
+        });
+    }
 }

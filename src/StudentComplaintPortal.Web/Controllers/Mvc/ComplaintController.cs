@@ -62,10 +62,20 @@ public class ComplaintController : Controller
         try
         {
             await _complaintService.UpdateStatusAsync(id, newStatus);
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Ok(new { success = true });
+            }
+
             TempData["SuccessMessage"] = "Complaint status updated successfully.";
         }
         catch (Exception ex)
         {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return BadRequest(new { success = false, error = ex.Message });
+            }
             TempData["ErrorMessage"] = $"Failed to update status: {ex.Message}";
         }
 

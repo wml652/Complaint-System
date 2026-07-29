@@ -2,6 +2,7 @@
     ViewData["Title"] = "Messages";
     bool isStaffOrAdmin = User.IsInRole("Admin") || User.IsInRole("Staff");
 }
+@Html.AntiForgeryToken()
 
 <div class="chat-workspace">
     <div class="chat-list-column" id="chatListColumn">
