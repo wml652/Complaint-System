@@ -64,6 +64,7 @@ public class ChatWorkspaceController : Controller
                 complaintId = complaint.Id,
                 studentName = User.IsInRole("Student") ? "Support Team" : complaint.StudentName,
                 studentId = complaint.StudentId,
+                isSupportTeamView = User.IsInRole("Student"),   // naya flag
                 title = complaint.Title,
                 lastMessagePreview = lastMessage?.Content,
                 lastMessageAt = lastMessage?.SentAt,

@@ -5,10 +5,7 @@
     let currentOtherUserId = null;
 
     function init() {
-        connection = new signalR.HubConnectionBuilder()
-            .withUrl("/hubs/chat")
-            .withAutomaticReconnect()
-            .build();
+        connection = AppHub.connection;
 
         connection.on("ReceiveMessage", onComplaintMessageReceived);
         connection.on("ReceiveInternalMessage", onInternalMessageReceived);
@@ -21,7 +18,7 @@
             updatePresenceUi(userId, false, lastSeenAt);
         });
 
-        connection.start()
+        AppHub.ensureStarted()
             .then(async () => {
                 const onlineIds = await connection.invoke("GetOnlineUserIds");
                 onlineIds.forEach(id => updatePresenceUi(id, true));
@@ -84,18 +81,18 @@
             item.onclick = () => openComplaintChat(chat.complaintId, chat.studentName, chat.studentId);
 
             item.innerHTML = `
-                <div class="chat-avatar-small">
-                    <span class="online-dot"></span>
+            <div class="chat-avatar-small">
+                ${chat.isSupportTeamView ? '' : '<span class="online-dot"></span>'}
+            </div>
+            <div style="flex:1; min-width:0;">
+                <div class="chat-list-row-top">
+                    <span class="chat-list-name">${escapeHtml(chat.studentName)}</span>
+                    <span class="chat-list-time">${formatTime(chat.lastMessageAt)}</span>
                 </div>
-                <div style="flex:1; min-width:0;">
-                    <div class="chat-list-row-top">
-                        <span class="chat-list-name">${escapeHtml(chat.studentName)}</span>
-                        <span class="chat-list-time">${formatTime(chat.lastMessageAt)}</span>
-                    </div>
-                    <div class="chat-list-preview">${escapeHtml(chat.lastMessagePreview || chat.title)}</div>
-                </div>
-                ${chat.unreadCount > 0 ? `<div class="unread-badge">${chat.unreadCount}</div>` : ''}
-            `;
+                <div class="chat-list-preview">${escapeHtml(chat.lastMessagePreview || chat.title)}</div>
+            </div>
+        ${chat.unreadCount > 0 ? `<div class="unread-badge">${chat.unreadCount}</div>` : ''}
+    `;
             container.appendChild(item);
         });
     }
@@ -169,7 +166,14 @@
         document.getElementById('chatHeader').style.display = 'flex';
         document.getElementById('chatInputBar').style.display = 'flex';
         document.getElementById('chatName').textContent = name;
-        document.getElementById('chatStatus').textContent = isGroup ? '' : 'offline';
+
+        if (isGroup) {
+            document.getElementById('chatStatus').textContent = '';
+        } else if (name === 'Support Team') {
+            document.getElementById('chatStatus').textContent = '';
+        } else {
+            document.getElementById('chatStatus').textContent = 'offline'; // updatePresenceUi jald hi isay update kar dega agar online ho
+        }
     }
 
     function showChatUi() {
@@ -269,8 +273,24 @@
 
     function formatTime(dateStr) {
         if (!dateStr) return '';
-        const d = new Date(dateStr);
-        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const date = new Date(dateStr);
+        const now = new Date();
+
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const startOfDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const diffDays = Math.round((startOfToday - startOfDate) / (1000 * 60 * 60 * 24));
+
+        const timeStr = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+
+        if (diffDays === 0) {
+            return timeStr;
+        } else if (diffDays === 1) {
+            return 'Yesterday';
+        } else if (diffDays > 1 && diffDays < 7) {
+            return date.toLocaleDateString([], { weekday: 'long' });
+        } else {
+            return date.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
     }
 
     function escapeHtml(text) {
