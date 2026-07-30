@@ -151,29 +151,31 @@
         });
     }
 
-   function openComplaintChat(complaintId, studentName, studentId, complaintTitle) {
-    currentChatType = 'complaint';
-    currentChatId = complaintId;
-    currentOtherUserId = studentId;
+    function openComplaintChat(complaintId, studentName, studentId, complaintTitle) {
+        currentChatType = 'complaint';
+        currentChatId = complaintId;
+        currentOtherUserId = studentId;
 
-    setHeader(studentName, studentId);
-    showChatUi();
-    setInfoPanelLoading();
+        setHeader(studentName, studentId);
+        showChatUi();
+        setInfoPanelLoading();
 
-    connection.invoke("JoinComplaintGroup", complaintId).catch(err => console.error(err));
+        connection.invoke("JoinComplaintGroup", complaintId)
+            .then(() => {
+                fetch(`/Complaint/GetMessages?complaintId=${complaintId}`)
+                    .then(res => res.json())
+                    .then(messages => {
+                        renderMessages(messages, false);
+                        connection.invoke("MarkAsRead", complaintId).catch(err => console.error(err));
+                    });
+            })
+            .catch(err => console.error(err));
 
-    fetch(`/Complaint/GetMessages?complaintId=${complaintId}`)
-        .then(res => res.json())
-        .then(messages => {
-            renderMessages(messages, false);
-            connection.invoke("MarkAsRead", complaintId).catch(err => console.error(err));
-        });
-
-    fetch(`/ChatWorkspace/GetComplaintDetails?complaintId=${complaintId}`)
-        .then(res => res.json())
-        .then(details => renderInfoPanel(details))
-        .catch(err => console.error("Failed to load complaint details:", err));
-}
+        fetch(`/ChatWorkspace/GetComplaintDetails?complaintId=${complaintId}`)
+            .then(res => res.json())
+            .then(details => renderInfoPanel(details))
+            .catch(err => console.error("Failed to load complaint details:", err));
+    }
 
     function openInternalChat(conversationId, name, otherUserId, isGroup) {
         currentChatType = 'internal';
