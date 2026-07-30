@@ -26,6 +26,12 @@
             })
             .catch(err => console.error("SignalR connection error:", err));
 
+        setupMessageInputToggle();
+
+        const micBtn = document.getElementById('micButton');
+        if (micBtn) {
+            micBtn.onclick = () => startRecording();
+        }
         showTab('students');
     }
     function updatePresenceUi(userId, isOnline, lastSeenAt) {
@@ -190,27 +196,72 @@
     }
 
     function renderMessages(messages, isInternal) {
-        const currentUserId = document.body.dataset.currentUserId;
-        const body = document.getElementById('chatBody');
-        body.innerHTML = '';
+    const currentUserId = document.body.dataset.currentUserId;
+    const body = document.getElementById('chatBody');
+    body.innerHTML = '';
 
-        messages.forEach(m => {
-            const isOutgoing = m.senderId === currentUserId;
-            const bubble = document.createElement('div');
-            bubble.className = `chat-bubble ${isOutgoing ? 'outgoing' : 'incoming'}`;
-            bubble.dataset.messageId = m.id;
+    messages.forEach(m => {
+        const isOutgoing = m.senderId === currentUserId;
+        const bubble = document.createElement('div');
+        bubble.className = `chat-bubble ${isOutgoing ? 'outgoing' : 'incoming'}`;
+        bubble.dataset.messageId = m.id;
 
-            let ticksHtml = '';
-            if (isOutgoing) {
-                const seen = !!m.readAt;
-                ticksHtml = `<div class="chat-bubble-ticks ${seen ? 'seen' : ''}"><i class="bi bi-check2-all"></i> ${seen ? 'seen' : 'sent'}</div>`;
-            }
+        let attachmentsHtml = '';
+        if (m.attachments && m.attachments.length > 0) {
+            attachmentsHtml = m.attachments.map(renderAttachment).join('');
+        }
 
-            bubble.innerHTML = `${escapeHtml(m.content || '')}${ticksHtml}`;
-            body.appendChild(bubble);
-        });
+        let ticksHtml = '';
+        if (isOutgoing) {
+            const seen = !!m.readAt;
+            ticksHtml = `<div class="chat-bubble-ticks ${seen ? 'seen' : ''}"><i class="bi bi-check2-all"></i> ${seen ? 'seen' : 'sent'}</div>`;
+        }
 
-        body.scrollTop = body.scrollHeight;
+        bubble.innerHTML = `${attachmentsHtml}${escapeHtml(m.content || '')}${ticksHtml}`;
+        body.appendChild(bubble);
+    });
+
+    body.scrollTop = body.scrollHeight;
+    if (window.voicePlayer) voicePlayer.setup();
+}
+
+    function renderAttachment(attachment) {
+    if (attachment.fileType === 'Photo') {
+        return `<img src="${attachment.fileUrl}" class="attachment-media" alt="Photo" />`;
+    } else if (attachment.fileType === 'Video') {
+        return `<video controls class="attachment-media"><source src="${attachment.fileUrl}" type="video/mp4" /></video>`;
+    } else if (attachment.fileType === 'VoiceNote') {
+        return `<div class="voice-bubble">
+            <button type="button" class="voice-play-btn"><i class="bi bi-play-fill"></i></button>
+            <div class="voice-progress-track"><div class="voice-progress-fill"></div></div>
+            <span class="voice-duration">0:00</span>
+            <audio src="${attachment.fileUrl}" preload="metadata" style="display:none;"></audio>
+        </div>`;
+    }
+    return '';
+}
+
+    function toggleAttachMenu() {
+        const menu = document.getElementById('attachMenu');
+        menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
+    document.addEventListener('click', (e) => {
+    const menu = document.getElementById('attachMenu');
+    const attachBtn = document.getElementById('attachButton');
+    if (!menu || menu.style.display === 'none') return;
+
+    if (!menu.contains(e.target) && e.target !== attachBtn && !attachBtn.contains(e.target)) {
+        menu.style.display = 'none';
+    }
+});
+
+    function handleFileSelected(inputEl, fileType) {
+        const file = inputEl.files[0];
+        if (!file) return;
+
+        uploadAttachment(file, fileType);
+        inputEl.value = ''; // reset, so that same file can not be selected in future
+        document.getElementById('attachMenu').style.display = 'none';
     }
 
     function sendMessage() {
@@ -225,6 +276,42 @@
         }
 
         input.value = '';
+    }
+
+    function uploadAttachment(file, fileType) {
+    const formData = new FormData();
+    formData.append('File', file);
+    formData.append('FileType', fileType);
+
+    fetch(`/api/v1/complaints/${currentChatId}/attachments`, {
+        method: 'POST',
+        body: formData
+    })
+        .then(res => {
+            if (!res.ok) {
+                console.error('Attachment upload failed, status:', res.status);
+            }
+            // ReceiveMessage SignalR event will add msg in chat — no need to manually render
+        })
+        .catch(err => console.error('Attachment upload error:', err));
+}
+
+    function setupMessageInputToggle() {
+        const input = document.getElementById('messageInput');
+        if (!input) return;
+
+        input.addEventListener('input', () => {
+            const hasText = input.value.trim().length > 0;
+            document.getElementById('micButton').style.display = hasText ? 'none' : 'flex';
+            document.getElementById('sendButton').style.display = hasText ? 'flex' : 'none';
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
     }
 
     function onComplaintMessageReceived(message) {
@@ -244,17 +331,24 @@
     }
 
     function appendIncomingMessage(message) {
-        const currentUserId = document.body.dataset.currentUserId;
-        const isOutgoing = message.senderId === currentUserId;
-        const body = document.getElementById('chatBody');
+    const currentUserId = document.body.dataset.currentUserId;
+    const isOutgoing = message.senderId === currentUserId;
+    const body = document.getElementById('chatBody');
 
-        const bubble = document.createElement('div');
-        bubble.className = `chat-bubble ${isOutgoing ? 'outgoing' : 'incoming'}`;
-        bubble.dataset.messageId = message.id;
-        bubble.innerHTML = escapeHtml(message.content || '');
-        body.appendChild(bubble);
-        body.scrollTop = body.scrollHeight;
+    const bubble = document.createElement('div');
+    bubble.className = `chat-bubble ${isOutgoing ? 'outgoing' : 'incoming'}`;
+    bubble.dataset.messageId = message.id;
+
+    let attachmentsHtml = '';
+    if (message.attachments && message.attachments.length > 0) {
+        attachmentsHtml = message.attachments.map(renderAttachment).join('');
     }
+
+    bubble.innerHTML = `${attachmentsHtml}${escapeHtml(message.content || '')}`;
+    body.appendChild(bubble);
+    body.scrollTop = body.scrollHeight;
+    if (window.voicePlayer) voicePlayer.setup();
+}
 
     function onComplaintMessagesRead(complaintId) {
         if (currentChatType === 'complaint' && complaintId === currentChatId) {
@@ -309,26 +403,77 @@ function setInfoPanelLoading() {
 
 function renderInfoPanel(details) {
     document.getElementById('infoPanel').innerHTML = `
-        <div style="font-weight:500; margin-bottom:12px;">Complaint details</div>
+        <div class="chat-info-panel-title">Complaint details</div>
         <div class="chat-info-panel-field">
             <div class="chat-info-panel-label">Title</div>
-            <div>${escapeHtml(details.title)}</div>
+            <div class="chat-info-panel-value">${escapeHtml(details.title)}</div>
         </div>
         <div class="chat-info-panel-field">
             <div class="chat-info-panel-label">Description</div>
-            <div style="color:#6c757d;">${escapeHtml(details.description || 'No description provided')}</div>
+            <div class="chat-info-panel-value" style="color:#6c757d;">${escapeHtml(details.description || 'No description provided')}</div>
         </div>
         <div class="chat-info-panel-field">
             <div class="chat-info-panel-label">Status</div>
-            <select id="statusSelect" class="form-select form-select-sm">
-                <option value="Open" ${details.status === 'Open' ? 'selected' : ''}>Open</option>
-                <option value="InProgress" ${details.status === 'InProgress' ? 'selected' : ''}>In Progress</option>
-                <option value="Resolved" ${details.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
-                <option value="Closed" ${details.status === 'Closed' ? 'selected' : ''}>Closed</option>
-            </select>
+            <select id="statusSelect" class="form-select form-select-sm status-select">
+    <option value="Open" ${details.status === 'Open' ? 'selected' : ''}>Open</option>
+    <option value="InProgress" ${details.status === 'InProgress' ? 'selected' : ''}>In Progress</option>
+    <option value="Resolved" ${details.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+    <option value="Closed" ${details.status === 'Closed' ? 'selected' : ''}>Closed</option>
+</select>
         </div>
         <button class="btn btn-sm btn-primary" onclick="ChatWorkspace.updateStatus()">Update Status</button>
     `;
+}
+
+    function startRecording() {
+    audioRecorder.startCapture()
+        .then(() => {
+            document.getElementById('messageInput').style.display = 'none';
+            document.getElementById('attachButton').style.display = 'none';
+            document.getElementById('recordingBar').style.display = 'flex';
+
+            const micBtn = document.getElementById('micButton');
+            micBtn.onclick = () => stopAndSendRecording();
+            micBtn.innerHTML = '<i class="bi bi-send"></i>';
+
+            setTimeout(() => {
+                audioRecorder.attachVisualizer('waveformBars', 'recordingTimer');
+            }, 50);
+        })
+        .catch(err => {
+            console.error('Failed to start recording:', err);
+            alert('Microphone access denied or unavailable.');
+        });
+}
+
+function cancelRecording() {
+    audioRecorder.cancel();
+    resetRecordingUi();
+}
+
+function stopAndSendRecording() {
+    audioRecorder.stop()
+        .then(audioBytes => {
+            resetRecordingUi();
+            const blob = new Blob([audioBytes], { type: 'audio/webm' });
+            const file = new File([blob], `voice-${Date.now()}.webm`, { type: 'audio/webm' });
+            uploadAttachment(file, 'VoiceNote');
+        })
+        .catch(err => {
+            console.error('Failed to stop recording:', err);
+            resetRecordingUi();
+        });
+}
+
+function resetRecordingUi() {
+    document.getElementById('messageInput').style.display = 'block';
+    document.getElementById('attachButton').style.display = 'flex';
+    document.getElementById('recordingBar').style.display = 'none';
+
+    const micBtn = document.getElementById('micButton');
+    micBtn.style.display = 'flex';
+    micBtn.onclick = () => startRecording();
+    micBtn.innerHTML = '<i class="bi bi-mic"></i>';
 }
 
 function updateStatus() {
@@ -361,5 +506,5 @@ function updateStatus() {
 
     document.addEventListener('DOMContentLoaded', init);
 
-    return { showTab, sendMessage, toggleInfo, updateStatus };
+    return { showTab, sendMessage, toggleInfo, updateStatus, toggleAttachMenu, handleFileSelected, startRecording, cancelRecording };
 })();
