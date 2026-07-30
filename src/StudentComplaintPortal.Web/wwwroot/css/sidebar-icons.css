@@ -1,0 +1,85 @@
+﻿.app-sidebar-icon-rail {
+    width: 64px;
+    height: 100vh;
+    background: #101828;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 0;
+    position: fixed;
+    left: 0;
+    top: 0;
+}
+
+.app-sidebar-brand-icon {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 24px;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: #2f6fed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.app-sidebar-nav-icons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+}
+
+.sidebar-icon-item {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #93a3b8;
+    font-size: 20px;
+    text-decoration: none;
+    border: none;
+    background: transparent;
+    position: relative;
+}
+
+    .sidebar-icon-item:hover {
+        background: rgba(255,255,255,0.08);
+        color: #ffffff;
+    }
+
+    .sidebar-icon-item.active {
+        background: #2f6fed;
+        color: #ffffff;
+    }
+
+.app-sidebar-icon-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.icon-notification-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 9px;
+}
+
+.logout-icon-btn {
+    cursor: pointer;
+}
+.app-shell {
+    display: flex;
+}
+
+.app-content {
+    flex: 1;
+    margin-left: 64px;
+    min-height: 100vh;
+    padding: 20px;
+}

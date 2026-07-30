@@ -65,8 +65,24 @@
     function loadStudentChats() {
         fetch('/ChatWorkspace/GetStudentChats')
             .then(res => res.json())
-            .then(chats => renderStudentList(chats))
+            .then(chats => {
+                renderStudentList(chats);
+                maybeOpenPreselectedComplaint(chats);
+            })
             .catch(err => console.error("Failed to load student chats:", err));
+    }
+
+    function maybeOpenPreselectedComplaint(chats) {
+        const wrapper = document.querySelector('.chat-workspace');
+        const preselectId = wrapper?.dataset.preselectComplaintId;
+        if (!preselectId || preselectId === '') return;
+
+        const match = chats.find(c => c.complaintId == preselectId);
+        if (match) {
+            openComplaintChat(match.complaintId, match.studentName, match.studentId, match.title);
+        }
+
+        wrapper.dataset.preselectComplaintId = '';
     }
 
     function loadTeamChats() {

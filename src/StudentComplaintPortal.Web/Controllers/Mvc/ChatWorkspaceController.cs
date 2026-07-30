@@ -23,9 +23,11 @@ public class ChatWorkspaceController : Controller
         _conversationService = conversationService;
     }
 
+   
     [HttpGet]
-    public IActionResult Index()
+    public IActionResult Index(int? complaintId = null)
     {
+        ViewBag.PreselectedComplaintId = complaintId;
         return View();
     }
 

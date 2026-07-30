@@ -1,54 +1,47 @@
-﻿@* Sidebar navigation, split out of _Layout.cshtml so the layout skeleton
-   stays clean and the nav items can be edited on their own. *@
-<aside class="app-sidebar">
-    <div class="app-sidebar-brand">Complaint Portal</div>
-    <nav class="app-sidebar-nav">
+﻿@* Sidebar navigation — thin icon rail, per-role visibility *@
+<aside class="app-sidebar-icon-rail">
+    <div class="app-sidebar-brand-icon" title="Complaint Portal">CP</div>
+    <nav class="app-sidebar-nav-icons">
+        <a class="sidebar-icon-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")"
+           asp-controller="Dashboard" asp-action="Index" title="Dashboard">
+            <i class="bi bi-layout-text-window-reverse"></i>
+        </a>
+
+        <a class="sidebar-icon-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "ChatWorkspace" ? "active" : "")"
+           asp-controller="ChatWorkspace" asp-action="Index" title="Complaints">
+            <i class="bi bi-chat-dots"></i>
+        </a>
+
+        @if (User.IsInRole("Student"))
+        {
+            <a class="sidebar-icon-item @(ViewContext.RouteData.Values["action"]?.ToString() == "NewComplaint" ? "active" : "")"
+               asp-controller="Dashboard" asp-action="NewComplaint" title="New Complaint">
+                <i class="bi bi-plus-circle"></i>
+            </a>
+        }
+
         @if (User.IsInRole("Admin"))
         {
-            <div class="sidebar-item sidebar-parent dropdown">
-                <a class="sidebar-item-label" asp-controller="Dashboard" asp-action="Index" asp-route-status="All">Dashboard</a>
-                <button class="sidebar-caret-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Show Dashboard submenu">
-                    <span class="caret">&#9662;</span>
-                </button>
-                <ul class="dropdown-menu sidebar-dropdown-menu">
-                    <li class="dropdown-item dropdown-submenu">
-                        <a class="dropdown-item dropdown-submenu-toggle" asp-controller="Dashboard" asp-action="Index" asp-route-status="All">
-                            All Complaints <span class="submenu-caret">&#9656;</span>
-                        </a>
-                        <ul class="dropdown-menu sidebar-dropdown-menu submenu">
-                            <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Index" asp-route-status="Open">Pending</a></li>
-                            <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Index" asp-route-status="InProgress">In Progress</a></li>
-                            <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Index" asp-route-status="Resolved">Resolved</a></li>
-                            <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Index" asp-route-status="Closed">Closed</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-            <a class="sidebar-item @(ViewContext.RouteData.Values["action"]?.ToString() == "MyAssignedComplaints" ? "active" : "")" asp-controller="Dashboard" asp-action="MyAssignedComplaints">My Assigned Complaints</a>
-            <a class="sidebar-item @(ViewContext.RouteData.Values["action"]?.ToString() == "CategoryManagement" ? "active" : "")" asp-controller="Dashboard" asp-action="CategoryManagement">Category Management</a>
-            <a class="sidebar-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" && ViewContext.RouteData.Values["controller"]?.ToString() == "RoleManagement" ? "active" : "")" asp-controller="RoleManagement" asp-action="Index">Assign Roles</a>
-        }
-        else if (User.IsInRole("Staff"))
-        {
-            <a class="sidebar-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
-            <a class="sidebar-item @(ViewContext.RouteData.Values["action"]?.ToString() == "MyAssignedComplaints" ? "active" : "")" asp-controller="Dashboard" asp-action="MyAssignedComplaints">My Assigned Complaints</a>
-        }
-        else if (User.IsInRole("Student"))
-        {
-            <a class="sidebar-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")" asp-controller="Dashboard" asp-action="Index">My Complaints</a>
-            <a class="sidebar-item @(ViewContext.RouteData.Values["action"]?.ToString() == "NewComplaint" ? "active" : "")" asp-controller="Dashboard" asp-action="NewComplaint">New Complaint</a>
+            <a class="sidebar-icon-item @(ViewContext.RouteData.Values["action"]?.ToString() == "CategoryManagement" ? "active" : "")"
+               asp-controller="Dashboard" asp-action="CategoryManagement" title="Category Management">
+                <i class="bi bi-folder"></i>
+            </a>
+
+            <a class="sidebar-icon-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "RoleManagement" ? "active" : "")"
+               asp-controller="RoleManagement" asp-action="Index" title="Assign Roles">
+                <i class="bi bi-shield-check"></i>
+            </a>
         }
     </nav>
-    <div class="app-sidebar-footer">
-        <div class="sidebar-user">@User.Identity?.Name</div>
-        <a class="nav-link position-relative d-inline-block mb-2" href="#" id="notificationBell">
-            <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.917zM14.22 12c.223.447.481.801.78 1H1c.299-.199.557-.553.78-1C2.68 10.2 3 6.88 3 6c0-2.42 1.72-4.44 4.005-4.901a1 1 0 1 1 1.99 0A5.002 5.002 0 0 1 13 6c0 .88.32 4.2 1.22 6z" />
-            </svg>
-            <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle" id="notificationCount" style="display:none;">0</span>
+    <div class="app-sidebar-icon-footer">
+        <a class="sidebar-icon-item" href="#" id="notificationBell" title="Notifications">
+            <i class="bi bi-bell"></i>
+            <span class="badge bg-danger rounded-pill icon-notification-badge" id="notificationCount" style="display:none;">0</span>
         </a>
         <form asp-controller="Account" asp-action="Logout" method="post">
-            <button type="submit" class="sidebar-item logout-link">Log Out</button>
+            <button type="submit" class="sidebar-icon-item logout-icon-btn" title="Log Out">
+                <i class="bi bi-box-arrow-right"></i>
+            </button>
         </form>
     </div>
 </aside>

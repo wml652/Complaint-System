@@ -4,7 +4,8 @@
 }
 @Html.AntiForgeryToken()
 
-<div class="chat-workspace">
+<div class="chat-workspace" data-preselect-complaint-id="@ViewBag.PreselectedComplaintId">
+
     <div class="chat-list-column" id="chatListColumn">
         @if (isStaffOrAdmin)
         {
