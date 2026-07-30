@@ -143,7 +143,7 @@ public class DashboardController : Controller
         }
 
         var complaint = await _complaintService.CreateComplaintAsync(userId, model);
-        return RedirectToAction("Detail", "Complaint", new { id = complaint.Id });
+        return RedirectToAction("Index", "ChatWorkspace", new { complaintId = complaint.Id });
     }
 
     [HttpGet]

@@ -127,6 +127,8 @@ builder.Services.AddSingleton<IAuthorizationPolicyProvider, StudentComplaintPort
 builder.Services.AddScoped<IAuthorizationHandler, StudentComplaintPortal.Web.Security.PermissionAuthorizationHandler>();
 builder.Services.AddScoped<IRoleManagementService, StudentComplaintPortal.Application.Services.RoleManagementService>();
 
+builder.Services.AddSingleton<PresenceTracker>();
+
 // Phase 2: Add SignalR
 builder.Services.AddSignalR();
 
@@ -150,6 +152,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IAttachmentService, AttachmentService>();
 builder.Services.AddScoped<IFileStorageService, LocalDiskFileStorageService>();
 builder.Services.AddScoped<INotificationPushService, SignalRNotificationPushService>();
+builder.Services.AddScoped<IConversationService, StudentComplaintPortal.Application.Services.ConversationService>();
 
 // Configure Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -207,6 +210,9 @@ using (var scope = app.Services.CreateScope())
         await StudentComplaintPortal.Data.Seeding.PermissionSeeder.SeedAsync(
             services.GetRequiredService<AppDbContext>());
 
+        await StudentComplaintPortal.Data.Seeding.ConversationSeeder.SeedAsync(
+           services.GetRequiredService<AppDbContext>());
+
         await StudentComplaintPortal.Data.Seeding.DbSeeder.SeedDataAsync(services);
     }
     catch (Exception ex)
@@ -257,6 +263,7 @@ app.Run();
 // Seed test users method
 static async Task SeedTestUsers(UserManager<AppUser> userManager)
 {
+
     // Seed Student
     if (await userManager.FindByEmailAsync("student@test.com") == null)
     {
@@ -301,6 +308,7 @@ static async Task SeedTestUsers(UserManager<AppUser> userManager)
         };
         await userManager.CreateAsync(staff, "Staff123!");
     }
+
 
     // ADD YOUR TEAM MEMBERS HERE:
     var teamMembers = new[]
