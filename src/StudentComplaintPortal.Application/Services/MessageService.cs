@@ -27,6 +27,11 @@ public class MessageService : IMessageService
             throw new NotFoundException($"Complaint with ID {complaintId} not found.");
         }
 
+        if (complaint.Status == ComplaintStatus.Closed)
+        {
+            throw new ComplaintClosedException("This complaint is closed. New messages can't be sent.");
+        }
+
         var message = new Message
         {
             ComplaintId = complaintId,

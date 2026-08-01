@@ -24,6 +24,16 @@
         @if (isStaffOrAdmin)
         {
             <div class="chat-list" id="listStaff" style="display:none;"></div>
+            <button class="new-chat-fab" id="newChatFab" style="display:none;" onclick="ChatWorkspace.openNewChatPicker()" title="New chat">
+                <i class="bi bi-plus-lg"></i>
+            </button>
+            <div class="contact-picker" id="contactPicker" style="display:none;">
+                <div class="contact-picker-header">
+                    <i class="bi bi-arrow-left" onclick="ChatWorkspace.closeNewChatPicker()"></i>
+                    <span>Select contact</span>
+                </div>
+                <div class="chat-list" id="contactList"></div>
+            </div>
         }
     </div>
 
@@ -73,6 +83,13 @@
                 <i class="bi bi-mic"></i>
             </button>
         </div>
+
+        <!-- IMPORTANT: closed-complaint UI guard - do not remove.
+             Shown instead of chatInputBar when the complaint's status is Closed. -->
+        <div class="chat-input-bar closed-banner" id="closedBanner" style="display:none;">
+            <i class="bi bi-lock-fill me-2"></i> This complaint is closed. The conversation is read-only.
+        </div>
+
     </div>
 
     <div class="chat-info-panel" id="infoPanel" style="display:none;"></div>

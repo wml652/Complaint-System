@@ -13,7 +13,8 @@
     <link rel="stylesheet" href="~/StudentComplaintPortal.Web.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/chat-workspace.css" />
 </head>
-<body data-current-user-id="@User.FindFirstValue(ClaimTypes.NameIdentifier)">
+<body data-current-user-id="@User.FindFirstValue(ClaimTypes.NameIdentifier)"
+      data-can-change-status="@((User.IsInRole("Admin") || User.HasClaim("Permission", "Complaints.ChangeStatus")).ToString().ToLower())">
     @{
         var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
         var showSidebar = User.Identity?.IsAuthenticated == true && currentController != "Account";

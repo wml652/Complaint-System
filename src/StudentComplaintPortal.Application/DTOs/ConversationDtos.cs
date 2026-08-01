@@ -21,3 +21,10 @@ public class InternalMessageDto
     public DateTime SentAt { get; set; }
     public DateTime? ReadAt { get; set; }
 }
+
+public class ParticipantDto
+{
+    public required string UserId { get; set; }
+    public required string FullName { get; set; }
+    public DateTime? LastReadAt { get; set; }
+}

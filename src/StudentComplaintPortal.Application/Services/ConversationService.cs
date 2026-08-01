@@ -9,6 +9,10 @@ public class ConversationService : IConversationService
 {
     private readonly AppDbContext _dbContext;
 
+    // Har user-pair ke liye ek lock, taake "+" button do dafa jaldi jaldi
+    // dabne se 2 log ek sath duplicate conversation na bana sakein.
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, SemaphoreSlim> _directConversationLocks = new();
+
     public ConversationService(AppDbContext dbContext)
     {
         _dbContext = dbContext;
@@ -35,8 +39,18 @@ public class ConversationService : IConversationService
                 .OrderByDescending(m => m.SentAt)
                 .FirstOrDefaultAsync();
 
+            // Direct (1-to-1) chat jisme abhi tak koi message nahi - list mein mat dikhao
+            if (conv.Type == ConversationType.Direct && lastMessage == null)
+            {
+                continue;
+            }
+
+            var myParticipant = conv.Participants.FirstOrDefault(p => p.UserId == userId);
+            var myLastReadAt = myParticipant?.LastReadAt;
+
             var unreadCount = await _dbContext.InternalMessages
-                .CountAsync(m => m.ConversationId == conv.Id && m.SenderId != userId && m.ReadAt == null);
+                .CountAsync(m => m.ConversationId == conv.Id && m.SenderId != userId
+                    && (myLastReadAt == null || m.SentAt > myLastReadAt));
 
             string? displayName = conv.Name;
             string? otherUserId = null;
@@ -69,42 +83,73 @@ public class ConversationService : IConversationService
 
     public async Task<int> GetOrCreateDirectConversationAsync(string userId1, string userId2)
     {
-        // find existing direct conversation which has both participants 
-        var existing = await _dbContext.Conversations
-            .Where(c => c.Type == ConversationType.Direct)
-            .Where(c => c.Participants.Any(p => p.UserId == userId1))
-            .Where(c => c.Participants.Any(p => p.UserId == userId2))
-            .FirstOrDefaultAsync();
+        // Dono log chahe kisi bhi order mein call karein, key hamesha same banegi
+        var pairKey = string.CompareOrdinal(userId1, userId2) < 0
+            ? $"{userId1}:{userId2}"
+            : $"{userId2}:{userId1}";
+        var gate = _directConversationLocks.GetOrAdd(pairKey, _ => new SemaphoreSlim(1, 1));
 
-        if (existing != null)
+        await gate.WaitAsync();
+        try
         {
-            return existing.Id;
+            // find existing direct conversation which has both participants 
+            var existing = await _dbContext.Conversations
+                .Where(c => c.Type == ConversationType.Direct)
+                .Where(c => c.Participants.Any(p => p.UserId == userId1))
+                .Where(c => c.Participants.Any(p => p.UserId == userId2))
+                .FirstOrDefaultAsync();
+
+            if (existing != null)
+            {
+                return existing.Id;
+            }
+
+            var newConversation = new Conversation
+            {
+                Type = ConversationType.Direct,
+                CreatedAt = DateTime.UtcNow
+            };
+            _dbContext.Conversations.Add(newConversation);
+            await _dbContext.SaveChangesAsync();
+
+            _dbContext.ConversationParticipants.AddRange(
+                new ConversationParticipant { ConversationId = newConversation.Id, UserId = userId1 },
+                new ConversationParticipant { ConversationId = newConversation.Id, UserId = userId2 }
+            );
+            await _dbContext.SaveChangesAsync();
+
+            return newConversation.Id;
         }
-
-        var newConversation = new Conversation
+        finally
         {
-            Type = ConversationType.Direct,
-            CreatedAt = DateTime.UtcNow
-        };
-        _dbContext.Conversations.Add(newConversation);
-        await _dbContext.SaveChangesAsync();
-
-        _dbContext.ConversationParticipants.AddRange(
-            new ConversationParticipant { ConversationId = newConversation.Id, UserId = userId1 },
-            new ConversationParticipant { ConversationId = newConversation.Id, UserId = userId2 }
-        );
-        await _dbContext.SaveChangesAsync();
-
-        return newConversation.Id;
+            gate.Release();
+        }
     }
 
     public async Task<List<InternalMessageDto>> GetMessagesAsync(int conversationId)
     {
-        return await _dbContext.InternalMessages
+        var participants = await _dbContext.ConversationParticipants
+            .Where(p => p.ConversationId == conversationId)
+            .ToListAsync();
+
+        var messages = await _dbContext.InternalMessages
             .Include(m => m.Sender)
             .Where(m => m.ConversationId == conversationId)
             .OrderBy(m => m.SentAt)
-            .Select(m => new InternalMessageDto
+            .ToListAsync();
+
+        var result = new List<InternalMessageDto>();
+        foreach (var m in messages)
+        {
+            var others = participants.Where(p => p.UserId != m.SenderId).ToList();
+
+            DateTime? seenByAllAt = null;
+            if (others.Count > 0 && others.All(p => p.LastReadAt.HasValue && p.LastReadAt.Value >= m.SentAt))
+            {
+                seenByAllAt = others.Max(p => p.LastReadAt!.Value);
+            }
+
+            result.Add(new InternalMessageDto
             {
                 Id = m.Id,
                 ConversationId = m.ConversationId,
@@ -112,9 +157,11 @@ public class ConversationService : IConversationService
                 SenderName = m.Sender.FullName,
                 Content = m.Content,
                 SentAt = m.SentAt,
-                ReadAt = m.ReadAt
-            })
-            .ToListAsync();
+                ReadAt = seenByAllAt
+            });
+        }
+
+        return result;
     }
 
     public async Task<InternalMessageDto> SendMessageAsync(int conversationId, string senderId, string content)
@@ -146,18 +193,41 @@ public class ConversationService : IConversationService
 
     public async Task MarkAllAsReadAsync(int conversationId, string readerUserId)
     {
-        var messages = await _dbContext.InternalMessages
-            .Where(m => m.ConversationId == conversationId && m.SenderId != readerUserId && m.ReadAt == null)
-            .ToListAsync();
+        var participant = await _dbContext.ConversationParticipants
+            .FirstOrDefaultAsync(p => p.ConversationId == conversationId && p.UserId == readerUserId);
 
-        if (messages.Any())
+        if (participant != null)
         {
-            var now = DateTime.UtcNow;
-            foreach (var message in messages)
-            {
-                message.ReadAt = now;
-            }
+            participant.LastReadAt = DateTime.UtcNow;
             await _dbContext.SaveChangesAsync();
         }
+    }
+
+    public async Task<List<ParticipantDto>> GetParticipantsAsync(int conversationId)
+    {
+        return await _dbContext.ConversationParticipants
+            .Include(p => p.User)
+            .Where(p => p.ConversationId == conversationId)
+            .Select(p => new ParticipantDto
+            {
+                UserId = p.UserId,
+                FullName = p.User.FullName,
+                LastReadAt = p.LastReadAt
+            })
+            .ToListAsync();
+    }
+    public async Task<List<ParticipantDto>> GetContactsAsync(string currentUserId)
+    {
+        return await _dbContext.Users
+            .Where(u => (u.Role == Domain.Enums.UserRole.Admin || u.Role == Domain.Enums.UserRole.Staff)
+                        && u.Id != currentUserId)
+            .OrderBy(u => u.FullName)
+            .Select(u => new ParticipantDto
+            {
+                UserId = u.Id,
+                FullName = u.FullName,
+                LastReadAt = null
+            })
+            .ToListAsync();
     }
 }

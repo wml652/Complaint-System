@@ -61,7 +61,14 @@ public class MessagesController : ControllerBase
             return Forbid();
         }
 
-        var message = await _messageService.SendMessageAsync(id, userId, request.Content);
-        return CreatedAtAction(nameof(GetMessages), new { id }, message);
+        try
+        {
+            var message = await _messageService.SendMessageAsync(id, userId, request.Content);
+            return CreatedAtAction(nameof(GetMessages), new { id }, message);
+        }
+        catch (StudentComplaintPortal.Application.Exceptions.ComplaintClosedException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }
