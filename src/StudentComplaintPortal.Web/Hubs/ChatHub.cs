@@ -106,7 +106,21 @@ public class ChatHub : Hub
     {
         return _presenceTracker.GetOnlineUserIds();
     }
-    
+
+    // Chat khulte waqt kisi specific user ka current online/last-seen status batata hai
+    public async Task<object> GetUserPresence(string userId)
+    {
+        bool isOnline = _presenceTracker.IsOnline(userId);
+        DateTime? lastSeen = null;
+
+        if (!isOnline)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            lastSeen = user?.LastSeenAt;
+        }
+
+        return new { userId, isOnline, lastSeenAt = lastSeen };
+    }
 
     // Jab receiver actually chat kholay aur dekhay (seen)
     public async Task MarkAsRead(int complaintId)
@@ -184,7 +198,17 @@ public class ChatHub : Hub
         }
 
         // Send message via service (which handles notifications)
-        var messageDto = await _messageService.SendMessageAsync(complaintId, userId, content);
+        StudentComplaintPortal.Application.DTOs.MessageDto messageDto;
+        try
+        {
+            messageDto = await _messageService.SendMessageAsync(complaintId, userId, content);
+        }
+        catch (StudentComplaintPortal.Application.Exceptions.ComplaintClosedException ex)
+        {
+            // SignalR sirf HubException ka message client tak bhejta hai -
+            // koi bhi doosri exception type generic error dikhati hai
+            throw new HubException(ex.Message);
+        }
 
         // Broadcast to all users in the complaint group
         await Clients.Group($"complaint-{complaintId}").SendAsync("ReceiveMessage", messageDto);

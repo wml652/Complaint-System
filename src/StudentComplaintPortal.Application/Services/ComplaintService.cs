@@ -123,18 +123,8 @@ public class ComplaintService : IComplaintService
 
     private bool IsValidStatusTransition(ComplaintStatus currentStatus, ComplaintStatus newStatus)
     {
-        // Closed complaints cannot be reopened directly
-        if (currentStatus == ComplaintStatus.Closed && newStatus == ComplaintStatus.Open)
-        {
-            return false;
-        }
-
-        // Closed complaints cannot go back to InProgress
-        if (currentStatus == ComplaintStatus.Closed && newStatus == ComplaintStatus.InProgress)
-        {
-            return false;
-        }
-
+        // Team decision (update): a Closed complaint CAN be moved to any other
+        // status again - status changes are no longer one-way.
         return true;
     }
 

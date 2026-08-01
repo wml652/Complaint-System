@@ -16,7 +16,58 @@
     border-right: 1px solid #dee2e6;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
+
+.new-chat-fab {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #0d6efd;
+    color: #fff;
+    border: none;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    cursor: pointer;
+    z-index: 5;
+}
+
+    .new-chat-fab:hover {
+        background: #0b5ed7;
+    }
+
+.contact-picker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+}
+
+.contact-picker-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-bottom: 1px solid #dee2e6;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+    .contact-picker-header i {
+        cursor: pointer;
+        font-size: 18px;
+    }
 
 .chat-tabs {
     display: flex;
@@ -452,3 +503,10 @@
         background: #fdeaea;
         color: #d0342c;
     }
+
+.closed-banner {
+    justify-content: center;
+    color: #6c757d;
+    background: #f1f3f5;
+    font-size: 0.9rem;
+}

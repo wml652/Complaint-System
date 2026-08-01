@@ -35,6 +35,26 @@ public class InternalChatController : Controller
         return Json(messages);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetMembers(int conversationId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Forbid();
+
+        var members = await _conversationService.GetParticipantsAsync(conversationId);
+        return Json(members);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetContacts()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Forbid();
+
+        var contacts = await _conversationService.GetContactsAsync(userId);
+        return Json(contacts);
+    }
+
     [HttpPost]
     public async Task<IActionResult> StartDirectConversation(string otherUserId)
     {

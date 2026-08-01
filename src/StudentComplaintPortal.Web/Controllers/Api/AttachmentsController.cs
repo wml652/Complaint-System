@@ -60,8 +60,16 @@ public class AttachmentsController : ControllerBase
 
         // Create message with attachment
         using var fileStream = request.File.OpenReadStream();
-        var messageDto = await _attachmentService.CreateMessageWithAttachmentAsync(
-            complaintId, userId, fileStream, request.File.FileName, request.File.ContentType, parsedFileType, request.Content);
+        MessageDto messageDto;
+        try
+        {
+            messageDto = await _attachmentService.CreateMessageWithAttachmentAsync(
+                complaintId, userId, fileStream, request.File.FileName, request.File.ContentType, parsedFileType, request.Content);
+        }
+        catch (StudentComplaintPortal.Application.Exceptions.ComplaintClosedException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
 
         // Push via SignalR to all users in the complaint group
         await _hubContext.Clients.Group($"complaint-{complaintId}").SendAsync("ReceiveMessage", messageDto);
