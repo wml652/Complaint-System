@@ -21,18 +21,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllers();
 
-// Phase 3: Add MVC with Views and Blazor Server with Increased Message Limits for Voice/Media
+// Phase 3: Add MVC with Views and Blazor Server
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
-
-builder.Services.AddServerSideBlazor(options =>
-{
-    options.DetailedErrors = true;
-}).AddHubOptions(options =>
-{
-    options.MaximumReceiveMessageSize = 10 * 1024 * 1024; // 10 MB limit for voice/media streams
-    options.EnableDetailedErrors = true;
-});
+builder.Services.AddServerSideBlazor();
 
 // Configure Database
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -145,7 +137,6 @@ builder.Services.AddHttpClient();
 
 // Register application services
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IComplaintService, ComplaintService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
@@ -260,7 +251,6 @@ app.MapControllerRoute(
 app.Run();
 
 // Seed test users method
-// Seed test users method
 static async Task SeedTestUsers(UserManager<AppUser> userManager)
 {
 
@@ -293,6 +283,7 @@ static async Task SeedTestUsers(UserManager<AppUser> userManager)
         };
         await userManager.CreateAsync(admin, "Admin123!");
     }
+}
 
     // Seed a dedicated Staff test account (redirects to the Staff Dashboard on login)
     if (await userManager.FindByEmailAsync("staff@test.com") == null)

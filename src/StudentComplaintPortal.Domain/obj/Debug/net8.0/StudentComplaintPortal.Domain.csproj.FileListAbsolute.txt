@@ -1,0 +1,12 @@
+C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\src\StudentComplaintPortal.Domain\bin\Debug\net8.0\StudentComplaintPortal.Domain.deps.json
+C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\src\StudentComplaintPortal.Domain\bin\Debug\net8.0\StudentComplaintPortal.Domain.dll
+C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\src\StudentComplaintPortal.Domain\bin\Debug\net8.0\StudentComplaintPortal.Domain.pdb
+C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\src\StudentComplaintPortal.Domain\obj\Debug\net8.0\StudentComplaintPortal.Domain.csproj.AssemblyReference.cache
+C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\src\StudentComplaintPortal.Domain\obj\Debug\net8.0\StudentComplaintPortal.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\src\StudentComplaintPortal.Domain\obj\Debug\net8.0\StudentComplaintPortal.Domain.AssemblyInfoInputs.cache
+C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\src\StudentComplaintPortal.Domain\obj\Debug\net8.0\StudentComplaintPortal.Domain.AssemblyInfo.cs
+C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\src\StudentComplaintPortal.Domain\obj\Debug\net8.0\StudentComplaintPortal.Domain.csproj.CoreCompileInputs.cache
+C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\src\StudentComplaintPortal.Domain\obj\Debug\net8.0\StudentComplaintPortal.Domain.dll
+C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\src\StudentComplaintPortal.Domain\obj\Debug\net8.0\refint\StudentComplaintPortal.Domain.dll
+C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\src\StudentComplaintPortal.Domain\obj\Debug\net8.0\StudentComplaintPortal.Domain.pdb
+C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\src\StudentComplaintPortal.Domain\obj\Debug\net8.0\ref\StudentComplaintPortal.Domain.dll
