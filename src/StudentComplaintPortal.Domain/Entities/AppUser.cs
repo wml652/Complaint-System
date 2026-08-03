@@ -8,6 +8,7 @@ public class AppUser : IdentityUser
     public required string FullName { get; set; }
     public UserRole Role { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime? LastSeenAt { get; set; }
 
     // Navigation properties
     public ICollection<Complaint> Complaints { get; set; } = new List<Complaint>();

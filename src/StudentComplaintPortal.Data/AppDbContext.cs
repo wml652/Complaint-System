@@ -14,6 +14,13 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<Message> Messages { get; set; }
     public DbSet<Attachment> Attachments { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<Category> Categories { get; set; }
+    public DbSet<CategoryAttachmentRule> CategoryAttachmentRules { get; set; }
+    public DbSet<CategoryAssignee> CategoryAssignees { get; set; }
+    public DbSet<Permission> Permissions { get; set; }
+    public DbSet<Conversation> Conversations { get; set; }
+    public DbSet<ConversationParticipant> ConversationParticipants { get; set; }
+    public DbSet<InternalMessage> InternalMessages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -95,6 +102,102 @@ public class AppDbContext : IdentityDbContext<AppUser>
         {
             entity.Property(e => e.FullName).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Role).HasConversion<string>();
+        });
+
+        // Category configuration
+        modelBuilder.Entity<Category>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.IsActive).IsRequired();
+
+            entity.HasMany(c => c.AttachmentRules)
+                .WithOne(r => r.Category)
+                .HasForeignKey(r => r.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(c => c.Assignees)
+                .WithOne(a => a.Category)
+                .HasForeignKey(a => a.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.IsActive);
+        });
+
+        // CategoryAttachmentRule configuration
+        modelBuilder.Entity<CategoryAttachmentRule>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.FileType).HasConversion<string>();
+            entity.Property(e => e.MaxFileCount).IsRequired();
+            entity.Property(e => e.MaxFileSizeBytes).IsRequired();
+            entity.Property(e => e.IsRequired).IsRequired();
+
+            entity.HasIndex(e => e.CategoryId);
+        });
+
+        // CategoryAssignee configuration
+        modelBuilder.Entity<CategoryAssignee>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.Category)
+                .WithMany(c => c.Assignees)
+                .HasForeignKey(e => e.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.AppUser)
+                .WithMany()
+                .HasForeignKey(e => e.AppUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.CategoryId);
+            entity.HasIndex(e => e.AppUserId);
+        });
+        // Conversation configuration
+        modelBuilder.Entity<Conversation>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(100);
+
+            entity.HasMany(c => c.Participants)
+                .WithOne(p => p.Conversation)
+                .HasForeignKey(p => p.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(c => c.Messages)
+                .WithOne(m => m.Conversation)
+                .HasForeignKey(m => m.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ConversationParticipant configuration
+        modelBuilder.Entity<ConversationParticipant>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.ConversationId, e.UserId }).IsUnique();
+        });
+
+        // InternalMessage configuration
+        modelBuilder.Entity<InternalMessage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Content).HasMaxLength(5000);
+
+            entity.HasOne(e => e.Sender)
+                .WithMany()
+                .HasForeignKey(e => e.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.ConversationId);
+            entity.HasIndex(e => e.SentAt);
         });
     }
 }

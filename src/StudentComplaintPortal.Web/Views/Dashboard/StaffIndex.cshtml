@@ -1,0 +1,174 @@
+﻿@model StudentComplaintPortal.Web.Models.StaffDashboardViewModel
+@{
+    ViewData["Title"] = Model.AssignedCategories.Any() ? $"{Model.SelectedCategoryName} Complaints" : "My Complaints";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>@(Model.AssignedCategories.Any() ? $"{Model.SelectedCategoryName} Complaints" : "My Complaints")</h2>
+
+    @if (Model.AssignedCategories.Count > 1)
+    {
+        <form asp-action="Index" method="get" class="d-flex align-items-center gap-2">
+            <label for="categoryId" class="form-label small mb-0 text-muted">Category:</label>
+            <select name="categoryId" id="categoryId" class="form-select form-select-sm" style="width: auto;" onchange="this.form.submit()">
+                @foreach (var category in Model.AssignedCategories)
+                {
+                    <option value="@category.Id" selected="@(category.Id == Model.SelectedCategoryId)">@category.Name</option>
+                }
+            </select>
+        </form>
+    }
+</div>
+
+@if (!Model.AssignedCategories.Any())
+{
+    <div class="alert alert-info">
+        <strong>No category assigned yet</strong>
+        <p class="mb-0 mt-2">You haven't been assigned to any complaint category. Contact an admin to get assigned - complaints will appear here once you are.</p>
+    </div>
+}
+else
+{
+    <div class="row mb-4 g-3">
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-num">@Model.TotalCount</div>
+                <div class="stat-label">Total</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-num">@Model.PendingCount</div>
+                <div class="stat-label">Pending</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-num">@Model.InProgressCount</div>
+                <div class="stat-label">In Progress</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-num">@Model.ResolvedCount</div>
+                <div class="stat-label">Resolved</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3 g-2">
+        <div class="col-md-6">
+            <label for="statusFilter" class="form-label small mb-1">Filter by status</label>
+            <select id="statusFilter" class="form-select form-select-sm">
+                <option value="All">All</option>
+                <option value="Open">Pending</option>
+                <option value="InProgress">In Progress</option>
+                <option value="Resolved">Resolved</option>
+                <option value="Closed">Closed</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label for="priorityFilter" class="form-label small mb-1">Filter by priority</label>
+            <select id="priorityFilter" class="form-select form-select-sm">
+                <option value="All">All</option>
+                <option value="Urgent">Urgent</option>
+                <option value="Normal">Normal</option>
+            </select>
+        </div>
+    </div>
+
+    @if (!Model.Complaints.Any())
+    {
+        <div class="alert alert-info">
+            <strong>No complaints in this category yet</strong>
+            <p class="mb-0 mt-2">New complaints will appear here when students submit issues in @Model.SelectedCategoryName.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover bg-white">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Student</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="complaintsTableBody">
+                    @{
+                        var orderedComplaints = Model.Complaints
+                        .OrderBy(c => c.Status == "Closed" ? 1 : 0)
+                        .ThenBy(c => c.Priority == "Urgent" ? 0 : c.Priority == "Normal" ? 1 : 2)
+                        .ThenByDescending(c => c.CreatedAt);
+                    }
+                    @foreach (var complaint in orderedComplaints)
+                    {
+                        <tr data-status="@complaint.Status" data-priority="@(complaint.Priority ?? "")">
+                            <td>#@complaint.Id</td>
+                            <td>@complaint.StudentName</td>
+                            <td>
+                                @if (complaint.Priority == "Urgent")
+                                {
+                                    <span class="badge bg-danger">Urgent</span>
+                                }
+                                else if (complaint.Priority == "Normal")
+                                {
+                                    <span class="badge bg-info text-dark">Normal</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">Not set</span>
+                                }
+                            </td>
+                            <td><span class="badge @(complaint.Status == "Open" ? "bg-success" : complaint.Status == "InProgress" ? "bg-warning text-dark" : "bg-secondary")">@(complaint.Status == "Open" ? "Pending" : complaint.Status)</span></td>
+                            <td>@complaint.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            <td>
+                                <a asp-controller="ChatWorkspace" asp-action="Index" asp-route-complaintId="@complaint.Id" class="btn btn-sm btn-outline-primary">View</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="note text-muted small">
+            Showing @Model.SelectedCategoryName complaints. Sorted by priority (Urgent first), then newest first.
+        </div>
+    }
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            const statusFilter = document.getElementById('statusFilter');
+            const priorityFilter = document.getElementById('priorityFilter');
+            const rows = document.querySelectorAll('#complaintsTableBody tr');
+            if (!statusFilter || !priorityFilter) return;
+
+            const preselectedStatus = '@Model.SelectedStatus';
+            if (preselectedStatus && preselectedStatus !== 'All') {
+                statusFilter.value = preselectedStatus;
+            }
+
+            function applyFilters() {
+                const statusValue = statusFilter.value;
+                const priorityValue = priorityFilter.value;
+
+                rows.forEach(row => {
+                    const status = row.getAttribute('data-status');
+                    const priority = row.getAttribute('data-priority');
+                    const statusMatch = statusValue === 'All' || status === statusValue;
+                    const priorityMatch = priorityValue === 'All' || priority === priorityValue;
+                    row.style.display = (statusMatch && priorityMatch) ? '' : 'none';
+                });
+            }
+
+            statusFilter.addEventListener('change', applyFilters);
+            priorityFilter.addEventListener('change', applyFilters);
+            applyFilters();
+        })();
+    </script>
+}

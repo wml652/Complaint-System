@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using StudentComplaintPortal.Application.DTOs;
 using StudentComplaintPortal.Application.Services;
 using StudentComplaintPortal.Data.Repositories;
+using StudentComplaintPortal.Domain.Entities;
+using StudentComplaintPortal.Web.Services;
 using System.Security.Claims;
 
 namespace StudentComplaintPortal.Web.Hubs;
@@ -12,11 +15,52 @@ public class ChatHub : Hub
 {
     private readonly IMessageService _messageService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IConversationService _conversationService;
+    private readonly PresenceTracker _presenceTracker;
+    private readonly UserManager<AppUser> _userManager;
 
-    public ChatHub(IMessageService messageService, IUnitOfWork unitOfWork)
+    public ChatHub(
+        IMessageService messageService,
+        IUnitOfWork unitOfWork,
+        PresenceTracker presenceTracker,
+        UserManager<AppUser> userManager,
+        IConversationService conversationService)
     {
         _messageService = messageService;
         _unitOfWork = unitOfWork;
+        _presenceTracker = presenceTracker;
+        _userManager = userManager;
+        _conversationService = conversationService;
+    }
+
+    public async Task JoinConversationGroup(int conversationId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"conversation-{conversationId}");
+    }
+
+    public async Task SendInternalMessage(int conversationId, string content)
+    {
+        var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+        {
+            throw new HubException("Unauthorized: User not authenticated.");
+        }
+
+        var messageDto = await _conversationService.SendMessageAsync(conversationId, userId, content);
+
+        await Clients.Group($"conversation-{conversationId}").SendAsync("ReceiveInternalMessage", messageDto);
+    }
+
+    public async Task MarkInternalMessagesAsRead(int conversationId)
+    {
+        var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+        {
+            throw new HubException("Unauthorized: User not authenticated.");
+        }
+
+        await _conversationService.MarkAllAsReadAsync(conversationId, userId);
+        await Clients.Group($"conversation-{conversationId}").SendAsync("InternalMessagesRead", conversationId, userId, DateTime.UtcNow);
     }
 
     public override async Task OnConnectedAsync()
@@ -24,8 +68,14 @@ public class ChatHub : Hub
         var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!string.IsNullOrEmpty(userId))
         {
-            // Add user to their personal notification group
             await Groups.AddToGroupAsync(Context.ConnectionId, $"user-{userId}");
+
+            bool justCameOnline = _presenceTracker.UserConnected(userId, Context.ConnectionId);
+            if (justCameOnline)
+            {
+                // tells user is online
+                await Clients.Others.SendAsync("UserOnline", userId);
+            }
         }
         await base.OnConnectedAsync();
     }
@@ -36,9 +86,59 @@ public class ChatHub : Hub
         if (!string.IsNullOrEmpty(userId))
         {
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"user-{userId}");
+
+            bool wentOffline = _presenceTracker.UserDisconnected(userId, Context.ConnectionId);
+            if (wentOffline)
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user != null)
+                {
+                    user.LastSeenAt = DateTime.UtcNow;
+                    await _userManager.UpdateAsync(user);
+                }
+
+                await Clients.Others.SendAsync("UserOffline", userId, DateTime.UtcNow);
+            }
         }
         await base.OnDisconnectedAsync(exception);
     }
+    public async Task<List<string>> GetOnlineUserIds()//to show all online users
+    {
+        return _presenceTracker.GetOnlineUserIds();
+    }
+
+    // Chat khulte waqt kisi specific user ka current online/last-seen status batata hai
+    public async Task<object> GetUserPresence(string userId)
+    {
+        bool isOnline = _presenceTracker.IsOnline(userId);
+        DateTime? lastSeen = null;
+
+        if (!isOnline)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            lastSeen = user?.LastSeenAt;
+        }
+
+        return new { userId, isOnline, lastSeenAt = lastSeen };
+    }
+
+    // Jab receiver actually chat kholay aur dekhay (seen)
+    public async Task MarkAsRead(int complaintId)
+    {
+        var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+        {
+            throw new HubException("Unauthorized: User not authenticated.");
+        }
+
+        await _messageService.MarkAllAsReadAsync(complaintId, userId);
+
+        // tells that messages of this complaint has been "seen"
+        await Clients.Group($"complaint-{complaintId}").SendAsync("MessagesRead", complaintId, userId, DateTime.UtcNow);
+    }
+
+    private string GetUserId() => Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        ?? throw new HubException("Unauthorized");
 
     public async Task JoinComplaintGroup(int complaintId)
     {
@@ -90,7 +190,17 @@ public class ChatHub : Hub
         }
 
         // Send message via service (which handles notifications)
-        var messageDto = await _messageService.SendMessageAsync(complaintId, userId, content);
+        StudentComplaintPortal.Application.DTOs.MessageDto messageDto;
+        try
+        {
+            messageDto = await _messageService.SendMessageAsync(complaintId, userId, content);
+        }
+        catch (StudentComplaintPortal.Application.Exceptions.ComplaintClosedException ex)
+        {
+            // SignalR sirf HubException ka message client tak bhejta hai -
+            // koi bhi doosri exception type generic error dikhati hai
+            throw new HubException(ex.Message);
+        }
 
         // Broadcast to all users in the complaint group
         await Clients.Group($"complaint-{complaintId}").SendAsync("ReceiveMessage", messageDto);

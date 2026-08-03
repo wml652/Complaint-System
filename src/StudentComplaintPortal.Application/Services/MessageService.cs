@@ -26,6 +26,11 @@ public class MessageService : IMessageService
             throw new NotFoundException($"Complaint with ID {complaintId} not found.");
         }
 
+        if (complaint.Status == ComplaintStatus.Closed)
+        {
+            throw new ComplaintClosedException("This complaint is closed. New messages can't be sent.");
+        }
+
         var message = new Message
         {
             ComplaintId = complaintId,
@@ -135,6 +140,7 @@ public class MessageService : IMessageService
             Content = message.Content,
             SentAt = message.SentAt,
             IsRead = message.IsRead,
+            ReadAt = message.ReadAt,
             Attachments = message.Attachments?.Select(a => new AttachmentDto
             {
                 Id = a.Id,
@@ -145,5 +151,30 @@ public class MessageService : IMessageService
                 UploadedAt = a.UploadedAt
             }).ToList() ?? new List<AttachmentDto>()
         };
+    }
+
+
+    public async Task MarkAllAsReadAsync(int complaintId, string readerUserId)
+    {
+        var dbMessages = await _unitOfWork.Messages.FindAsync(
+            m => m.ComplaintId == complaintId && m.SenderId != readerUserId && m.ReadAt == null);
+
+        var now = DateTime.UtcNow;
+        bool anyDbUpdated = false;
+
+        foreach (var message in dbMessages)
+        {
+            message.ReadAt = now;
+            message.IsRead = true;
+            _unitOfWork.Messages.Update(message);
+            anyDbUpdated = true;
+        }
+
+        if (anyDbUpdated)
+        {
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        _bufferService.MarkAsRead(complaintId, readerUserId);
     }
 }

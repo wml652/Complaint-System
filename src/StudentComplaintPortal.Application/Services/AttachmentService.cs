@@ -46,6 +46,12 @@ public class AttachmentService : IAttachmentService
             throw new NotFoundException($"Complaint with ID {complaintId} not found.");
         }
 
+        //Verify Complaint status if closed
+        if (complaint.Status == ComplaintStatus.Closed)
+        {
+            throw new ComplaintClosedException("This complaint is closed. New messages can't be sent.");
+        }
+
         // Upload file
         var fileUrl = await _fileStorageService.UploadAsync(fileStream, fileName, contentType, fileType, complaintId);
 

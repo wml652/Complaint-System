@@ -49,7 +49,7 @@ else
                         <td>@complaint.StudentName</td>
                         <td>@complaint.CreatedAt.ToString("MMM dd, yyyy")</td>
                         <td>
-                            <a asp-controller="Complaint" asp-action="Detail" asp-route-id="@complaint.Id" class="btn btn-sm btn-outline-primary">View</a>
+                            <a asp-controller="ChatWorkspace" asp-action="Index" asp-route-complaintId="@complaint.Id" class="btn btn-sm btn-outline-primary">View</a>
                         </td>
                     </tr>
                 }

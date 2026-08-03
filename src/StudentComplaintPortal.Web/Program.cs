@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -106,6 +107,20 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddDistributedMemoryCache();
+
+builder.Services.AddSession();
+
+builder.Services.AddSingleton<StudentComplaintPortal.Application.Services.MessageBufferService>();
+
+builder.Services.AddHostedService<StudentComplaintPortal.Web.Services.MessageFlushWorker>();
+
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, StudentComplaintPortal.Web.Security.PermissionPolicyProvider>();
+builder.Services.AddScoped<IAuthorizationHandler, StudentComplaintPortal.Web.Security.PermissionAuthorizationHandler>();
+builder.Services.AddScoped<IRoleManagementService, StudentComplaintPortal.Application.Services.RoleManagementService>();
+
+builder.Services.AddSingleton<PresenceTracker>();
+
 // Phase 2: Add SignalR
 builder.Services.AddSignalR();
 
@@ -128,6 +143,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IAttachmentService, AttachmentService>();
 builder.Services.AddScoped<IFileStorageService, LocalDiskFileStorageService>();
 builder.Services.AddScoped<INotificationPushService, SignalRNotificationPushService>();
+builder.Services.AddScoped<IConversationService, StudentComplaintPortal.Application.Services.ConversationService>();
 
 // Configure Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -176,6 +192,26 @@ if (app.Environment.IsDevelopment())
     await SeedTestUsers(userManager);
 }
 
+// Seed categories and initial data
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        await StudentComplaintPortal.Data.Seeding.PermissionSeeder.SeedAsync(
+            services.GetRequiredService<AppDbContext>());
+
+        await StudentComplaintPortal.Data.Seeding.ConversationSeeder.SeedAsync(
+           services.GetRequiredService<AppDbContext>());
+
+        await StudentComplaintPortal.Data.Seeding.DbSeeder.SeedDataAsync(services);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while seeding the database.");
+    }
+}
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
@@ -192,7 +228,10 @@ app.UseStaticFiles();
 
 app.UseWebSockets();
 
+app.UseSession();
+
 app.UseAuthentication();
+
 app.UseAuthorization();
 
 // Map API controllers
@@ -214,6 +253,7 @@ app.Run();
 // Seed test users method
 static async Task SeedTestUsers(UserManager<AppUser> userManager)
 {
+
     // Seed Student
     if (await userManager.FindByEmailAsync("student@test.com") == null)
     {
@@ -245,5 +285,49 @@ static async Task SeedTestUsers(UserManager<AppUser> userManager)
     }
 }
 
-// Make Program class accessible for integration tests
+    // Seed a dedicated Staff test account (redirects to the Staff Dashboard on login)
+    if (await userManager.FindByEmailAsync("staff@test.com") == null)
+    {
+        var staff = new AppUser
+        {
+            UserName = "staff@test.com",
+            Email = "staff@test.com",
+            FullName = "Test Staff",
+            Role = UserRole.Staff,
+            CreatedAt = DateTime.UtcNow,
+            EmailConfirmed = true
+        };
+        await userManager.CreateAsync(staff, "Staff123!");
+    }
+
+
+    // ADD YOUR TEAM MEMBERS HERE:
+    var teamMembers = new[]
+    {
+        new { Name = "Mahnoor Fatima", Email = "mahnoor@test.com" },
+        new { Name = "Muskan", Email = "muskan@test.com" },
+        new { Name = "Faizan", Email = "faizan@test.com" },
+        new { Name = "Ahmed", Email = "ahmed@test.com" },
+        new { Name = "Faraz", Email = "faraz@test.com" },
+        new { Name = "Bisma", Email = "bisma@test.com" }
+    };
+
+    foreach (var member in teamMembers)
+    {
+        if (await userManager.FindByEmailAsync(member.Email) == null)
+        {
+            var user = new AppUser
+            {
+                UserName = member.Email,
+                Email = member.Email,
+                FullName = member.Name,
+                Role = UserRole.Staff, // Category-assigned staff members - redirected to the Staff Dashboard
+                CreatedAt = DateTime.UtcNow,
+                EmailConfirmed = true
+            };
+            // This automatically generates the secure password hash for "Staff123!"
+            await userManager.CreateAsync(user, "Staff123!");
+        }
+    }
+}// Make Program class accessible for integration tests
 public partial class Program { }
