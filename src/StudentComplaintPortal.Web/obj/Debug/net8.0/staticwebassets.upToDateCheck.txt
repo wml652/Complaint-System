@@ -8,31 +8,15 @@ wwwroot\js\notifications.js
 wwwroot\js\signalr-connection.js
 wwwroot\uploads\1002\a3c6ca3b-3663-4c5c-816f-0f7bdd914e8b-Gemini_Generated_Image_4bk5304bk5304bk5.png
 wwwroot\uploads\1003\61d16c1b-d9ef-40b9-8b47-852ed3ed4660-WhatsApp Image 2026-06-07 at 3.02.53 PM.jpeg
-wwwroot\uploads\1003\6aa57024-c518-4dd3-bb6e-97f1b6fbac29-Gemini_Generated_Image_8khees8khees8khe (1).png
 wwwroot\uploads\1003\d7ae6f88-9143-4db9-89f4-6432c995c88c-WhatsApp Video 2026-05-25 at 9.01.57 AM.mp4
 wwwroot\uploads\1003\ee5b3180-c915-40da-aaed-c9018877225c-PixVerse_V6_Image_Text_360P_Scene_Description_.mp4
 wwwroot\uploads\1003\f8a1d455-714a-437c-9455-50123b063b8c-WhatsApp Image 2026-06-07 at 3.02.53 PM (1).jpeg
-wwwroot\uploads\1004\4cc0126b-ab95-4046-9dad-5a3051a5f78f-Gemini_Generated_Image_f79z45f79z45f79z.png
-wwwroot\uploads\1005\062944d3-ce64-40e2-a5eb-e2e075b2bcfb-voice-639206391511576199.webm
-wwwroot\uploads\1005\3feed9cc-3291-4e2c-92ad-c090231aa143-spike.jpeg
-wwwroot\uploads\1005\5355a506-6ec7-4ed4-a956-a0ff5802fdbf-login.jpeg
-wwwroot\uploads\1005\567c56a0-43ba-4166-8c2a-48bf9116336f-voice-639206540577604144.webm
-wwwroot\uploads\1005\6379b0de-a431-4417-8bd3-a6792897b500-voice-639206400270336710.webm
-wwwroot\uploads\1005\72c115d7-665b-47be-8656-3235b16c4ae3-voice-639206540427135239.webm
-wwwroot\uploads\1005\a2b1b786-0fdf-4810-be7f-4150658019d2-voice-639206542032371464.webm
-wwwroot\uploads\1005\b777dc4c-c52b-48a9-b094-d222c8e330c5-spike.jpeg
-wwwroot\uploads\1005\c2bb5624-617d-49c4-a270-0e8b0e102595-voice-639206391850975625.webm
-wwwroot\uploads\1005\c69c9e23-0043-43c8-9067-fab72fe07953-Screenshot 2026-06-26 184154.png
-wwwroot\uploads\1005\cfa1abe4-836e-4053-9df1-86b71b0949de-demo.mp4
-wwwroot\uploads\1005\d5a18254-271e-43d5-99be-80c17d60967c-voice-639206354030862848.webm
-wwwroot\uploads\1005\d87f3010-cac4-4278-b471-0e0cbede0292-voice-639206537193631204.webm
-wwwroot\uploads\1005\df93d0bd-8669-4ce2-a1f1-ba34cc021982-voice-639206414688590014.webm
-wwwroot\uploads\1005\e860e390-fcac-411c-9298-d4e627b50235-voice-639206400436752589.webm
-wwwroot\uploads\1005\f72c47dc-b3c3-4ca9-8ee5-978551195d72-Screenshot 2026-07-04 020348.png
 wwwroot\uploads\1\2a22bf22-92ca-4377-9fc9-ab27dd64babd-b2.mp4
 wwwroot\uploads\1\386da6e4-777e-465d-9d9a-6c4a930b874b-voice-639206562029323956.webm
 wwwroot\uploads\1\6accfb83-2fee-4579-871c-d134f25a2d33-spike.jpeg
+wwwroot\uploads\1\6c7b5250-992a-4678-b2cc-c6a81e893a18-voice-639206573903531100.webm
 wwwroot\uploads\2\0b2432ae-b206-4994-8ecb-d20a66cc9288-voice-1785381547026.webm
+wwwroot\uploads\2\83dd2114-ae3e-406d-ab80-e50ae9c8e18d-voice-639207587129966129.webm
 wwwroot\uploads\2\d0777495-663b-4b6d-9eae-13dbdd0fbc18-voice-639207020665726270.webm
 wwwroot\uploads\3\7068aed2-6fa1-4ca9-a5c6-90f07f60c870-voice-639207096496420716.webm
 wwwroot\uploads\3\a8b83432-4fae-4b2c-884e-5bb808dba93e-voice-639207097124527437.webm

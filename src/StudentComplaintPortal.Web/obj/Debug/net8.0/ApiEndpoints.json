@@ -56,7 +56,7 @@
       },
       {
         "Name": "dto",
-        "Type": "StudentComplaintPortal.Application.DTOs.UpdateCategoryDto",
+        "Type": "StudentComplaintPortal.Application.DTOs.CreateCategoryDto",
         "IsRequired": true
       }
     ],
@@ -80,22 +80,6 @@
   },
   {
     "ContainingType": "StudentComplaintPortal.Web.Controllers.Api.CategoriesController",
-    "Method": "GetCategoryStats",
-    "RelativePath": "api/categories/{id}/stats",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "StudentComplaintPortal.Web.Controllers.Api.CategoriesController",
     "Method": "ToggleActiveStatus",
     "RelativePath": "api/categories/{id}/toggle-active",
     "HttpMethod": "PATCH",
@@ -106,32 +90,6 @@
         "Name": "id",
         "Type": "System.Int32",
         "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "StudentComplaintPortal.Web.Controllers.Api.CategoriesController",
-    "Method": "GetAllCategoriesPaged",
-    "RelativePath": "api/categories/all",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "pageSize",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "isActive",
-        "Type": "System.Nullable\u00601[[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
       }
     ],
     "ReturnTypes": []

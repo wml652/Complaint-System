@@ -217,17 +217,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateCategoryDto"
+                "$ref": "#/components/schemas/CreateCategoryDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateCategoryDto"
+                "$ref": "#/components/schemas/CreateCategoryDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateCategoryDto"
+                "$ref": "#/components/schemas/CreateCategoryDto"
               }
             }
           }
@@ -239,80 +239,6 @@
         }
       },
       "delete": {
-        "tags": [
-          "Categories"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/categories/staff": {
-      "get": {
-        "tags": [
-          "Categories"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/categories/all": {
-      "get": {
-        "tags": [
-          "Categories"
-        ],
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 1
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 10
-            }
-          },
-          {
-            "name": "isActive",
-            "in": "query",
-            "schema": {
-              "type": "boolean"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/categories/{id}/stats": {
-      "get": {
         "tags": [
           "Categories"
         ],
@@ -349,6 +275,18 @@
               "format": "int32"
             }
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/categories/staff": {
+      "get": {
+        "tags": [
+          "Categories"
         ],
         "responses": {
           "200": {
@@ -601,6 +539,16 @@
         },
         "additionalProperties": false
       },
+      "ComplaintCategory": {
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
       "ComplaintStatus": {
         "enum": [
           0,
@@ -612,27 +560,38 @@
         "format": "int32"
       },
       "CreateCategoryDto": {
+        "required": [
+          "name"
+        ],
         "type": "object",
         "properties": {
           "name": {
-            "type": "string",
-            "nullable": true
+            "minLength": 1,
+            "type": "string"
           },
           "description": {
             "type": "string",
             "nullable": true
           },
-          "attachmentRules": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CategoryAttachmentRuleDto"
-            },
+          "icon": {
+            "type": "string",
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
             "nullable": true
           },
           "assigneeIds": {
             "type": "array",
             "items": {
               "type": "string"
+            },
+            "nullable": true
+          },
+          "attachmentRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryAttachmentRuleDto"
             },
             "nullable": true
           }
@@ -650,9 +609,8 @@
             "type": "string",
             "nullable": true
           },
-          "categoryId": {
-            "type": "integer",
-            "format": "int32"
+          "category": {
+            "$ref": "#/components/schemas/ComplaintCategory"
           }
         },
         "additionalProperties": false
@@ -717,37 +675,6 @@
         "properties": {
           "content": {
             "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "UpdateCategoryDto": {
-        "required": [
-          "name"
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "assigneeIds": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "nullable": true
-          },
-          "attachmentRules": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CategoryAttachmentRuleDto"
-            },
             "nullable": true
           }
         },
