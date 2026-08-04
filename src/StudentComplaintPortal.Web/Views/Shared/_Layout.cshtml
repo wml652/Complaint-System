@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="~/css/chat-workspace.css" />
 </head>
 <body data-current-user-id="@User.FindFirstValue(ClaimTypes.NameIdentifier)"
+      data-user-role="@(User.FindFirstValue(ClaimTypes.Role) ?? "Student")"
       data-can-change-status="@((User.IsInRole("Admin") || User.HasClaim("Permission", "Complaints.ChangeStatus")).ToString().ToLower())">
     @{
         var currentController = ViewContext.RouteData.Values["controller"]?.ToString();

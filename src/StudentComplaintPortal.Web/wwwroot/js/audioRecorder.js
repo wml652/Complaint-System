@@ -1,63 +1,65 @@
 window.audioRecorder = (function() {
     let mediaRecorder = null;
     let audioChunks = [];
+    let recordingStartTime = null;
+    let recordingTimeout = null;
+    let activeStream = null;
+    const MAX_RECORDING_DURATION = 5 * 60 * 1000; // 5 minutes
 
     async function start() {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-
+            activeStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            // Do not force webm. Let the browser use its native format.
+            mediaRecorder = new MediaRecorder(activeStream);
             audioChunks = [];
+            recordingStartTime = Date.now();
 
             mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    audioChunks.push(event.data);
-                }
+                if (event.data && event.data.size > 0) audioChunks.push(event.data);
             };
 
-            mediaRecorder.start();
-            console.log('Recording started');
+            mediaRecorder.start(250);
+
+            recordingTimeout = setTimeout(() => { stop().catch(console.error); }, MAX_RECORDING_DURATION);
         } catch (error) {
-            console.error('Error starting recording:', error);
+            console.error('Microphone error:', error);
+            alert('Could not access microphone. Please check browser permissions.');
             throw error;
         }
     }
 
     async function stop() {
         return new Promise((resolve, reject) => {
-            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
-                reject(new Error('MediaRecorder is not recording'));
-                return;
-            }
+            if (recordingTimeout) clearTimeout(recordingTimeout);
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') return reject(new Error('Not recording'));
 
-            mediaRecorder.onstop = async () => {
-                try {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const arrayBuffer = await audioBlob.arrayBuffer();
-                    const uint8Array = new Uint8Array(arrayBuffer);
-
-                    // Stop all tracks
-                    mediaRecorder.stream.getTracks().forEach(track => track.stop());
-
-                    resolve(Array.from(uint8Array));
-                } catch (error) {
-                    reject(error);
-                }
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
+                if (activeStream) activeStream.getTracks().forEach(track => track.stop());
+                resolve({ blob: audioBlob, mimeType: mediaRecorder.mimeType });
             };
-
             mediaRecorder.stop();
         });
     }
 
+    async function uploadVoiceMessage(complaintId, audioData) {
+        const blobToUpload = audioData.blob ? audioData.blob : audioData;
+
+        // Note: We intentionally DO NOT set 'Content-Type' here.
+        // The browser will automatically set the correct boundary and mime type for the Blob.
+        const response = await fetch(`/api/v1/complaints/${complaintId}/voice-message`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
+            body: blobToUpload
+        });
+
+        if (!response.ok) throw new Error(`Upload failed with status ${response.status}`);
+        return await response.json();
+    }
+
     return {
         start: start,
-        stop: stop
+        stop: stop,
+        uploadVoiceMessage: uploadVoiceMessage
     };
 })();
-
-function scrollToBottom(elementId) {
-    const element = document.getElementById(elementId);
-    if (element) {
-        element.scrollTop = element.scrollHeight;
-    }
-}

@@ -283,7 +283,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 6,
+          "SelectedChildIndex": 5,
           "Children": [
             {
               "$type": "Bookmark",
@@ -292,19 +292,6 @@
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Category.cs",
-              "DocumentMoniker": "D:\\Complaint-System\\src\\StudentComplaintPortal.Domain\\Entities\\Category.cs",
-              "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Domain\\Entities\\Category.cs",
-              "ToolTip": "D:\\Complaint-System\\src\\StudentComplaintPortal.Domain\\Entities\\Category.cs",
-              "RelativeToolTip": "src\\StudentComplaintPortal.Domain\\Entities\\Category.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAADwvwwAAABYAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-04T18:13:43.284Z",
-              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -350,10 +337,22 @@
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Views\\Dashboard\\Categories.cshtml",
               "ToolTip": "D:\\Complaint-System\\src\\StudentComplaintPortal.Web\\Views\\Dashboard\\Categories.cshtml",
               "RelativeToolTip": "src\\StudentComplaintPortal.Web\\Views\\Dashboard\\Categories.cshtml",
-              "ViewState": "AgIAAHkAAAAAAAAAAAAAAJwAAAAqAAAAAAAAAA==",
+              "ViewState": "AgIAAIkAAAAAAAAAAAAqwJwAAAAqAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2026-08-04T00:01:14.664Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Category.cs",
+              "DocumentMoniker": "D:\\Complaint-System\\src\\StudentComplaintPortal.Domain\\Entities\\Category.cs",
+              "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Domain\\Entities\\Category.cs",
+              "ToolTip": "D:\\Complaint-System\\src\\StudentComplaintPortal.Domain\\Entities\\Category.cs",
+              "RelativeToolTip": "src\\StudentComplaintPortal.Domain\\Entities\\Category.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAADwvwwAAABYAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-04T18:13:43.284Z"
             },
             {
               "$type": "Document",

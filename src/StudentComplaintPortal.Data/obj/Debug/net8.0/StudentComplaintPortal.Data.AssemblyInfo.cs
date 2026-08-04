@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("StudentComplaintPortal.Data")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+df86ffc9028d300a5099a0a76885fef821535be4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b885eae0ee7af33008bbb63c89eafb8fb53635f1")]
 [assembly: System.Reflection.AssemblyProductAttribute("StudentComplaintPortal.Data")]
 [assembly: System.Reflection.AssemblyTitleAttribute("StudentComplaintPortal.Data")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

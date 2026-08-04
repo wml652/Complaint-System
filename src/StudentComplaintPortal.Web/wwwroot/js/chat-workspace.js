@@ -35,6 +35,33 @@
             lastSeenCache.set(userId, lastSeenAt);
             updatePresenceUi(userId, false, lastSeenAt);
         });
+        connection.on("MessageEdited", (updatedMessage) => {
+            const msgEl = document.querySelector(`[data-message-id="${updatedMessage.id}"]`);
+            if (msgEl) {
+                const textEl = msgEl.querySelector('.message-text') || msgEl.querySelector('p');
+                if (textEl) {
+                    textEl.textContent = updatedMessage.content;
+                    if (!textEl.querySelector('.edited-badge')) {
+                        const badge = document.createElement('small');
+                        badge.className = 'text-muted ms-1 edited-badge';
+                        badge.style.fontSize = '0.7rem';
+                        badge.textContent = '(edited)';
+                        textEl.appendChild(badge);
+                    }
+                }
+            }
+        });
+        connection.on("MessageDeleted", (messageId) => {
+            const msgEl = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (msgEl) {
+                const textEl = msgEl.querySelector('.message-text') || msgEl.querySelector('p');
+                if (textEl) {
+                    textEl.innerHTML = '<span class="text-muted fst-italic">[Message deleted]</span>';
+                }
+                const actionsEl = msgEl.querySelector('.message-actions');
+                if (actionsEl) actionsEl.remove();
+            }
+        });
 
         AppHub.ensureStarted()
             .then(async () => {
@@ -277,11 +304,14 @@
 
     function renderMessages(messages, isInternal) {
     const currentUserId = document.body.dataset.currentUserId;
+    const userRole = document.body.dataset.userRole;
+    const isAdmin = userRole === 'Admin';
     const body = document.getElementById('chatBody');
     body.innerHTML = '';
 
     messages.forEach((m, index) => {
         const isOutgoing = m.senderId === currentUserId;
+        const canEditDelete = isOutgoing || isAdmin;
         const bubble = document.createElement('div');
         bubble.className = `chat-bubble ${isOutgoing ? 'outgoing' : 'incoming'}`;
         bubble.dataset.messageId = m.id;
@@ -300,7 +330,29 @@
          ticksHtml = `<div class="chat-bubble-ticks ${seen ? 'seen' : ''}"><i class="bi ${icon}"></i>${label}</div>`;
     }
 
-        bubble.innerHTML = `${attachmentsHtml}${escapeHtml(m.content || '')}${ticksHtml}`;
+        let contentHtml = escapeHtml(m.content || '');
+        let editBadgeHtml = m.isEdited ? '<small class="text-muted ms-1 edited-badge" style="font-size: 0.7rem;">(edited)</small>' : '';
+
+        let actionsHtml = '';
+        if (canEditDelete && !m.deletedAt) {
+            actionsHtml = `
+                <div class="message-actions" style="margin-top: 4px; display: flex; gap: 6px;">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" style="font-size: 0.75rem; padding: 2px 6px;" onclick="ChatWorkspace.editMessage(${m.id}, ${currentChatId}, '${escapeHtml(m.content || '').replace(/'/g, "\\'")}')">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" style="font-size: 0.75rem; padding: 2px 6px;" onclick="ChatWorkspace.deleteMessage(${m.id}, ${currentChatId})">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </div>
+            `;
+        }
+
+        let messageContent = `<p class="message-text mb-0">${contentHtml}${editBadgeHtml}</p>${actionsHtml}`;
+        if (m.deletedAt) {
+            messageContent = `<p class="message-text mb-0"><span class="text-muted fst-italic">[Message deleted]</span></p>`;
+        }
+
+        bubble.innerHTML = `${attachmentsHtml}${messageContent}${ticksHtml}`;
         body.appendChild(bubble);
     });
 
@@ -313,13 +365,8 @@
         return `<img src="${attachment.fileUrl}" class="attachment-media" alt="Photo" />`;
     } else if (attachment.fileType === 'Video') {
         return `<video controls class="attachment-media"><source src="${attachment.fileUrl}" type="video/mp4" /></video>`;
-    } else if (attachment.fileType === 'VoiceNote') {
-        return `<div class="voice-bubble">
-            <button type="button" class="voice-play-btn"><i class="bi bi-play-fill"></i></button>
-            <div class="voice-progress-track"><div class="voice-progress-fill"></div></div>
-            <span class="voice-duration">0:00</span>
-            <audio src="${attachment.fileUrl}" preload="metadata" style="display:none;"></audio>
-        </div>`;
+    } else if (attachment.fileType === 'VoiceNote' || attachment.fileType === 'Audio' || attachment.fileUrl.match(/\.(webm|mp3|mp4|ogg|wav)$/i)) {
+        return `<audio controls class="attachment-media" style="min-width: 250px; max-width: 100%; margin-top: 8px;"><source src="${attachment.fileUrl}" /></audio>`;
     }
     return '';
 }
@@ -385,7 +432,19 @@
 
         input.addEventListener('input', () => {
             const hasText = input.value.trim().length > 0;
-            document.getElementById('micButton').style.display = hasText ? 'none' : 'flex';
+
+            // Check if user role allows voice recording
+            const userRole = document.body.dataset.userRole;
+            const canRecord = userRole === 'Admin' || userRole === 'Staff';
+
+            // Show mic button only if user can record AND no text input
+            const micBtn = document.getElementById('micButton');
+            if (micBtn && canRecord) {
+                micBtn.style.display = hasText ? 'none' : 'flex';
+            } else if (micBtn) {
+                micBtn.style.display = 'none';
+            }
+
             document.getElementById('sendButton').style.display = hasText ? 'flex' : 'none';
 
             // Notify typing
@@ -709,56 +768,84 @@ function setInfoPanelLoading() {
             inputBar.style.display = 'flex';
         }
     }
-    function startRecording() {
-    audioRecorder.startCapture()
-        .then(() => {
-            document.getElementById('messageInput').style.display = 'none';
-            document.getElementById('attachButton').style.display = 'none';
-            document.getElementById('recordingBar').style.display = 'flex';
+        function startRecording() {
+        const userRole = document.body.dataset.userRole;
 
+        // Final authorization check (fail-safe)
+        if (userRole !== 'Admin' && userRole !== 'Staff') {
+            alert('Only Admin and Staff members can send voice messages.');
+            return;
+        }
+
+        if (!currentChatId || currentChatType !== 'complaint') {
+            alert('Please select a complaint chat to send a voice message.');
+            return;
+        }
+
+        audioRecorder.start()
+            .then(() => {
+                document.getElementById('messageInput').style.display = 'none';
+                document.getElementById('attachButton').style.display = 'none';
+                document.getElementById('recordingBar').style.display = 'flex';
+
+                const micBtn = document.getElementById('micButton');
+                micBtn.onclick = () => stopAndSendRecording();
+                micBtn.innerHTML = '<i class="bi bi-send"></i>';
+                micBtn.title = 'Stop recording and send';
+            })
+            .catch(err => {
+                console.error('Failed to start recording:', err);
+                alert('Microphone access denied or unavailable. Please check your browser permissions.');
+            });
+    }
+
+    function cancelRecording() {
+        // For now, we'll stop and discard
+        audioRecorder.stop()
+            .then(() => {
+                resetRecordingUi();
+            })
+            .catch(err => {
+                console.error('Error canceling recording:', err);
+                resetRecordingUi();
+            });
+    }
+
+    async function stopAndSendRecording() {
+        try {
+            const recordingData = await audioRecorder.stop();
+            resetRecordingUi();
+
+            // Show upload progress
             const micBtn = document.getElementById('micButton');
-            micBtn.onclick = () => stopAndSendRecording();
-            micBtn.innerHTML = '<i class="bi bi-send"></i>';
+            micBtn.disabled = true;
+            micBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
-            setTimeout(() => {
-                audioRecorder.attachVisualizer('waveformBars', 'recordingTimer');
-            }, 50);
-        })
-        .catch(err => {
-            console.error('Failed to start recording:', err);
-            alert('Microphone access denied or unavailable.');
-        });
-}
+            // Upload voice message using the new endpoint
+            const messageDto = await audioRecorder.uploadVoiceMessage(currentChatId, recordingData.blob);
 
-function cancelRecording() {
-    audioRecorder.cancel();
-    resetRecordingUi();
-}
-
-function stopAndSendRecording() {
-    audioRecorder.stop()
-        .then(audioBytes => {
+            console.log('Voice message sent successfully');
+            micBtn.disabled = false;
+            micBtn.innerHTML = '<i class="bi bi-mic"></i>';
+        } catch (err) {
+            console.error('Failed to send voice message:', err);
+            alert(`Error sending voice message: ${err.message}`);
             resetRecordingUi();
-            const blob = new Blob([audioBytes], { type: 'audio/webm' });
-            const file = new File([blob], `voice-${Date.now()}.webm`, { type: 'audio/webm' });
-            uploadAttachment(file, 'VoiceNote');
-        })
-        .catch(err => {
-            console.error('Failed to stop recording:', err);
-            resetRecordingUi();
-        });
-}
+        }
+    }
 
-function resetRecordingUi() {
-    document.getElementById('messageInput').style.display = 'block';
-    document.getElementById('attachButton').style.display = 'flex';
-    document.getElementById('recordingBar').style.display = 'none';
+    function resetRecordingUi() {
+        document.getElementById('messageInput').style.display = 'block';
+        document.getElementById('attachButton').style.display = 'flex';
+        document.getElementById('recordingBar').style.display = 'none';
 
-    const micBtn = document.getElementById('micButton');
-    micBtn.style.display = 'flex';
-    micBtn.onclick = () => startRecording();
-    micBtn.innerHTML = '<i class="bi bi-mic"></i>';
-}
+        const micBtn = document.getElementById('micButton');
+        micBtn.style.display = 'flex';
+        micBtn.onclick = () => startRecording();
+        micBtn.innerHTML = '<i class="bi bi-mic"></i>';
+        micBtn.title = 'Record voice message';
+        micBtn.disabled = false;
+    }
 
 function updateStatus() {
     const select = document.getElementById('statusSelect');
@@ -793,7 +880,57 @@ function updateStatus() {
         return div.innerHTML;
     }
 
+    async function editMessage(messageId, complaintId, currentContent) {
+        const newContent = prompt('Edit message:', currentContent);
+        if (newContent === null || newContent.trim() === '') return;
+
+        try {
+            const response = await fetch(`/api/v1/complaints/${complaintId}/messages/${messageId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+                },
+                body: JSON.stringify({ content: newContent.trim() })
+            });
+
+            if (!response.ok) {
+                alert(`Error editing message: ${response.status}`);
+                return;
+            }
+
+            const updatedMessage = await response.json();
+            console.log('Message edited:', updatedMessage);
+        } catch (err) {
+            console.error('Error editing message:', err);
+            alert('Failed to edit message');
+        }
+    }
+
+    async function deleteMessage(messageId, complaintId) {
+        if (!confirm('Are you sure you want to delete this message?')) return;
+
+        try {
+            const response = await fetch(`/api/v1/complaints/${complaintId}/messages/${messageId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+                }
+            });
+
+            if (!response.ok) {
+                alert(`Error deleting message: ${response.status}`);
+                return;
+            }
+
+            console.log('Message deleted:', messageId);
+        } catch (err) {
+            console.error('Error deleting message:', err);
+            alert('Failed to delete message');
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', init);
 
-    return { showTab, sendMessage, toggleInfo, updateStatus, toggleAttachMenu, handleFileSelected, startRecording, cancelRecording, openNewChatPicker, closeNewChatPicker };
+    return { showTab, sendMessage, toggleInfo, updateStatus, toggleAttachMenu, handleFileSelected, startRecording, cancelRecording, openNewChatPicker, closeNewChatPicker, editMessage, deleteMessage };
 })();

@@ -204,6 +204,69 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "StudentComplaintPortal.Web.Controllers.Api.MessagesController",
+    "Method": "EditMessage",
+    "RelativePath": "api/v1/complaints/{complaintId}/messages/{messageId}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "complaintId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "messageId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "StudentComplaintPortal.Application.DTOs.EditMessageRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "StudentComplaintPortal.Web.Controllers.Api.MessagesController",
+    "Method": "DeleteMessage",
+    "RelativePath": "api/v1/complaints/{complaintId}/messages/{messageId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "complaintId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "messageId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "StudentComplaintPortal.Web.Controllers.Api.AttachmentsController",
+    "Method": "UploadVoiceMessage",
+    "RelativePath": "api/v1/complaints/{complaintId}/voice-message",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "complaintId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "StudentComplaintPortal.Web.Controllers.Api.ComplaintsController",
     "Method": "GetComplaint",
     "RelativePath": "api/v1/complaints/{id}",
