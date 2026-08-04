@@ -14,7 +14,6 @@ public class ComplaintRepository : GenericRepository<Complaint>, IComplaintRepos
         return await _dbSet
             .Where(c => c.StudentId == studentId)
             .Include(c => c.Student)
-            .Include(c => c.Category)
             .OrderByDescending(c => c.CreatedAt)
             .ToListAsync();
     }
@@ -23,7 +22,6 @@ public class ComplaintRepository : GenericRepository<Complaint>, IComplaintRepos
     {
         return await _dbSet
             .Include(c => c.Student)
-            .Include(c => c.Category)
             .Include(c => c.Messages)
                 .ThenInclude(m => m.Sender)
             .FirstOrDefaultAsync(c => c.Id == id);
@@ -33,7 +31,6 @@ public class ComplaintRepository : GenericRepository<Complaint>, IComplaintRepos
     {
         return await _dbSet
             .Include(c => c.Student)
-            .Include(c => c.Category)
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
@@ -41,17 +38,16 @@ public class ComplaintRepository : GenericRepository<Complaint>, IComplaintRepos
     {
         return await _dbSet
             .Include(c => c.Student)
-            .Include(c => c.Category)
             .OrderByDescending(c => c.CreatedAt)
             .ToListAsync();
     }
 
     public async Task<IEnumerable<Complaint>> GetAssignedToStaffAsync(string staffUserId)
     {
+        // TODO: Implement proper category-based assignment once Category entity system is added
+        // For now, return all complaints
         return await _dbSet
             .Include(c => c.Student)
-            .Include(c => c.Category)
-            .Where(c => c.Category.Assignees.Any(a => a.AppUserId == staffUserId))
             .OrderByDescending(c => c.CreatedAt)
             .ToListAsync();
     }

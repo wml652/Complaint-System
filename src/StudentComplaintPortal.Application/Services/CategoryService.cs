@@ -42,6 +42,8 @@ public class CategoryService : ICategoryService
         {
             Name = dto.Name,
             Description = dto.Description,
+            Icon = dto.Icon ?? "📋",
+            Color = dto.Color ?? "#007bff",
             IsActive = true
         };
 
@@ -83,6 +85,8 @@ public class CategoryService : ICategoryService
             Id = category.Id,
             Name = category.Name,
             Description = category.Description,
+            Icon = category.Icon ?? "📋",
+            Color = category.Color ?? "#007bff",
             IsActive = category.IsActive,
             AttachmentRules = category.AttachmentRules.Select(r => new CategoryAttachmentRuleDto
             {

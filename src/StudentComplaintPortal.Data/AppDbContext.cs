@@ -14,13 +14,14 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<Message> Messages { get; set; }
     public DbSet<Attachment> Attachments { get; set; }
     public DbSet<Notification> Notifications { get; set; }
-    public DbSet<Category> Categories { get; set; }
-    public DbSet<CategoryAttachmentRule> CategoryAttachmentRules { get; set; }
-    public DbSet<CategoryAssignee> CategoryAssignees { get; set; }
     public DbSet<Permission> Permissions { get; set; }
     public DbSet<Conversation> Conversations { get; set; }
     public DbSet<ConversationParticipant> ConversationParticipants { get; set; }
     public DbSet<InternalMessage> InternalMessages { get; set; }
+    public DbSet<Category> Categories { get; set; }
+    public DbSet<CategoryAttachmentRule> CategoryAttachmentRules { get; set; }
+    public DbSet<CategoryAssignee> CategoryAssignees { get; set; }
+    public DbSet<MessageQuota> MessageQuotas { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,21 +34,16 @@ public class AppDbContext : IdentityDbContext<AppUser>
             entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Description).IsRequired().HasMaxLength(2000);
             entity.Property(e => e.Status).HasConversion<string>();
-
+            entity.Property(e => e.Category).HasConversion<string>();
+            
             entity.HasOne(e => e.Student)
                 .WithMany(u => u.Complaints)
                 .HasForeignKey(e => e.StudentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasOne(e => e.Category)
-                .WithMany(cat => cat.Complaints)
-                .HasForeignKey(e => e.CategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
-
             entity.HasIndex(e => e.StudentId);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.CreatedAt);
-            entity.HasIndex(e => e.CategoryId);
         });
 
         // Message configuration
@@ -55,7 +51,7 @@ public class AppDbContext : IdentityDbContext<AppUser>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Content).HasMaxLength(5000);
-            
+
             entity.HasOne(e => e.Complaint)
                 .WithMany(c => c.Messages)
                 .HasForeignKey(e => e.ComplaintId)
@@ -64,6 +60,11 @@ public class AppDbContext : IdentityDbContext<AppUser>
             entity.HasOne(e => e.Sender)
                 .WithMany(u => u.Messages)
                 .HasForeignKey(e => e.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.ReadBy)
+                .WithMany()
+                .HasForeignKey(e => e.ReadByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasIndex(e => e.ComplaintId);
@@ -203,6 +204,27 @@ public class AppDbContext : IdentityDbContext<AppUser>
 
             entity.HasIndex(e => e.ConversationId);
             entity.HasIndex(e => e.SentAt);
+        });
+
+        // MessageQuota configuration
+        modelBuilder.Entity<MessageQuota>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasIndex(e => new { e.ComplaintId, e.StudentId }).IsUnique();
+
+            entity.HasOne(e => e.Complaint)
+                .WithMany()
+                .HasForeignKey(e => e.ComplaintId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Student)
+                .WithMany()
+                .HasForeignKey(e => e.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.Property(e => e.MessagesRemaining)
+                .HasDefaultValue(MessageQuota.MAX_MESSAGES_PER_STAFF_RESPONSE);
         });
     }
 }

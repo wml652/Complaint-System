@@ -5,6 +5,7 @@ using StudentComplaintPortal.Application.DTOs;
 using StudentComplaintPortal.Application.Services;
 using StudentComplaintPortal.Data.Repositories;
 using StudentComplaintPortal.Domain.Entities;
+using StudentComplaintPortal.Domain.Enums;
 using StudentComplaintPortal.Web.Services;
 using System.Security.Claims;
 
@@ -18,19 +19,25 @@ public class ChatHub : Hub
     private readonly IConversationService _conversationService;
     private readonly PresenceTracker _presenceTracker;
     private readonly UserManager<AppUser> _userManager;
+    private readonly IMessageReadTrackingService _readTrackingService;
+    private readonly IMessageQuotaService _quotaService;
 
     public ChatHub(
         IMessageService messageService,
         IUnitOfWork unitOfWork,
         PresenceTracker presenceTracker,
         UserManager<AppUser> userManager,
-        IConversationService conversationService)
+        IConversationService conversationService,
+        IMessageReadTrackingService readTrackingService,
+        IMessageQuotaService quotaService)
     {
         _messageService = messageService;
         _unitOfWork = unitOfWork;
         _presenceTracker = presenceTracker;
         _userManager = userManager;
         _conversationService = conversationService;
+        _readTrackingService = readTrackingService;
+        _quotaService = quotaService;
     }
 
     public async Task JoinConversationGroup(int conversationId)
@@ -167,14 +174,6 @@ public class ChatHub : Hub
         await Clients.Caller.SendAsync("JoinedGroup", complaintId);
     }
 
-    public async Task NotifyNewMessage(int complaintId, MessageDto message)
-    {
-        // ADD THIS LINE:
-        Console.WriteLine($"[SIGNALR HUB] Broadcasting message to complaint-{complaintId}");
-
-        await Clients.OthersInGroup($"complaint-{complaintId}").SendAsync("ReceiveMessage", message);
-    }
-
     public async Task SendMessage(int complaintId, string content)
     {
         var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -197,6 +196,23 @@ public class ChatHub : Hub
             throw new HubException("Forbidden: You can only send messages to your own complaints.");
         }
 
+        // Check quota for students only
+        if (userRole == "Student")
+        {
+            var canSend = await _quotaService.CanSendMessageAsync(complaintId, userId);
+
+            if (!canSend)
+            {
+                await Clients.Caller.SendAsync("QuotaExceeded", new
+                {
+                    message = "You've reached your message limit (10 messages). Please wait for a staff response to continue.",
+                    remaining = 0,
+                    maxMessages = MessageQuota.MAX_MESSAGES_PER_STAFF_RESPONSE
+                });
+                return;
+            }
+        }
+
         // Send message via service (which handles notifications)
         StudentComplaintPortal.Application.DTOs.MessageDto messageDto;
         try
@@ -205,12 +221,133 @@ public class ChatHub : Hub
         }
         catch (StudentComplaintPortal.Application.Exceptions.ComplaintClosedException ex)
         {
-            // SignalR sirf HubException ka message client tak bhejta hai -
-            // koi bhi doosri exception type generic error dikhati hai
             throw new HubException(ex.Message);
+        }
+
+        // Handle quota updates
+        if (userRole == "Student")
+        {
+            await _quotaService.DecrementQuotaAsync(complaintId, userId);
+
+            var remaining = await _quotaService.GetRemainingMessagesAsync(complaintId, userId);
+
+            // Notify sender of remaining quota
+            await Clients.Caller.SendAsync("QuotaUpdated", new
+            {
+                remaining = remaining,
+                maxMessages = MessageQuota.MAX_MESSAGES_PER_STAFF_RESPONSE,
+                canSendMore = remaining > 0
+            });
+        }
+        else if (userRole == "Staff" || userRole == "Admin")
+        {
+            // Reset quota for all students in this complaint
+            await _quotaService.ResetQuotaForComplaintAsync(complaintId);
+
+            // Notify all students in the conversation
+            await Clients.Group($"complaint-{complaintId}")
+                .SendAsync("QuotaReset", new
+                {
+                    remaining = MessageQuota.MAX_MESSAGES_PER_STAFF_RESPONSE,
+                    maxMessages = MessageQuota.MAX_MESSAGES_PER_STAFF_RESPONSE,
+                    message = "Staff has responded. You can now send more messages."
+                });
         }
 
         // Broadcast to all users in the complaint group
         await Clients.Group($"complaint-{complaintId}").SendAsync("ReceiveMessage", messageDto);
     }
+
+    // Mark individual message as read
+    public async Task MarkMessageAsRead(int messageId, int complaintId)
+    {
+        var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            throw new HubException("User not authenticated");
+        }
+
+        try
+        {
+            await _readTrackingService.MarkMessageAsReadAsync(messageId, userId);
+
+            var user = await _userManager.FindByIdAsync(userId);
+
+            // Notify all participants in this complaint
+            await Clients.Group($"complaint-{complaintId}")
+                .SendAsync("MessageRead", new
+                {
+                    messageId,
+                    readAt = DateTime.UtcNow,
+                    readByUserId = userId,
+                    readByUserName = user?.FullName
+                });
+        }
+        catch (Exception ex)
+        {
+            throw new HubException($"Failed to mark message as read: {ex.Message}");
+        }
+    }
+
+    // Mark multiple messages as read
+    public async Task MarkMultipleMessagesAsRead(List<int> messageIds, int complaintId)
+    {
+        var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            throw new HubException("User not authenticated");
+        }
+
+        try
+        {
+            await _readTrackingService.MarkMultipleMessagesAsReadAsync(messageIds, userId);
+
+            // Notify all participants
+            await Clients.Group($"complaint-{complaintId}")
+                .SendAsync("MultipleMessagesRead", new
+                {
+                    messageIds,
+                    readAt = DateTime.UtcNow,
+                    readByUserId = userId
+                });
+        }
+        catch (Exception ex)
+        {
+            throw new HubException($"Failed to mark messages as read: {ex.Message}");
+        }
+    }
+
+    #region Typing Indicators
+
+    public async Task UserStartedTyping(int complaintId)
+    {
+        var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userName = Context.User?.FindFirst(ClaimTypes.GivenName)?.Value ?? "User";
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            await Clients.Group($"complaint-{complaintId}")
+                .SendAsync("UserTyping", userId, userName);
+        }
+    }
+
+    public async Task UserStoppedTyping(int complaintId)
+    {
+        var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            await Clients.Group($"complaint-{complaintId}")
+                .SendAsync("UserStoppedTyping", userId);
+        }
+    }
+
+    public async Task LeaveComplaintGroup(int complaintId)
+    {
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"complaint-{complaintId}");
+    }
+
+    #endregion
 }

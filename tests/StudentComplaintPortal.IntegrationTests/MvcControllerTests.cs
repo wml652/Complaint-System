@@ -1,5 +1,3 @@
-// TODO: Update tests after Category migration
-/*
 using Microsoft.AspNetCore.Mvc.Testing;
 using StudentComplaintPortal.Domain.Entities;
 using StudentComplaintPortal.Domain.Enums;
@@ -152,4 +150,3 @@ public class MvcControllerTests : IClassFixture<CustomWebApplicationFactory>
         Assert.Contains("Register", content);
     }
 }
-*/

@@ -358,8 +358,9 @@ namespace StudentComplaintPortal.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -368,9 +369,6 @@ namespace StudentComplaintPortal.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
-
-                    b.Property<int?>("Priority")
-                        .HasColumnType("int");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -389,8 +387,6 @@ namespace StudentComplaintPortal.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CategoryId");
 
                     b.HasIndex("CreatedAt");
 
@@ -512,6 +508,9 @@ namespace StudentComplaintPortal.Data.Migrations
                     b.Property<DateTime?>("ReadAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("ReadByUserId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("SenderId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -522,6 +521,8 @@ namespace StudentComplaintPortal.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ComplaintId");
+
+                    b.HasIndex("ReadByUserId");
 
                     b.HasIndex("SenderId");
 
@@ -686,19 +687,11 @@ namespace StudentComplaintPortal.Data.Migrations
 
             modelBuilder.Entity("StudentComplaintPortal.Domain.Entities.Complaint", b =>
                 {
-                    b.HasOne("StudentComplaintPortal.Domain.Entities.Category", "Category")
-                        .WithMany("Complaints")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("StudentComplaintPortal.Domain.Entities.AppUser", "Student")
                         .WithMany("Complaints")
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Category");
 
                     b.Navigation("Student");
                 });
@@ -749,6 +742,11 @@ namespace StudentComplaintPortal.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("StudentComplaintPortal.Domain.Entities.AppUser", "ReadBy")
+                        .WithMany()
+                        .HasForeignKey("ReadByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("StudentComplaintPortal.Domain.Entities.AppUser", "Sender")
                         .WithMany("Messages")
                         .HasForeignKey("SenderId")
@@ -756,6 +754,8 @@ namespace StudentComplaintPortal.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Complaint");
+
+                    b.Navigation("ReadBy");
 
                     b.Navigation("Sender");
                 });
@@ -785,8 +785,6 @@ namespace StudentComplaintPortal.Data.Migrations
                     b.Navigation("Assignees");
 
                     b.Navigation("AttachmentRules");
-
-                    b.Navigation("Complaints");
                 });
 
             modelBuilder.Entity("StudentComplaintPortal.Domain.Entities.Complaint", b =>
