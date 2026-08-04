@@ -87,7 +87,8 @@ else
                     // Urgent first, then Normal, then complaints with no priority set yet
                     // (nothing assigns Priority today - see note above the table).
                     var orderedComplaints = Model.Complaints
-                    .OrderBy(c => c.Priority == "Urgent" ? 0 : c.Priority == "Normal" ? 1 : 2)
+                    .OrderBy(c => c.Status == "Closed" ? 1 : 0)
+                    .ThenBy(c => c.Priority == "Urgent" ? 0 : c.Priority == "Normal" ? 1 : 2)
                     .ThenByDescending(c => c.CreatedAt);
                 }
                 @foreach (var complaint in orderedComplaints)
@@ -113,7 +114,7 @@ else
                         <td><span class="badge @(complaint.Status == "Open" ? "bg-success" : complaint.Status == "InProgress" ? "bg-warning text-dark" : "bg-secondary")">@(complaint.Status == "Open" ? "Pending" : complaint.Status)</span></td>
                         <td>@complaint.CreatedAt.ToString("MMM dd, yyyy")</td>
                         <td>
-                            <a asp-controller="Complaint" asp-action="Detail" asp-route-id="@complaint.Id" class="btn btn-sm btn-outline-primary">View</a>
+                            <a asp-controller="ChatWorkspace" asp-action="Index" asp-route-complaintId="@complaint.Id" class="btn btn-sm btn-outline-primary">View</a>
                         </td>
                     </tr>
                 }

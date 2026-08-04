@@ -1,0 +1,208 @@
+@model PagedResult<CategoryListItemDto>
+
+@{
+    ViewData["Title"] = "Category Management";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Category Management</h2>
+        <a href="@Url.Action("CategoryManagement", "Dashboard")" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Create New Category
+        </a>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">Filter by Status:</label>
+                    <div class="btn-group" role="group">
+                        <a href="@Url.Action("Categories", "Dashboard", new { page = 1 })" class="btn btn-outline-secondary btn-sm @(string.IsNullOrEmpty(Context.Request.Query["filterActive"]) ? "active" : "")">
+                            All
+                        </a>
+                        <a href="@Url.Action("Categories", "Dashboard", new { page = 1, filterActive = "active" })" class="btn btn-outline-secondary btn-sm @(Context.Request.Query["filterActive"] == "active" ? "active" : "")">
+                            Active
+                        </a>
+                        <a href="@Url.Action("Categories", "Dashboard", new { page = 1, filterActive = "inactive" })" class="btn btn-outline-secondary btn-sm @(Context.Request.Query["filterActive"] == "inactive" ? "active" : "")">
+                            Inactive
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Search:</label>
+                    <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search categories..." />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Table -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Complaints</th>
+                        <th>Staff Assigned</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Items.Count > 0)
+                    {
+                        @foreach (var category in Model.Items)
+                        {
+                            <tr>
+                                <td class="fw-bold">@category.Name</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(category.Description))
+                                    {
+                                        <span>@Html.Raw(category.Description.Length > 50 ? category.Description.Substring(0, 50) + "..." : category.Description)</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (category.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-info text-dark">@category.ComplaintCount</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">@category.AssignedStaffCount</span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="@Url.Action("CategoryDetails", "Dashboard", new { id = category.Id })" class="btn btn-outline-info" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="@Url.Action("EditCategory", "Dashboard", new { id = category.Id })" class="btn btn-outline-warning" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="toggleCategoryStatus(@category.Id)" title="Toggle Status">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger" onclick="deleteCategory(@category.Id)" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                No categories found. <a href="@Url.Action("CategoryManagement", "Dashboard")">Create one now</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    @if (Model.TotalPages > 1)
+    {
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                @if (Model.HasPreviousPage)
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="@Url.Action("Categories", "Dashboard", new { page = Model.PageNumber - 1, filterActive = Context.Request.Query["filterActive"] })">Previous</a>
+                    </li>
+                }
+                else
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">Previous</span>
+                    </li>
+                }
+
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    @if (i == Model.PageNumber)
+                    {
+                        <li class="page-item active">
+                            <span class="page-link">@i</span>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action("Categories", "Dashboard", new { page = i, filterActive = Context.Request.Query["filterActive"] })">@i</a>
+                        </li>
+                    }
+                }
+
+                @if (Model.HasNextPage)
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="@Url.Action("Categories", "Dashboard", new { page = Model.PageNumber + 1, filterActive = Context.Request.Query["filterActive"] })">Next</a>
+                    </li>
+                }
+                else
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">Next</span>
+                    </li>
+                }
+            </ul>
+        </nav>
+
+        <div class="text-center text-muted small mt-2">
+            Page @Model.PageNumber of @Model.TotalPages (Total: @Model.TotalCount categories)
+        </div>
+    }
+</div>
+
+@section Scripts {
+<script src="~/js/category-management.js"></script>
+<script>
+    // Client-side search filter
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('tbody tr');
+
+        rows.forEach(row => {
+            const categoryName = row.querySelector('td:nth-child(1)')?.textContent.toLowerCase() || '';
+            const description = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
+
+            if (categoryName.includes(searchTerm) || description.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    function toggleCategoryStatus(categoryId) {
+        if (confirm('Toggle this category status?')) {
+            toggleCategoryActive(categoryId);
+        }
+    }
+
+    function deleteCategory(categoryId) {
+        if (confirm('Are you sure you want to delete this category? This action cannot be undone.')) {
+            deleteCategory_API(categoryId);
+        }
+    }
+</script>
+}

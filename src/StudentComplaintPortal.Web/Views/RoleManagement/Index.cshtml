@@ -1,0 +1,54 @@
+﻿@model List<StudentComplaintPortal.Application.DTOs.RoleDto>
+
+@{
+    ViewData["Title"] = "Manage Roles";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Manage Roles</h3>
+    <div>
+        <a asp-action="AssignToStaff" class="btn btn-outline-primary">Assign to Staff</a>
+        <a asp-action="Edit" class="btn btn-primary">+ Create New Role</a>
+    </div>
+</div>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Role Name</th>
+            <th>Permissions</th>
+            <th style="width: 160px;">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var role in Model)
+        {
+            <tr>
+                <td>@role.Name</td>
+                <td>
+                    @if (role.PermissionCodes.Any())
+                    {
+                        @string.Join(", ", role.PermissionCodes)
+                    }
+                    else
+                    {
+                        <span class="text-muted">No permissions assigned</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@role.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
+                    <form asp-action="Delete" asp-route-id="@role.Id" method="post" class="d-inline"
+                          onsubmit="return confirm('Delete this role? This cannot be undone.');">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

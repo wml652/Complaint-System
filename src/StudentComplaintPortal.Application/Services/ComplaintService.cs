@@ -83,9 +83,8 @@ public class ComplaintService : IComplaintService
 
     public async Task<IEnumerable<ComplaintDto>> GetAssignedComplaintsAsync(string staffUserId)
     {
-        // Query complaints where the category has an assignee matching the staffUserId
-        var complaints = await _unitOfWork.Complaints.FindAsync(c =>
-            c.Category.Assignees.Any(a => a.AppUserId == staffUserId));
+        // Uses the dedicated repository method so Student/Category are eager-loaded correctly
+        var complaints = await _unitOfWork.Complaints.GetAssignedToStaffAsync(staffUserId);
         return complaints.Select(MapToDto);
     }
 
@@ -124,18 +123,8 @@ public class ComplaintService : IComplaintService
 
     private bool IsValidStatusTransition(ComplaintStatus currentStatus, ComplaintStatus newStatus)
     {
-        // Closed complaints cannot be reopened directly
-        if (currentStatus == ComplaintStatus.Closed && newStatus == ComplaintStatus.Open)
-        {
-            return false;
-        }
-
-        // Closed complaints cannot go back to InProgress
-        if (currentStatus == ComplaintStatus.Closed && newStatus == ComplaintStatus.InProgress)
-        {
-            return false;
-        }
-
+        // Team decision (update): a Closed complaint CAN be moved to any other
+        // status again - status changes are no longer one-way.
         return true;
     }
 

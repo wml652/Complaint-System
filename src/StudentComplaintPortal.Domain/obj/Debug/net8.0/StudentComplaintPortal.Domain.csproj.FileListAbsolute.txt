@@ -1,0 +1,13 @@
+D:\Complaint-System\src\StudentComplaintPortal.Domain\bin\Debug\net8.0\StudentComplaintPortal.Domain.deps.json
+D:\Complaint-System\src\StudentComplaintPortal.Domain\bin\Debug\net8.0\StudentComplaintPortal.Domain.dll
+D:\Complaint-System\src\StudentComplaintPortal.Domain\bin\Debug\net8.0\StudentComplaintPortal.Domain.pdb
+D:\Complaint-System\src\StudentComplaintPortal.Domain\obj\Debug\net8.0\StudentComplaintPortal.Domain.csproj.AssemblyReference.cache
+D:\Complaint-System\src\StudentComplaintPortal.Domain\obj\Debug\net8.0\StudentComplaintPortal.Domain.GeneratedMSBuildEditorConfig.editorconfig
+D:\Complaint-System\src\StudentComplaintPortal.Domain\obj\Debug\net8.0\StudentComplaintPortal.Domain.AssemblyInfoInputs.cache
+D:\Complaint-System\src\StudentComplaintPortal.Domain\obj\Debug\net8.0\StudentComplaintPortal.Domain.AssemblyInfo.cs
+D:\Complaint-System\src\StudentComplaintPortal.Domain\obj\Debug\net8.0\StudentComplaintPortal.Domain.csproj.CoreCompileInputs.cache
+D:\Complaint-System\src\StudentComplaintPortal.Domain\obj\Debug\net8.0\StudentComplaintPortal.Domain.sourcelink.json
+D:\Complaint-System\src\StudentComplaintPortal.Domain\obj\Debug\net8.0\StudentComplaintPortal.Domain.dll
+D:\Complaint-System\src\StudentComplaintPortal.Domain\obj\Debug\net8.0\refint\StudentComplaintPortal.Domain.dll
+D:\Complaint-System\src\StudentComplaintPortal.Domain\obj\Debug\net8.0\StudentComplaintPortal.Domain.pdb
+D:\Complaint-System\src\StudentComplaintPortal.Domain\obj\Debug\net8.0\ref\StudentComplaintPortal.Domain.dll

@@ -74,4 +74,22 @@ public class MessageBufferService
     {
         OnMessageBroadcast?.Invoke(complaintId, message);
     }
+    public void MarkAsRead(int complaintId, string readerUserId)
+    {
+        if (_buffers.TryGetValue(complaintId, out var entry))
+        {
+            lock (entry)
+            {
+                var now = DateTime.UtcNow;
+                foreach (var msg in entry.Messages)
+                {
+                    if (msg.SenderId != readerUserId && msg.ReadAt == null)
+                    {
+                        msg.ReadAt = now;
+                        msg.IsRead = true;
+                    }
+                }
+            }
+        }
+    }
 }
