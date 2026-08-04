@@ -175,6 +175,7 @@ public class MessageService : IMessageService
             await _unitOfWork.SaveChangesAsync();
         }
 
-        _bufferService.MarkAsRead(complaintId, readerUserId);
+        // TODO: Re-enable when MessageBufferService is properly injected
+        // _bufferService.MarkAsRead(complaintId, readerUserId);
     }
 }

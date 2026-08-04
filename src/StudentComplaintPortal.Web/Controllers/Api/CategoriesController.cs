@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using StudentComplaintPortal.Application.DTOs;
 using StudentComplaintPortal.Application.Services;
 using StudentComplaintPortal.Data;
+using StudentComplaintPortal.Domain.Entities;
 using StudentComplaintPortal.Domain.Enums;
 
 namespace StudentComplaintPortal.Web.Controllers.Api;
@@ -25,45 +26,183 @@ public class CategoriesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAllActiveCategories()
     {
-        var categories = await _categoryService.GetAllActiveCategoriesAsync();
-        return Ok(categories);
+        try
+        {
+            var categories = await _categoryService.GetAllActiveCategoriesAsync();
+            return Ok(categories);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetCategoryById(int id)
     {
-        var category = await _categoryService.GetCategoryByIdAsync(id);
-
-        if (category == null)
+        try
         {
-            return NotFound(new { message = $"Category with ID {id} not found" });
-        }
+            var category = await _categoryService.GetCategoryByIdAsync(id);
 
-        return Ok(category);
+            if (category == null)
+            {
+                return NotFound(new { message = $"Category with ID {id} not found" });
+            }
+
+            return Ok(category);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
     }
 
     [HttpPost]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryDto dto)
     {
-        if (!ModelState.IsValid)
+        try
         {
-            return BadRequest(ModelState);
-        }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-        var category = await _categoryService.CreateCategoryAsync(dto);
-        return CreatedAtAction(nameof(GetCategoryById), new { id = category.Id }, category);
+            var category = await _categoryService.CreateCategoryAsync(dto);
+            return CreatedAtAction(nameof(GetCategoryById), new { id = category.Id }, category);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
+    [HttpPatch("{id}/toggle-active")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> ToggleActiveStatus(int id)
+    {
+        try
+        {
+            var category = await _context.Categories.FindAsync(id);
+            if (category == null)
+            {
+                return NotFound(new { message = $"Category with ID {id} not found" });
+            }
+
+            category.IsActive = !category.IsActive;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Category status updated", isActive = category.IsActive });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
     }
 
     [HttpGet("staff")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Staff")]
     public async Task<IActionResult> GetStaffUsers()
     {
-        var staffUsers = await _context.Users
-            .Where(u => u.Role == UserRole.Staff)
-            .Select(u => new { u.Id, u.FullName, u.Email })
-            .ToListAsync();
+        try
+        {
+            var staffUsers = await _context.Users
+                .Where(u => u.Role == UserRole.Staff)
+                .Select(u => new { u.Id, u.FullName, u.Email })
+                .ToListAsync();
 
-        return Ok(staffUsers);
+            return Ok(staffUsers);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
+    [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> UpdateCategory(int id, [FromBody] CreateCategoryDto dto)
+    {
+        try
+        {
+            var category = await _context.Categories
+                .Include(c => c.AttachmentRules)
+                .Include(c => c.Assignees)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (category == null)
+            {
+                return NotFound(new { message = $"Category with ID {id} not found" });
+            }
+
+            category.Name = dto.Name;
+            category.Description = dto.Description;
+
+            _context.CategoryAttachmentRules.RemoveRange(category.AttachmentRules);
+            await _context.SaveChangesAsync();
+
+            foreach (var ruleDto in dto.AttachmentRules)
+            {
+                var rule = new CategoryAttachmentRule
+                {
+                    CategoryId = category.Id,
+                    FileType = Enum.Parse<FileType>(ruleDto.FileType),
+                    MaxFileCount = ruleDto.MaxFileCount,
+                    MaxFileSizeBytes = ruleDto.MaxFileSizeBytes,
+                    IsRequired = ruleDto.IsRequired
+                };
+                category.AttachmentRules.Add(rule);
+            }
+
+            _context.CategoryAssignees.RemoveRange(category.Assignees);
+            foreach (var assigneeId in dto.AssigneeIds)
+            {
+                category.Assignees.Add(new CategoryAssignee
+                {
+                    CategoryId = category.Id,
+                    AppUserId = assigneeId
+                });
+            }
+
+            _context.Categories.Update(category);
+            await _context.SaveChangesAsync();
+
+            var updatedCategory = await _categoryService.GetCategoryByIdAsync(id);
+            return Ok(updatedCategory);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteCategory(int id)
+    {
+        try
+        {
+            var category = await _context.Categories
+                .Include(c => c.AttachmentRules)
+                .Include(c => c.Assignees)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (category == null)
+            {
+                return NotFound(new { message = $"Category with ID {id} not found" });
+            }
+
+            _context.CategoryAttachmentRules.RemoveRange(category.AttachmentRules);
+            _context.CategoryAssignees.RemoveRange(category.Assignees);
+            _context.Categories.Remove(category);
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Category deleted successfully" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
     }
 }

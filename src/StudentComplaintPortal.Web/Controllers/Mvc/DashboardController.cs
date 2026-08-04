@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudentComplaintPortal.Application.DTOs;
 using StudentComplaintPortal.Application.Services;
+using StudentComplaintPortal.Web.Models;
 using System.Security.Claims;
 
 namespace StudentComplaintPortal.Web.Controllers.Mvc;

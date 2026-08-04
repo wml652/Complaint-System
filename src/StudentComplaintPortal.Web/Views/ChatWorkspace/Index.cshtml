@@ -56,9 +56,11 @@
             <div id="attachMenu" class="attach-menu" style="display:none;">
                 <label class="attach-menu-item" for="photoInput"><i class="bi bi-image"></i> Photo</label>
                 <label class="attach-menu-item" for="videoInput"><i class="bi bi-camera-video"></i> Video</label>
+                <label class="attach-menu-item" for="voiceInput"><i class="bi bi-mic"></i> Voice Message</label>
             </div>
             <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="ChatWorkspace.handleFileSelected(this, 'Photo')" />
             <input type="file" id="videoInput" accept="video/*" style="display:none;" onchange="ChatWorkspace.handleFileSelected(this, 'Video')" />
+            <input type="file" id="voiceInput" accept="audio/*" style="display:none;" onchange="ChatWorkspace.handleFileSelected(this, 'VoiceNote')" />
 
             <input type="text" id="messageInput" class="form-control" placeholder="Type a message" />
 

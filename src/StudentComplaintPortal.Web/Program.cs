@@ -18,6 +18,7 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+#region Core Services
 // Add services to the container
 builder.Services.AddControllers();
 
@@ -25,11 +26,15 @@ builder.Services.AddControllers();
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+#endregion
 
+#region Database Configuration
 // Configure Database
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+#endregion
 
+#region Identity Configuration
 // Configure Identity
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 {
@@ -42,7 +47,9 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders()
 .AddClaimsPrincipalFactory<AppUserClaimsPrincipalFactory>();
+#endregion
 
+#region Authentication Configuration
 // Configure Authentication with Policy Scheme
 builder.Services.AddAuthentication(options =>
 {
@@ -63,20 +70,18 @@ builder.Services.AddAuthentication(options =>
             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
     };
 
-    // Phase 2: Support JWT token from query string for SignalR
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
         {
             var accessToken = context.Request.Query["access_token"];
             var path = context.HttpContext.Request.Path;
-            
-            // Only read token from query string for SignalR hub
+
             if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/chat"))
             {
                 context.Token = accessToken;
             }
-            
+
             return Task.CompletedTask;
         }
     };
@@ -106,35 +111,37 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
+#endregion
 
+#region Caching and Session
 builder.Services.AddDistributedMemoryCache();
-
 builder.Services.AddSession();
+#endregion
 
-builder.Services.AddSingleton<StudentComplaintPortal.Application.Services.MessageBufferService>();
+#region SignalR and Real-time Communication
+builder.Services.AddSingleton<PresenceTracker>();
+builder.Services.AddSignalR();
+#endregion
 
-builder.Services.AddHostedService<StudentComplaintPortal.Web.Services.MessageFlushWorker>();
-
+#region Security and Authorization
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, StudentComplaintPortal.Web.Security.PermissionPolicyProvider>();
 builder.Services.AddScoped<IAuthorizationHandler, StudentComplaintPortal.Web.Security.PermissionAuthorizationHandler>();
 builder.Services.AddScoped<IRoleManagementService, StudentComplaintPortal.Application.Services.RoleManagementService>();
+#endregion
 
-builder.Services.AddSingleton<PresenceTracker>();
-
-// Phase 2: Add SignalR
-builder.Services.AddSignalR();
-
-// Phase 3: Add HttpClient for Blazor components with authentication
+#region HTTP Clients
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CookieHandler>();
 builder.Services.AddHttpClient("AuthenticatedClient")
     .AddHttpMessageHandler<CookieHandler>()
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
     {
-        UseCookies = false // We handle cookies manually
+        UseCookies = false
     });
 builder.Services.AddHttpClient();
+#endregion
 
+#region Application Services
 // Register application services
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IComplaintService, ComplaintService>();
@@ -144,7 +151,12 @@ builder.Services.AddScoped<IAttachmentService, AttachmentService>();
 builder.Services.AddScoped<IFileStorageService, LocalDiskFileStorageService>();
 builder.Services.AddScoped<INotificationPushService, SignalRNotificationPushService>();
 builder.Services.AddScoped<IConversationService, StudentComplaintPortal.Application.Services.ConversationService>();
+builder.Services.AddScoped<IMessageReadTrackingService, MessageReadTrackingService>();
+builder.Services.AddScoped<IMessageQuotaService, MessageQuotaService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+#endregion
 
+#region Swagger Configuration
 // Configure Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -156,7 +168,6 @@ builder.Services.AddSwaggerGen(options =>
         Description = "REST API for Student Complaint Portal - Phase 1 & 2"
     });
 
-    // Add JWT authentication to Swagger
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.",
@@ -181,9 +192,29 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
+#endregion
+
 
 var app = builder.Build();
 
+#region Database Initialization
+// Apply pending migrations on startup
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    try
+    {
+        await dbContext.Database.MigrateAsync();
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating the database.");
+    }
+}
+#endregion
+
+#region Development Data Seeding
 // Seed test users in development
 if (app.Environment.IsDevelopment())
 {
@@ -204,7 +235,8 @@ using (var scope = app.Services.CreateScope())
         await StudentComplaintPortal.Data.Seeding.ConversationSeeder.SeedAsync(
            services.GetRequiredService<AppDbContext>());
 
-        await StudentComplaintPortal.Data.Seeding.DbSeeder.SeedDataAsync(services);
+        await StudentComplaintPortal.Data.Seeding.DbSeeder.SeedDataAsync(
+            services.GetRequiredService<AppDbContext>());
     }
     catch (Exception ex)
     {
@@ -212,6 +244,9 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "An error occurred while seeding the database.");
     }
 }
+#endregion
+
+#region HTTP Pipeline Configuration
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
@@ -220,40 +255,36 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-
 app.UseHttpsRedirection();
-
-// Phase 2: Serve static files for uploads
 app.UseStaticFiles();
-
 app.UseWebSockets();
-
 app.UseSession();
-
 app.UseAuthentication();
-
 app.UseAuthorization();
+#endregion
 
+#region Route Configuration
 // Map API controllers
 app.MapControllers();
 
-// Phase 2: Map SignalR hub
+// Map SignalR hub
 app.MapHub<ChatHub>("/hubs/chat");
 
-// Phase 3: Map Blazor hub
+// Map Blazor hub
 app.MapBlazorHub();
 
 // Map MVC routes with default route
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}");
+#endregion
 
 app.Run();
 
+#region Helper Methods
 // Seed test users method
 static async Task SeedTestUsers(UserManager<AppUser> userManager)
 {
-
     // Seed Student
     if (await userManager.FindByEmailAsync("student@test.com") == null)
     {
@@ -283,7 +314,6 @@ static async Task SeedTestUsers(UserManager<AppUser> userManager)
         };
         await userManager.CreateAsync(admin, "Admin123!");
     }
-}
 
     // Seed a dedicated Staff test account (redirects to the Staff Dashboard on login)
     if (await userManager.FindByEmailAsync("staff@test.com") == null)
@@ -299,7 +329,6 @@ static async Task SeedTestUsers(UserManager<AppUser> userManager)
         };
         await userManager.CreateAsync(staff, "Staff123!");
     }
-
 
     // ADD YOUR TEAM MEMBERS HERE:
     var teamMembers = new[]
@@ -321,13 +350,15 @@ static async Task SeedTestUsers(UserManager<AppUser> userManager)
                 UserName = member.Email,
                 Email = member.Email,
                 FullName = member.Name,
-                Role = UserRole.Staff, // Category-assigned staff members - redirected to the Staff Dashboard
+                Role = UserRole.Staff,
                 CreatedAt = DateTime.UtcNow,
                 EmailConfirmed = true
             };
-            // This automatically generates the secure password hash for "Staff123!"
             await userManager.CreateAsync(user, "Staff123!");
         }
     }
-}// Make Program class accessible for integration tests
+}
+#endregion
+
+// Make Program class accessible for integration tests
 public partial class Program { }
