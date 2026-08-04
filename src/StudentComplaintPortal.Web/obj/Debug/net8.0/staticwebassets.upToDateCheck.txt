@@ -4,6 +4,7 @@ wwwroot\css\site.css
 wwwroot\js\audioRecorder.js
 wwwroot\js\category-management.js
 wwwroot\js\chat-workspace.js
+wwwroot\js\dashboard-charts.js
 wwwroot\js\notifications.js
 wwwroot\js\signalr-connection.js
 wwwroot\uploads\1002\a3c6ca3b-3663-4c5c-816f-0f7bdd914e8b-Gemini_Generated_Image_4bk5304bk5304bk5.png

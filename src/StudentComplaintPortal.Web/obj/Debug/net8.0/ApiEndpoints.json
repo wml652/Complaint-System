@@ -351,6 +351,26 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "StudentComplaintPortal.Web.Controllers.Api.DashboardController",
+    "Method": "GetStats",
+    "RelativePath": "api/v1/dashboard/stats",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "StudentComplaintPortal.Application.DTOs.DashboardStatsDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
     "ContainingType": "StudentComplaintPortal.Web.Controllers.Api.NotificationsController",
     "Method": "GetNotifications",
     "RelativePath": "api/v1/notifications",
