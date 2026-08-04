@@ -9,6 +9,10 @@ public class CreateCategoryDto
 
     public string? Description { get; set; }
 
+    public string? Icon { get; set; } = "📋";
+
+    public string? Color { get; set; } = "#007bff";
+
     public List<string> AssigneeIds { get; set; } = new();
 
     public List<CategoryAttachmentRuleDto> AttachmentRules { get; set; } = new();

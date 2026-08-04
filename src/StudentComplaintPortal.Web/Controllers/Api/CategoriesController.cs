@@ -137,6 +137,8 @@ public class CategoriesController : ControllerBase
 
             category.Name = dto.Name;
             category.Description = dto.Description;
+            category.Icon = dto.Icon ?? category.Icon;
+            category.Color = dto.Color ?? category.Color;
 
             _context.CategoryAttachmentRules.RemoveRange(category.AttachmentRules);
             await _context.SaveChangesAsync();

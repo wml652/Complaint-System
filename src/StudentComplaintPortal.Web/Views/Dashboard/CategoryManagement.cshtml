@@ -64,6 +64,31 @@
                             <textarea id="categoryDescription" class="form-control" rows="3" placeholder="Describe what this category is for..."></textarea>
                         </div>
 
+                        <!-- Icon Selection -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Category Icon</label>
+                            <div class="icon-selector">
+                                <button type="button" class="icon-btn" onclick="selectIcon(this, '🎓')">🎓</button>
+                                <button type="button" class="icon-btn" onclick="selectIcon(this, '💰')">💰</button>
+                                <button type="button" class="icon-btn" onclick="selectIcon(this, '🏫')">🏫</button>
+                                <button type="button" class="icon-btn" onclick="selectIcon(this, '🔒')">🔒</button>
+                                <button type="button" class="icon-btn" onclick="selectIcon(this, '🏠')">🏠</button>
+                                <button type="button" class="icon-btn active" onclick="selectIcon(this, '📋')">📋</button>
+                                <button type="button" class="icon-btn" onclick="selectIcon(this, '❓')">❓</button>
+                            </div>
+                            <input type="hidden" id="categoryIcon" value="📋" />
+                            <small class="text-muted">Selected: <span id="iconPreview">📋</span></small>
+                        </div>
+
+                        <!-- Color Selection -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Category Color</label>
+                            <div class="color-selector">
+                                <input type="color" id="categoryColor" class="form-control form-control-color" value="#007bff" style="width: 100px; height: 40px;" />
+                            </div>
+                            <small class="text-muted">Pick a color for category badge</small>
+                        </div>
+
                         <!-- Assignees -->
                         <div class="mb-4">
                             <label class="form-label fw-bold">Assign Staff Handlers</label>
@@ -102,6 +127,31 @@
                         <div class="mb-3">
                             <label class="form-label fw-bold">Description</label>
                             <textarea id="editCategoryDescription" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <!-- Icon Selection for Edit -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Category Icon</label>
+                            <div class="edit-icon-selector">
+                                <button type="button" class="edit-icon-btn" onclick="selectEditIcon(this, '🎓')">🎓</button>
+                                <button type="button" class="edit-icon-btn" onclick="selectEditIcon(this, '💰')">💰</button>
+                                <button type="button" class="edit-icon-btn" onclick="selectEditIcon(this, '🏫')">🏫</button>
+                                <button type="button" class="edit-icon-btn" onclick="selectEditIcon(this, '🔒')">🔒</button>
+                                <button type="button" class="edit-icon-btn" onclick="selectEditIcon(this, '🏠')">🏠</button>
+                                <button type="button" class="edit-icon-btn active" onclick="selectEditIcon(this, '📋')">📋</button>
+                                <button type="button" class="edit-icon-btn" onclick="selectEditIcon(this, '❓')">❓</button>
+                            </div>
+                            <input type="hidden" id="editCategoryIcon" value="📋" />
+                            <small class="text-muted">Selected: <span id="editIconPreview">📋</span></small>
+                        </div>
+
+                        <!-- Color Selection for Edit -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Category Color</label>
+                            <div class="color-selector">
+                                <input type="color" id="editCategoryColor" class="form-control form-control-color" value="#007bff" style="width: 100px; height: 40px;" />
+                            </div>
+                            <small class="text-muted">Pick a color for category badge</small>
                         </div>
 
                         <!-- Assignees -->
@@ -157,8 +207,9 @@
 
                     categories.forEach(cat => {
                         const row = document.createElement('tr');
+                        const badgeColor = cat.color || '#007bff';
                         row.innerHTML = `
-                            <td><strong>${escapeHtml(cat.name)}</strong></td>
+                            <td><span style="font-size: 20px; margin-right: 8px;">${cat.icon || '📋'}</span><strong>${escapeHtml(cat.name)}</strong></td>
                             <td>${escapeHtml(cat.description || 'N/A')}</td>
                             <td><span class="badge ${cat.isActive ? 'bg-success' : 'bg-secondary'}">${cat.isActive ? 'Active' : 'Inactive'}</span></td>
                             <td>${cat.attachmentRules ? cat.attachmentRules.length : 0}</td>
@@ -278,6 +329,20 @@
             editRuleIndex++;
         }
 
+        function selectIcon(button, icon) {
+            document.querySelectorAll('.icon-selector .icon-btn').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            document.getElementById('categoryIcon').value = icon;
+            document.getElementById('iconPreview').textContent = icon;
+        }
+
+        function selectEditIcon(button, icon) {
+            document.querySelectorAll('.edit-icon-selector .edit-icon-btn').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            document.getElementById('editCategoryIcon').value = icon;
+            document.getElementById('editIconPreview').textContent = icon;
+        }
+
         async function loadEditForm(categoryId) {
             try {
                 const response = await fetch(`/api/categories/${categoryId}`);
@@ -286,6 +351,19 @@
                     document.getElementById('editCategoryId').value = category.id;
                     document.getElementById('editCategoryName').value = category.name;
                     document.getElementById('editCategoryDescription').value = category.description || '';
+
+                    // Load icon and color
+                    document.getElementById('editCategoryIcon').value = category.icon || '📋';
+                    document.getElementById('editCategoryColor').value = category.color || '#007bff';
+                    document.getElementById('editIconPreview').textContent = category.icon || '📋';
+
+                    // Set active icon button
+                    document.querySelectorAll('.edit-icon-selector .edit-icon-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                        if (btn.textContent === (category.icon || '📋')) {
+                            btn.classList.add('active');
+                        }
+                    });
 
                     // Load rules
                     const editRulesContainer = document.getElementById('editRulesContainer');
@@ -354,6 +432,8 @@
         async function submitCategory() {
             const name = document.getElementById('categoryName').value;
             const description = document.getElementById('categoryDescription').value;
+            const icon = document.getElementById('categoryIcon').value;
+            const color = document.getElementById('categoryColor').value;
 
             if (!name) {
                 alert("Category Name is required!");
@@ -373,7 +453,7 @@
                 });
             });
 
-            const payload = { name, description, assigneeIds, attachmentRules };
+            const payload = { name, description, icon, color, assigneeIds, attachmentRules };
 
             try {
                 const response = await fetch('/api/categories', {
@@ -401,6 +481,8 @@
             const categoryId = document.getElementById('editCategoryId').value;
             const name = document.getElementById('editCategoryName').value;
             const description = document.getElementById('editCategoryDescription').value;
+            const icon = document.getElementById('editCategoryIcon').value;
+            const color = document.getElementById('editCategoryColor').value;
 
             if (!name) {
                 alert("Category Name is required!");
@@ -420,7 +502,7 @@
                 });
             });
 
-            const payload = { name, description, assigneeIds, attachmentRules };
+            const payload = { name, description, icon, color, assigneeIds, attachmentRules };
 
             try {
                 const response = await fetch(`/api/categories/${categoryId}`, {

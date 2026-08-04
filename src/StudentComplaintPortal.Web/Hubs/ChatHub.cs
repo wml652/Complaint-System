@@ -318,4 +318,36 @@ public class ChatHub : Hub
             throw new HubException($"Failed to mark messages as read: {ex.Message}");
         }
     }
+
+    #region Typing Indicators
+
+    public async Task UserStartedTyping(int complaintId)
+    {
+        var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userName = Context.User?.FindFirst(ClaimTypes.GivenName)?.Value ?? "User";
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            await Clients.Group($"complaint-{complaintId}")
+                .SendAsync("UserTyping", userId, userName);
+        }
+    }
+
+    public async Task UserStoppedTyping(int complaintId)
+    {
+        var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            await Clients.Group($"complaint-{complaintId}")
+                .SendAsync("UserStoppedTyping", userId);
+        }
+    }
+
+    public async Task LeaveComplaintGroup(int complaintId)
+    {
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"complaint-{complaintId}");
+    }
+
+    #endregion
 }
