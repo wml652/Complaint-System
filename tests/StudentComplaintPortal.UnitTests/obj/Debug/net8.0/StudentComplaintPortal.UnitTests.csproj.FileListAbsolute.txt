@@ -480,3 +480,6 @@ C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\tests\Student
 C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\tests\StudentComplaintPortal.UnitTests\obj\Debug\net8.0\StudentComplaintPortal.UnitTests.pdb
 C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\tests\StudentComplaintPortal.UnitTests\obj\Debug\net8.0\StudentComplaintPortal.UnitTests.genruntimeconfig.cache
 C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\tests\StudentComplaintPortal.UnitTests\obj\Debug\net8.0\ref\StudentComplaintPortal.UnitTests.dll
+D:\Complaint-System\tests\StudentComplaintPortal.UnitTests\obj\Debug\net8.0\StudentComplaintPortal.UnitTests.dll
+D:\Complaint-System\tests\StudentComplaintPortal.UnitTests\obj\Debug\net8.0\refint\StudentComplaintPortal.UnitTests.dll
+D:\Complaint-System\tests\StudentComplaintPortal.UnitTests\obj\Debug\net8.0\StudentComplaintPortal.UnitTests.pdb

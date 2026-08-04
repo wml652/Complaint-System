@@ -164,3 +164,6 @@ C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\src\StudentCo
 C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\src\StudentComplaintPortal.Web\obj\Debug\net8.0\StudentComplaintPortal.Web.genruntimeconfig.cache
 C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\src\StudentComplaintPortal.Web\obj\Debug\net8.0\ref\StudentComplaintPortal.Web.dll
 C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\src\StudentComplaintPortal.Web\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
+D:\Complaint-System\src\StudentComplaintPortal.Web\obj\Debug\net8.0\StudentComplaintPortal.Web.dll
+D:\Complaint-System\src\StudentComplaintPortal.Web\obj\Debug\net8.0\refint\StudentComplaintPortal.Web.dll
+D:\Complaint-System\src\StudentComplaintPortal.Web\obj\Debug\net8.0\StudentComplaintPortal.Web.pdb

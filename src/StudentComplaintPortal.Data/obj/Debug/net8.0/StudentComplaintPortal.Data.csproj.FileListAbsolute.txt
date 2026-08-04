@@ -15,3 +15,21 @@ C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\src\StudentCo
 C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\src\StudentComplaintPortal.Data\obj\Debug\net8.0\StudentComplaintPortal.Data.pdb
 C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\src\StudentComplaintPortal.Data\obj\Debug\net8.0\StudentComplaintPortal.Data.genruntimeconfig.cache
 C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\src\StudentComplaintPortal.Data\obj\Debug\net8.0\ref\StudentComplaintPortal.Data.dll
+D:\Complaint-System\src\StudentComplaintPortal.Data\obj\Debug\net8.0\StudentComplaintPortal.Data.dll
+D:\Complaint-System\src\StudentComplaintPortal.Data\obj\Debug\net8.0\refint\StudentComplaintPortal.Data.dll
+D:\Complaint-System\src\StudentComplaintPortal.Data\obj\Debug\net8.0\StudentComplaintPortal.Data.pdb
+D:\Complaint-System\src\StudentComplaintPortal.Data\obj\Debug\net8.0\StudentComplaintPortal.Data.csproj.AssemblyReference.cache
+D:\Complaint-System\src\StudentComplaintPortal.Data\obj\Debug\net8.0\StudentComplaintPortal.Data.GeneratedMSBuildEditorConfig.editorconfig
+D:\Complaint-System\src\StudentComplaintPortal.Data\obj\Debug\net8.0\StudentComplaintPortal.Data.AssemblyInfoInputs.cache
+D:\Complaint-System\src\StudentComplaintPortal.Data\obj\Debug\net8.0\StudentComplaintPortal.Data.AssemblyInfo.cs
+D:\Complaint-System\src\StudentComplaintPortal.Data\obj\Debug\net8.0\StudentComplaintPortal.Data.csproj.CoreCompileInputs.cache
+D:\Complaint-System\src\StudentComplaintPortal.Data\obj\Debug\net8.0\StudentComplaintPortal.Data.sourcelink.json
+D:\Complaint-System\src\StudentComplaintPortal.Data\bin\Debug\net8.0\StudentComplaintPortal.Data.deps.json
+D:\Complaint-System\src\StudentComplaintPortal.Data\bin\Debug\net8.0\StudentComplaintPortal.Data.runtimeconfig.json
+D:\Complaint-System\src\StudentComplaintPortal.Data\bin\Debug\net8.0\StudentComplaintPortal.Data.dll
+D:\Complaint-System\src\StudentComplaintPortal.Data\bin\Debug\net8.0\StudentComplaintPortal.Data.pdb
+D:\Complaint-System\src\StudentComplaintPortal.Data\bin\Debug\net8.0\StudentComplaintPortal.Domain.dll
+D:\Complaint-System\src\StudentComplaintPortal.Data\bin\Debug\net8.0\StudentComplaintPortal.Domain.pdb
+D:\Complaint-System\src\StudentComplaintPortal.Data\obj\Debug\net8.0\StudentC.7689474C.Up2Date
+D:\Complaint-System\src\StudentComplaintPortal.Data\obj\Debug\net8.0\StudentComplaintPortal.Data.genruntimeconfig.cache
+D:\Complaint-System\src\StudentComplaintPortal.Data\obj\Debug\net8.0\ref\StudentComplaintPortal.Data.dll

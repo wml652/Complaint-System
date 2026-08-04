@@ -503,3 +503,6 @@ C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\tests\Student
 C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\tests\StudentComplaintPortal.IntegrationTests\obj\Debug\net8.0\StudentComplaintPortal.IntegrationTests.pdb
 C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\tests\StudentComplaintPortal.IntegrationTests\obj\Debug\net8.0\StudentComplaintPortal.IntegrationTests.genruntimeconfig.cache
 C:\Users\Waqar Musa Loon\Desktop\Complaint SYstem\Complaint SYstem\tests\StudentComplaintPortal.IntegrationTests\obj\Debug\net8.0\ref\StudentComplaintPortal.IntegrationTests.dll
+D:\Complaint-System\tests\StudentComplaintPortal.IntegrationTests\obj\Debug\net8.0\StudentComplaintPortal.IntegrationTests.dll
+D:\Complaint-System\tests\StudentComplaintPortal.IntegrationTests\obj\Debug\net8.0\refint\StudentComplaintPortal.IntegrationTests.dll
+D:\Complaint-System\tests\StudentComplaintPortal.IntegrationTests\obj\Debug\net8.0\StudentComplaintPortal.IntegrationTests.pdb
