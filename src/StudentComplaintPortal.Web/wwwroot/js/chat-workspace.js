@@ -11,7 +11,8 @@
 
     // Typing indicator tracking
     let typingTimeout = null;
-    const typingSet = new Set();
+    let typingStopTimeout = null;
+    const typingUsers = new Map(); // userName -> timeout
 
     function init() {
         connection = AppHub.connection;
@@ -20,11 +21,12 @@
         connection.on("ReceiveInternalMessage", onInternalMessageReceived);
         connection.on("MessagesRead", onComplaintMessagesRead);
         connection.on("InternalMessagesRead", onInternalMessagesRead);
-        connection.on("UserTyping", (userId, userName) => {
-            showTypingIndicator(userName);
-        });
-        connection.on("UserStoppedTyping", (userId) => {
-            hideTypingIndicator();
+        connection.on("UserTyping", (userName, isTyping) => {
+            if (isTyping) {
+                showTypingIndicator(userName);
+            } else {
+                hideTypingIndicatorForUser(userName);
+            }
         });
         connection.on("UserOnline", (userId) => {
             onlineUserIds.add(userId);
@@ -464,35 +466,75 @@
     }
 
     function notifyTyping() {
-        if (currentChatId) {
+        if (!currentChatId) return;
+
+        // Send typing started on first keystroke
+        if (!typingTimeout) {
             connection.invoke("UserStartedTyping", currentChatId).catch(err => console.error(err));
         }
 
+        // Clear existing timeout
         clearTimeout(typingTimeout);
+
+        // Set new timeout to notify typing stopped after 1.5 seconds of inactivity
         typingTimeout = setTimeout(() => {
-            if (currentChatId) {
-                connection.invoke("UserStoppedTyping", currentChatId).catch(err => console.error(err));
-            }
-        }, 3000);
+            connection.invoke("UserStoppedTyping", currentChatId).catch(err => console.error(err));
+            typingTimeout = null;
+        }, 1500);
     }
 
     function showTypingIndicator(userName) {
-        typingSet.add(userName);
-        const typingNames = Array.from(typingSet).join(", ");
         const indicator = document.getElementById('typingIndicator');
-        if (indicator) {
-            document.getElementById('typingText').textContent =
-                typingNames + (typingSet.size === 1 ? " is typing..." : " are typing...");
-            indicator.style.display = 'block';
+        if (!indicator) return;
+
+        // Clear existing timeout for this user if any
+        if (typingUsers.has(userName)) {
+            clearTimeout(typingUsers.get(userName));
         }
+
+        // Add user to typing set
+        typingUsers.set(userName, null);
+
+        // Update display
+        updateTypingDisplay();
+
+        // Show indicator
+        indicator.style.display = 'block';
+
+        // Set auto-hide timeout (3 seconds) in case we don't get UserTyping(false) event
+        const timeout = setTimeout(() => {
+            typingUsers.delete(userName);
+            updateTypingDisplay();
+        }, 3000);
+
+        typingUsers.set(userName, timeout);
     }
 
-    function hideTypingIndicator() {
-        typingSet.clear();
-        const indicator = document.getElementById('typingIndicator');
-        if (indicator) {
-            indicator.style.display = 'none';
+    function hideTypingIndicatorForUser(userName) {
+        if (typingUsers.has(userName)) {
+            clearTimeout(typingUsers.get(userName));
+            typingUsers.delete(userName);
         }
+        updateTypingDisplay();
+    }
+
+    function updateTypingDisplay() {
+        const indicator = document.getElementById('typingIndicator');
+        const typingText = document.getElementById('typingText');
+        if (!indicator || !typingText) return;
+
+        if (typingUsers.size === 0) {
+            indicator.style.display = 'none';
+            return;
+        }
+
+        const userNames = Array.from(typingUsers.keys());
+        const text = userNames.length === 1
+            ? `${userNames[0]} is typing...`
+            : `${userNames.join(', ')} are typing...`;
+
+        typingText.textContent = text;
+        indicator.style.display = 'block';
     }
 
     function onComplaintMessageReceived(message) {
