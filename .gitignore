@@ -1,0 +1,10 @@
+.vs/
+bin/
+obj/
+*.bacpac
+*.user
+
+
+.vs/
+.vscode/
+.claude/

@@ -25,14 +25,14 @@ public static class DbSeeder
                 {
                     new CategoryAttachmentRule
                     {
-                        FileType = FileType.Photo,
+                        FileType = "Photo",
                         MaxFileCount = 5,
                         MaxFileSizeBytes = 10 * 1024 * 1024,
                         IsRequired = true
                     },
                     new CategoryAttachmentRule
                     {
-                        FileType = FileType.Video,
+                        FileType = "Video",
                         MaxFileCount = 2,
                         MaxFileSizeBytes = 100 * 1024 * 1024,
                         IsRequired = false
@@ -48,7 +48,7 @@ public static class DbSeeder
                 {
                     new CategoryAttachmentRule
                     {
-                        FileType = FileType.Photo,
+                        FileType = "Photo",
                         MaxFileCount = 10,
                         MaxFileSizeBytes = 5 * 1024 * 1024,
                         IsRequired = false
@@ -64,7 +64,7 @@ public static class DbSeeder
                 {
                     new CategoryAttachmentRule
                     {
-                        FileType = FileType.Photo,
+                        FileType = "Photo",
                         MaxFileCount = 3,
                         MaxFileSizeBytes = 5 * 1024 * 1024,
                         IsRequired = true
@@ -80,14 +80,14 @@ public static class DbSeeder
                 {
                     new CategoryAttachmentRule
                     {
-                        FileType = FileType.Photo,
+                        FileType = "Photo",
                         MaxFileCount = 5,
                         MaxFileSizeBytes = 15 * 1024 * 1024,
                         IsRequired = true
                     },
                     new CategoryAttachmentRule
                     {
-                        FileType = FileType.Video,
+                        FileType = "Video",
                         MaxFileCount = 1,
                         MaxFileSizeBytes = 200 * 1024 * 1024,
                         IsRequired = false
@@ -103,7 +103,7 @@ public static class DbSeeder
                 {
                     new CategoryAttachmentRule
                     {
-                        FileType = FileType.Photo,
+                        FileType = "Photo",
                         MaxFileCount = 5,
                         MaxFileSizeBytes = 10 * 1024 * 1024,
                         IsRequired = false

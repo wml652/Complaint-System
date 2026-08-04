@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace StudentComplaintPortal.Application.DTOs;
 
-public class UpdateCategoryDto
+public class CreateCategoryDto
 {
     [Required]
     public string Name { get; set; } = string.Empty;

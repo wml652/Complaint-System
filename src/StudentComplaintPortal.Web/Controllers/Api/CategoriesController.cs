@@ -148,7 +148,7 @@ public class CategoriesController : ControllerBase
                 var rule = new CategoryAttachmentRule
                 {
                     CategoryId = category.Id,
-                    FileType = Enum.Parse<FileType>(ruleDto.FileType),
+                    FileType = ruleDto.FileType,
                     MaxFileCount = ruleDto.MaxFileCount,
                     MaxFileSizeBytes = ruleDto.MaxFileSizeBytes,
                     IsRequired = ruleDto.IsRequired

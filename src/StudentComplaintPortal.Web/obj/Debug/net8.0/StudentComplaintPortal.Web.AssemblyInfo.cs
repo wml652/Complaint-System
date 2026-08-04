@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("StudentComplaintPortal.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b3a48024982e146003425b71e8bf463d221eaf92")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+df86ffc9028d300a5099a0a76885fef821535be4")]
 [assembly: System.Reflection.AssemblyProductAttribute("StudentComplaintPortal.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("StudentComplaintPortal.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

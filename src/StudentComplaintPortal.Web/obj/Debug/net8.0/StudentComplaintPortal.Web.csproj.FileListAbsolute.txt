@@ -158,10 +158,10 @@ D:\Complaint-System\src\StudentComplaintPortal.Web\obj\Debug\net8.0\staticwebass
 D:\Complaint-System\src\StudentComplaintPortal.Web\obj\Debug\net8.0\staticwebassets.development.json
 D:\Complaint-System\src\StudentComplaintPortal.Web\obj\Debug\net8.0\staticwebassets.build.endpoints.json
 D:\Complaint-System\src\StudentComplaintPortal.Web\obj\Debug\net8.0\swae.build.ex.cache
-D:\Complaint-System\src\StudentComplaintPortal.Web\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 D:\Complaint-System\src\StudentComplaintPortal.Web\obj\Debug\net8.0\StudentC.BAC9BBF8.Up2Date
 D:\Complaint-System\src\StudentComplaintPortal.Web\obj\Debug\net8.0\StudentComplaintPortal.Web.dll
 D:\Complaint-System\src\StudentComplaintPortal.Web\obj\Debug\net8.0\refint\StudentComplaintPortal.Web.dll
 D:\Complaint-System\src\StudentComplaintPortal.Web\obj\Debug\net8.0\StudentComplaintPortal.Web.pdb
 D:\Complaint-System\src\StudentComplaintPortal.Web\obj\Debug\net8.0\StudentComplaintPortal.Web.genruntimeconfig.cache
 D:\Complaint-System\src\StudentComplaintPortal.Web\obj\Debug\net8.0\ref\StudentComplaintPortal.Web.dll
+D:\Complaint-System\src\StudentComplaintPortal.Web\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
