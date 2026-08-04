@@ -4,6 +4,7 @@ wwwroot\css\site.css
 wwwroot\js\audioRecorder.js
 wwwroot\js\category-management.js
 wwwroot\js\chat-workspace.js
+wwwroot\js\dashboard-charts.js
 wwwroot\js\notifications.js
 wwwroot\js\signalr-connection.js
 wwwroot\uploads\1002\a3c6ca3b-3663-4c5c-816f-0f7bdd914e8b-Gemini_Generated_Image_4bk5304bk5304bk5.png
@@ -11,10 +12,19 @@ wwwroot\uploads\1003\61d16c1b-d9ef-40b9-8b47-852ed3ed4660-WhatsApp Image 2026-06
 wwwroot\uploads\1003\d7ae6f88-9143-4db9-89f4-6432c995c88c-WhatsApp Video 2026-05-25 at 9.01.57 AM.mp4
 wwwroot\uploads\1003\ee5b3180-c915-40da-aaed-c9018877225c-PixVerse_V6_Image_Text_360P_Scene_Description_.mp4
 wwwroot\uploads\1003\f8a1d455-714a-437c-9455-50123b063b8c-WhatsApp Image 2026-06-07 at 3.02.53 PM (1).jpeg
+wwwroot\uploads\1\143734e6-07bc-441f-9540-2aed770d4353-voice_20260804_204316.webm
+wwwroot\uploads\1\1b810cb9-27fd-41c6-b040-1bfe3412572f-voice_20260804_204030.webm
 wwwroot\uploads\1\2a22bf22-92ca-4377-9fc9-ab27dd64babd-b2.mp4
 wwwroot\uploads\1\386da6e4-777e-465d-9d9a-6c4a930b874b-voice-639206562029323956.webm
+wwwroot\uploads\1\3bf533aa-751b-4eec-9ffe-0d54f7a17ff7-chand raat-01.jpg
+wwwroot\uploads\1\501c1fb7-f22a-4022-834a-234f9c1d3ad0-voice_20260804_204309.webm
+wwwroot\uploads\1\65b0515c-5ed7-4dad-8ebd-24a4546edc5a-voice_20260804_204711.webm
+wwwroot\uploads\1\69c6ee4a-b748-456d-b9dd-2f68f470d44f-voice_20260804_204017.webm
 wwwroot\uploads\1\6accfb83-2fee-4579-871c-d134f25a2d33-spike.jpeg
 wwwroot\uploads\1\6c7b5250-992a-4678-b2cc-c6a81e893a18-voice-639206573903531100.webm
+wwwroot\uploads\1\86ba4a42-4d37-4eec-a0af-d7abdad58d57-voice_20260804_204739.webm
+wwwroot\uploads\1\a6512d8d-c09b-4985-b934-a6095604399b-voice_20260804_204633.webm
+wwwroot\uploads\1\b1c3a899-4161-40ad-9933-68efc6e40c75-voice_20260804_205207.webm
 wwwroot\uploads\2\0b2432ae-b206-4994-8ecb-d20a66cc9288-voice-1785381547026.webm
 wwwroot\uploads\2\83dd2114-ae3e-406d-ab80-e50ae9c8e18d-voice-639207587129966129.webm
 wwwroot\uploads\2\d0777495-663b-4b6d-9eae-13dbdd0fbc18-voice-639207020665726270.webm

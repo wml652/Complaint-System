@@ -1,174 +1,284 @@
-﻿@model StudentComplaintPortal.Web.Models.StaffDashboardViewModel
-@{
-    ViewData["Title"] = Model.AssignedCategories.Any() ? $"{Model.SelectedCategoryName} Complaints" : "My Complaints";
+﻿@{
+    ViewData["Title"] = "Staff Dashboard";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>@(Model.AssignedCategories.Any() ? $"{Model.SelectedCategoryName} Complaints" : "My Complaints")</h2>
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="mb-1">Dashboard</h1>
+            <p class="text-muted mb-0">Welcome back! Here's your complaint system overview.</p>
+        </div>
+    </div>
 
-    @if (Model.AssignedCategories.Count > 1)
-    {
-        <form asp-action="Index" method="get" class="d-flex align-items-center gap-2">
-            <label for="categoryId" class="form-label small mb-0 text-muted">Category:</label>
-            <select name="categoryId" id="categoryId" class="form-select form-select-sm" style="width: auto;" onchange="this.form.submit()">
-                @foreach (var category in Model.AssignedCategories)
-                {
-                    <option value="@category.Id" selected="@(category.Id == Model.SelectedCategoryId)">@category.Name</option>
-                }
-            </select>
-        </form>
-    }
+    <!-- KPI Stat Cards Row -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card stat-card-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-2 stat-label">Total Complaints</p>
+                            <h2 class="stat-value" id="totalComplaints">-</h2>
+                        </div>
+                        <i class="bi bi-inbox stat-icon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card stat-card-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-2 stat-label">Resolved</p>
+                            <h2 class="stat-value" id="resolvedCount">-</h2>
+                        </div>
+                        <i class="bi bi-check-circle stat-icon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card stat-card-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-2 stat-label">In Progress</p>
+                            <h2 class="stat-value" id="inProgressCount">-</h2>
+                        </div>
+                        <i class="bi bi-arrow-repeat stat-icon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card stat-card-danger">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-2 stat-label">Open</p>
+                            <h2 class="stat-value" id="openCount">-</h2>
+                        </div>
+                        <i class="bi bi-exclamation-circle stat-icon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Complaints Over Time (30 Days)</h5>
+                </div>
+                <div class="card-body" style="height: 320px; position: relative;">
+                    <canvas id="complaintsLineChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Complaints by Category</h5>
+                </div>
+                <div class="card-body" style="height: 320px; position: relative;">
+                    <canvas id="categoryPieChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity and Pending Actions Row -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Recent Activity</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div id="activityFeed" class="activity-feed">
+                        <div class="text-center text-muted py-4">
+                            <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Pending Action Items</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div id="pendingActions" class="pending-actions">
+                        <div class="text-center text-muted py-4">
+                            <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-@if (!Model.AssignedCategories.Any())
-{
-    <div class="alert alert-info">
-        <strong>No category assigned yet</strong>
-        <p class="mb-0 mt-2">You haven't been assigned to any complaint category. Contact an admin to get assigned - complaints will appear here once you are.</p>
-    </div>
-}
-else
-{
-    <div class="row mb-4 g-3">
-        <div class="col-6 col-md-3">
-            <div class="stat-card">
-                <div class="stat-num">@Model.TotalCount</div>
-                <div class="stat-label">Total</div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="stat-card">
-                <div class="stat-num">@Model.PendingCount</div>
-                <div class="stat-label">Pending</div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="stat-card">
-                <div class="stat-num">@Model.InProgressCount</div>
-                <div class="stat-label">In Progress</div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="stat-card">
-                <div class="stat-num">@Model.ResolvedCount</div>
-                <div class="stat-label">Resolved</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row mb-3 g-2">
-        <div class="col-md-6">
-            <label for="statusFilter" class="form-label small mb-1">Filter by status</label>
-            <select id="statusFilter" class="form-select form-select-sm">
-                <option value="All">All</option>
-                <option value="Open">Pending</option>
-                <option value="InProgress">In Progress</option>
-                <option value="Resolved">Resolved</option>
-                <option value="Closed">Closed</option>
-            </select>
-        </div>
-        <div class="col-md-6">
-            <label for="priorityFilter" class="form-label small mb-1">Filter by priority</label>
-            <select id="priorityFilter" class="form-select form-select-sm">
-                <option value="All">All</option>
-                <option value="Urgent">Urgent</option>
-                <option value="Normal">Normal</option>
-            </select>
-        </div>
-    </div>
-
-    @if (!Model.Complaints.Any())
-    {
-        <div class="alert alert-info">
-            <strong>No complaints in this category yet</strong>
-            <p class="mb-0 mt-2">New complaints will appear here when students submit issues in @Model.SelectedCategoryName.</p>
-        </div>
+<style>
+    .stat-card {
+        border-radius: 8px;
+        border: none;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
     }
-    else
-    {
-        <div class="table-responsive">
-            <table class="table table-hover bg-white">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Student</th>
-                        <th>Priority</th>
-                        <th>Status</th>
-                        <th>Submitted</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="complaintsTableBody">
-                    @{
-                        var orderedComplaints = Model.Complaints
-                        .OrderBy(c => c.Status == "Closed" ? 1 : 0)
-                        .ThenBy(c => c.Priority == "Urgent" ? 0 : c.Priority == "Normal" ? 1 : 2)
-                        .ThenByDescending(c => c.CreatedAt);
-                    }
-                    @foreach (var complaint in orderedComplaints)
-                    {
-                        <tr data-status="@complaint.Status" data-priority="@(complaint.Priority ?? "")">
-                            <td>#@complaint.Id</td>
-                            <td>@complaint.StudentName</td>
-                            <td>
-                                @if (complaint.Priority == "Urgent")
-                                {
-                                    <span class="badge bg-danger">Urgent</span>
-                                }
-                                else if (complaint.Priority == "Normal")
-                                {
-                                    <span class="badge bg-info text-dark">Normal</span>
-                                }
-                                else
-                                {
-                                    <span class="text-muted small">Not set</span>
-                                }
-                            </td>
-                            <td><span class="badge @(complaint.Status == "Open" ? "bg-success" : complaint.Status == "InProgress" ? "bg-warning text-dark" : "bg-secondary")">@(complaint.Status == "Open" ? "Pending" : complaint.Status)</span></td>
-                            <td>@complaint.CreatedAt.ToString("MMM dd, yyyy")</td>
-                            <td>
-                                <a asp-controller="ChatWorkspace" asp-action="Index" asp-route-complaintId="@complaint.Id" class="btn btn-sm btn-outline-primary">View</a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-        <div class="note text-muted small">
-            Showing @Model.SelectedCategoryName complaints. Sorted by priority (Urgent first), then newest first.
-        </div>
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
-}
+
+    .stat-card-primary {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        color: white;
+    }
+
+    .stat-card-success {
+        background: linear-gradient(135deg, #198754 0%, #157347 100%);
+        color: white;
+    }
+
+    .stat-card-warning {
+        background: linear-gradient(135deg, #ffc107 0%, #ffb800 100%);
+        color: white;
+    }
+
+    .stat-card-danger {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        opacity: 0.9;
+    }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .stat-icon {
+        font-size: 2rem;
+        opacity: 0.7;
+    }
+
+    .card {
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+
+    .card-header {
+        border-bottom: 1px solid #e9ecef;
+        padding: 1.25rem;
+    }
+
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #212529;
+    }
+
+    .activity-feed {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .activity-item {
+        padding: 1rem;
+        border-bottom: 1px solid #e9ecef;
+        transition: background-color 0.2s;
+    }
+
+    .activity-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-time {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+
+    .activity-action {
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 0.25rem;
+    }
+
+    .activity-description {
+        font-size: 0.9rem;
+        color: #495057;
+    }
+
+    .pending-actions {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .pending-item {
+        padding: 1rem;
+        border-bottom: 1px solid #e9ecef;
+        transition: background-color 0.2s;
+    }
+
+    .pending-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .pending-item:last-child {
+        border-bottom: none;
+    }
+
+    .pending-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 0.5rem;
+    }
+
+    .pending-title {
+        font-weight: 600;
+        color: #212529;
+        flex: 1;
+    }
+
+    .pending-badge {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.65rem;
+    }
+
+    .pending-meta {
+        font-size: 0.85rem;
+        color: #6c757d;
+        display: flex;
+        gap: 1rem;
+    }
+
+    .pending-days {
+        color: #dc3545;
+        font-weight: 600;
+    }
+</style>
 
 @section Scripts {
-    <script>
-        (function () {
-            const statusFilter = document.getElementById('statusFilter');
-            const priorityFilter = document.getElementById('priorityFilter');
-            const rows = document.querySelectorAll('#complaintsTableBody tr');
-            if (!statusFilter || !priorityFilter) return;
-
-            const preselectedStatus = '@Model.SelectedStatus';
-            if (preselectedStatus && preselectedStatus !== 'All') {
-                statusFilter.value = preselectedStatus;
-            }
-
-            function applyFilters() {
-                const statusValue = statusFilter.value;
-                const priorityValue = priorityFilter.value;
-
-                rows.forEach(row => {
-                    const status = row.getAttribute('data-status');
-                    const priority = row.getAttribute('data-priority');
-                    const statusMatch = statusValue === 'All' || status === statusValue;
-                    const priorityMatch = priorityValue === 'All' || priority === priorityValue;
-                    row.style.display = (statusMatch && priorityMatch) ? '' : 'none';
-                });
-            }
-
-            statusFilter.addEventListener('change', applyFilters);
-            priorityFilter.addEventListener('change', applyFilters);
-            applyFilters();
-        })();
-    </script>
+    <script src="~/js/dashboard-charts.js" asp-append-version="true"></script>
 }
+

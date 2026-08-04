@@ -154,6 +154,7 @@ builder.Services.AddScoped<IConversationService, StudentComplaintPortal.Applicat
 builder.Services.AddScoped<IMessageReadTrackingService, MessageReadTrackingService>();
 builder.Services.AddScoped<IMessageQuotaService, MessageQuotaService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 #endregion
 
 #region Swagger Configuration

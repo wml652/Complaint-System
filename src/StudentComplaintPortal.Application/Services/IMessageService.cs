@@ -9,4 +9,6 @@ public interface IMessageService
     Task<MessageDto> GetMessageByIdAsync(int messageId);
 
     Task MarkAllAsReadAsync(int complaintId, string readerUserId);
+    Task<MessageDto?> EditMessageAsync(int messageId, string userId, string newContent, bool isAdmin);
+    Task<bool> DeleteMessageAsync(int messageId, string userId, bool isAdmin);
 }

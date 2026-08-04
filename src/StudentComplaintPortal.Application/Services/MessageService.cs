@@ -178,4 +178,62 @@ public class MessageService : IMessageService
         // TODO: Re-enable when MessageBufferService is properly injected
         // _bufferService.MarkAsRead(complaintId, readerUserId);
     }
+
+    public async Task<MessageDto?> EditMessageAsync(int messageId, string userId, string newContent, bool isAdmin)
+    {
+        var messages = await _unitOfWork.Messages.FindAsync(m => m.Id == messageId);
+        var message = messages.FirstOrDefault();
+
+        if (message == null)
+        {
+            throw new NotFoundException($"Message with ID {messageId} not found.");
+        }
+
+        // Only the sender can edit their message (Admins cannot edit other people's text)
+        if (message.SenderId != userId)
+        {
+            throw new UnauthorizedComplaintAccessException("Only the sender can edit this message.");
+        }
+
+        // Store original content if not already edited
+        if (!message.IsEdited)
+        {
+            message.OriginalContent = message.Content;
+        }
+
+        // Update message
+        message.Content = newContent;
+        message.IsEdited = true;
+        message.EditedAt = DateTime.UtcNow;
+
+        _unitOfWork.Messages.Update(message);
+        await _unitOfWork.SaveChangesAsync();
+
+        return MapToDto(message);
+    }
+
+    public async Task<bool> DeleteMessageAsync(int messageId, string userId, bool isAdmin)
+    {
+        var messages = await _unitOfWork.Messages.FindAsync(m => m.Id == messageId);
+        var message = messages.FirstOrDefault();
+
+        if (message == null)
+        {
+            throw new NotFoundException($"Message with ID {messageId} not found.");
+        }
+
+        // Sender can delete their own message, or Admin can delete any message
+        if (message.SenderId != userId && !isAdmin)
+        {
+            throw new UnauthorizedComplaintAccessException("You do not have permission to delete this message.");
+        }
+
+        // Soft delete
+        message.DeletedAt = DateTime.UtcNow;
+
+        _unitOfWork.Messages.Update(message);
+        await _unitOfWork.SaveChangesAsync();
+
+        return true;
+    }
 }
