@@ -3,6 +3,5 @@
 public enum NotificationType
 {
     NewMessage,
-    StatusChanged,
-    NewComplaint
+    StatusChanged
 }

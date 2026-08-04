@@ -7,12 +7,13 @@ public class Message
     public required string SenderId { get; set; }
     public string? Content { get; set; }
     public DateTime SentAt { get; set; }
-    public DateTime? ReadAt { get; set; }   // to show the tick when message is read
-
+    public DateTime? ReadAt { get; set; }
+    public string? ReadByUserId { get; set; }
     public bool IsRead { get; set; }
 
     // Navigation properties
     public Complaint Complaint { get; set; } = null!;
     public AppUser Sender { get; set; } = null!;
+    public AppUser? ReadBy { get; set; }
     public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
 }

@@ -42,6 +42,8 @@ public class CategoryService : ICategoryService
         {
             Name = dto.Name,
             Description = dto.Description,
+            Icon = dto.Icon ?? "📋",
+            Color = dto.Color ?? "#0d6efd",
             IsActive = true
         };
 
@@ -51,7 +53,7 @@ public class CategoryService : ICategoryService
             var rule = new CategoryAttachmentRule
             {
                 CategoryId = category.Id,
-                FileType = Enum.Parse<FileType>(ruleDto.FileType),
+                FileType = ruleDto.FileType,
                 MaxFileCount = ruleDto.MaxFileCount,
                 MaxFileSizeBytes = ruleDto.MaxFileSizeBytes,
                 IsRequired = ruleDto.IsRequired
@@ -83,11 +85,13 @@ public class CategoryService : ICategoryService
             Id = category.Id,
             Name = category.Name,
             Description = category.Description,
+            Icon = category.Icon ?? "📋",
+            Color = category.Color ?? "#0d6efd",
             IsActive = category.IsActive,
             AttachmentRules = category.AttachmentRules.Select(r => new CategoryAttachmentRuleDto
             {
                 Id = r.Id,
-                FileType = r.FileType.ToString(),
+                FileType = r.FileType,
                 MaxFileCount = r.MaxFileCount,
                 MaxFileSizeBytes = r.MaxFileSizeBytes,
                 IsRequired = r.IsRequired

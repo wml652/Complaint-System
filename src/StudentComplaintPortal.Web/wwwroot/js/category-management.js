@@ -221,6 +221,45 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+/**
+ * Select an icon for the category
+ * @param {string} iconValue - The icon value to select
+ * @param {HTMLElement} buttonElement - The button element that was clicked
+ */
+function selectIcon(iconValue, buttonElement) {
+    // Remove active class from all icon buttons
+    document.querySelectorAll('.icon-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Add active class to clicked button
+    buttonElement.classList.add('active');
+
+    // Update hidden input
+    const selectedIconInput = document.getElementById('selectedIcon');
+    if (selectedIconInput) {
+        selectedIconInput.value = iconValue;
+    }
+}
+
+/**
+ * Initialize icon picker on page load
+ */
+function initializeIconPicker() {
+    const selectedIcon = document.getElementById('selectedIcon')?.value;
+    if (selectedIcon) {
+        const button = document.querySelector(`[data-icon="${selectedIcon}"]`);
+        if (button) {
+            button.classList.add('active');
+        }
+    }
+}
+
+// Initialize on DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+    initializeIconPicker();
+});
+
 // Export functions for use in views
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
@@ -231,6 +270,8 @@ if (typeof module !== 'undefined' && module.exports) {
         removeRuleRow,
         validateCategoryForm,
         formatBytes,
-        escapeHtml
+        escapeHtml,
+        selectIcon,
+        initializeIconPicker
     };
 }

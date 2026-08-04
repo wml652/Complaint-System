@@ -37,21 +37,8 @@ public class DashboardController : Controller
         }
         else if (User.IsInRole("Admin"))
         {
-            var complaints = (await _complaintService.GetAllAsync()).ToList();
-
-            // Wireframe stat cards. "Pending" in the wireframe maps to our
-            // ComplaintStatus.Open value - no new status is being introduced.
-            var viewModel = new AdminDashboardViewModel
-            {
-                Complaints = complaints,
-                TotalCount = complaints.Count,
-                PendingCount = complaints.Count(c => c.Status == "Open"),
-                InProgressCount = complaints.Count(c => c.Status == "InProgress"),
-                ResolvedCount = complaints.Count(c => c.Status == "Resolved"),
-                SelectedStatus = status
-            };
-
-            return View("AdminIndex", viewModel);
+            var complaints = await _complaintService.GetAllAsync();
+            return View("AdminIndex", complaints);
         }
         else if (User.IsInRole("Staff"))
         {

@@ -9,6 +9,10 @@
     const onlineUserIds = new Set();
     const lastSeenCache = new Map(); // userId -> lastSeenAt string
 
+    // Typing indicator tracking
+    let typingTimeout = null;
+    const typingSet = new Set();
+
     function init() {
         connection = AppHub.connection;
 
@@ -16,6 +20,12 @@
         connection.on("ReceiveInternalMessage", onInternalMessageReceived);
         connection.on("MessagesRead", onComplaintMessagesRead);
         connection.on("InternalMessagesRead", onInternalMessagesRead);
+        connection.on("UserTyping", (userId, userName) => {
+            showTypingIndicator(userName);
+        });
+        connection.on("UserStoppedTyping", (userId) => {
+            hideTypingIndicator();
+        });
         connection.on("UserOnline", (userId) => {
             onlineUserIds.add(userId);
             updatePresenceUi(userId, true);
@@ -377,14 +387,53 @@
             const hasText = input.value.trim().length > 0;
             document.getElementById('micButton').style.display = hasText ? 'none' : 'flex';
             document.getElementById('sendButton').style.display = hasText ? 'flex' : 'none';
+
+            // Notify typing
+            notifyTyping();
         });
 
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
+                // Stop typing indicator after send
+                if (currentChatId) {
+                    connection.invoke("UserStoppedTyping", currentChatId).catch(err => console.error(err));
+                }
             }
         });
+    }
+
+    function notifyTyping() {
+        if (currentChatId) {
+            connection.invoke("UserStartedTyping", currentChatId).catch(err => console.error(err));
+        }
+
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+            if (currentChatId) {
+                connection.invoke("UserStoppedTyping", currentChatId).catch(err => console.error(err));
+            }
+        }, 3000);
+    }
+
+    function showTypingIndicator(userName) {
+        typingSet.add(userName);
+        const typingNames = Array.from(typingSet).join(", ");
+        const indicator = document.getElementById('typingIndicator');
+        if (indicator) {
+            document.getElementById('typingText').textContent =
+                typingNames + (typingSet.size === 1 ? " is typing..." : " are typing...");
+            indicator.style.display = 'block';
+        }
+    }
+
+    function hideTypingIndicator() {
+        typingSet.clear();
+        const indicator = document.getElementById('typingIndicator');
+        if (indicator) {
+            indicator.style.display = 'none';
+        }
     }
 
     function onComplaintMessageReceived(message) {
