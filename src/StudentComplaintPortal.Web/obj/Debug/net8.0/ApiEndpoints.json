@@ -320,6 +320,37 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "StudentComplaintPortal.Web.Controllers.Api.MessagesController",
+    "Method": "GetMessagesPaged",
+    "RelativePath": "api/v1/complaints/{id}/messages/paged",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "cursor",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "forward",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "StudentComplaintPortal.Web.Controllers.Api.ComplaintsController",
     "Method": "UpdateStatus",
     "RelativePath": "api/v1/complaints/{id}/status",
@@ -349,6 +380,73 @@
     "Order": 0,
     "Parameters": [],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "StudentComplaintPortal.Web.Controllers.Api.DashboardController",
+    "Method": "GetPendingActions",
+    "RelativePath": "api/v1/dashboard/pending-actions",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "StudentComplaintPortal.Application.DTOs.PagedResult\u00601[[StudentComplaintPortal.Application.DTOs.PendingActionDto, StudentComplaintPortal.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "StudentComplaintPortal.Web.Controllers.Api.DashboardController",
+    "Method": "GetRecentActivity",
+    "RelativePath": "api/v1/dashboard/recent-activity",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "cursor",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "forward",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "StudentComplaintPortal.Application.DTOs.CursorResult\u00601[[StudentComplaintPortal.Application.DTOs.ActivityLogDto, StudentComplaintPortal.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   },
   {
     "ContainingType": "StudentComplaintPortal.Web.Controllers.Api.DashboardController",

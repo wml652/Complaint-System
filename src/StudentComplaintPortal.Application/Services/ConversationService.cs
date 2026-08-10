@@ -2,6 +2,7 @@
 using StudentComplaintPortal.Application.DTOs;
 using StudentComplaintPortal.Data;
 using StudentComplaintPortal.Domain.Entities;
+using StudentComplaintPortal.Application.ServiceHelper;
 
 namespace StudentComplaintPortal.Application.Services;
 
@@ -162,6 +163,44 @@ public class ConversationService : IConversationService
         }
 
         return result;
+    }
+
+    public async Task<CursorResult<InternalMessageDto>> GetMessagesPagedAsync(int conversationId, string? cursor, int pageSize = 20, bool moveForward = true)
+    {
+        var participants = await _dbContext.ConversationParticipants
+            .Where(p => p.ConversationId == conversationId)
+            .ToListAsync();
+
+        var messages = await _dbContext.InternalMessages
+            .Include(m => m.Sender)
+            .Where(m => m.ConversationId == conversationId)
+            .OrderBy(m => m.SentAt)
+            .ToListAsync();
+
+        var messageDtos = new List<InternalMessageDto>();
+        foreach (var m in messages)
+        {
+            var others = participants.Where(p => p.UserId != m.SenderId).ToList();
+
+            DateTime? seenByAllAt = null;
+            if (others.Count > 0 && others.All(p => p.LastReadAt.HasValue && p.LastReadAt.Value >= m.SentAt))
+            {
+                seenByAllAt = others.Max(p => p.LastReadAt!.Value);
+            }
+
+            messageDtos.Add(new InternalMessageDto
+            {
+                Id = m.Id,
+                ConversationId = m.ConversationId,
+                SenderId = m.SenderId,
+                SenderName = m.Sender.FullName,
+                Content = m.Content,
+                SentAt = m.SentAt,
+                ReadAt = seenByAllAt
+            });
+        }
+
+        return PaginationHelper.PaginateByCursorId(messageDtos, dto => dto.Id, cursor, pageSize, moveForward);
     }
 
     public async Task<InternalMessageDto> SendMessageAsync(int conversationId, string senderId, string content)

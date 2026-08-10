@@ -1,6 +1,8 @@
 const DashboardCharts = (function () {
     let lineChart = null;
     let pieChart = null;
+    let currentPendingPage = 1;
+    let activityCursor = null;
 
     async function init() {
         await loadDashboardStats();
@@ -19,6 +21,7 @@ const DashboardCharts = (function () {
             initializeCharts(stats);
             renderActivityFeed(stats.recentActivity);
             renderPendingActions(stats.pendingActions);
+            activityCursor = stats.recentActivity.nextCursor;
         } catch (error) {
             console.error('Error loading dashboard stats:', error);
         }
@@ -155,22 +158,62 @@ const DashboardCharts = (function () {
         });
     }
 
-    function renderActivityFeed(activities) {
+    function renderActivityFeed(activityResult) {
         const container = document.getElementById('activityFeed');
         if (!container) return;
 
-        if (!activities || activities.length === 0) {
+        const activities = activityResult.items || [];
+
+        if (activities.length === 0) {
             container.innerHTML = '<div class="text-center text-muted py-4">No recent activity</div>';
             return;
         }
 
         const html = activities
-            .slice(0, 10)
             .map(activity => {
                 const time = new Date(activity.timestamp);
                 const timeStr = formatTime(time);
 
                 return `
+                <div class="activity-item">
+                    <div class="d-flex justify-content-between mb-1">
+                        <div class="activity-action">${escapeHtml(activity.action)}</div>
+                        <span class="activity-time">${timeStr}</span>
+                    </div>
+                    <div class="activity-description">${escapeHtml(activity.description)}</div>
+                    <div style="font-size: 0.8rem; color: #999; margin-top: 0.25rem;">by ${escapeHtml(activity.initiatedBy)}</div>
+                </div>
+            `;
+            })
+            .join('');
+
+        const loadMoreHtml = activityResult.hasMore
+            ? `<button class="btn btn-sm btn-outline-secondary w-100 mt-2" onclick="DashboardCharts.loadMoreActivity()">Load More</button>`
+            : '';
+
+        container.innerHTML = html + loadMoreHtml;
+    }
+
+    async function loadMoreActivity() {
+        if (!activityCursor) return;
+
+        try {
+            const response = await fetch(`/api/v1/dashboard/recent-activity?cursor=${encodeURIComponent(activityCursor)}`);
+            if (!response.ok) return;
+
+            const result = await response.json();
+            activityCursor = result.nextCursor;
+
+            const container = document.getElementById('activityFeed');
+            const existingButton = container.querySelector('button');
+            if (existingButton) existingButton.remove();
+
+            const html = result.items
+                .map(activity => {
+                    const time = new Date(activity.timestamp);
+                    const timeStr = formatTime(time);
+
+                    return `
                     <div class="activity-item">
                         <div class="d-flex justify-content-between mb-1">
                             <div class="activity-action">${escapeHtml(activity.action)}</div>
@@ -180,44 +223,78 @@ const DashboardCharts = (function () {
                         <div style="font-size: 0.8rem; color: #999; margin-top: 0.25rem;">by ${escapeHtml(activity.initiatedBy)}</div>
                     </div>
                 `;
-            })
-            .join('');
+                })
+                .join('');
 
-        container.innerHTML = html;
+            const loadMoreHtml = result.hasMore
+                ? `<button class="btn btn-sm btn-outline-secondary w-100 mt-2" onclick="DashboardCharts.loadMoreActivity()">Load More</button>`
+                : '';
+
+            container.insertAdjacentHTML('beforeend', html + loadMoreHtml);
+        } catch (error) {
+            console.error('Error loading more activity:', error);
+        }
     }
 
-    function renderPendingActions(actions) {
+    function renderPendingActions(pagedResult) {
         const container = document.getElementById('pendingActions');
         if (!container) return;
 
-        if (!actions || actions.length === 0) {
+        const actions = pagedResult.items || [];
+
+        if (actions.length === 0) {
             container.innerHTML = '<div class="text-center text-muted py-4">No pending actions</div>';
             return;
         }
 
         const html = actions
-            .slice(0, 10)
             .map(action => {
                 const statusColor = getStatusColor(action.status);
                 const daysLabel = action.daysPending === 1 ? 'day' : 'days';
 
                 return `
-                    <div class="pending-item">
-                        <div class="pending-header">
-                            <span class="pending-title">${escapeHtml(action.title)}</span>
-                            <span class="badge pending-badge" style="background-color: ${statusColor};">${escapeHtml(action.status)}</span>
-                        </div>
-                        <div class="pending-meta">
-                            <span>${escapeHtml(action.studentName)}</span>
-                            <span>${escapeHtml(action.category)}</span>
-                            <span class="pending-days">${action.daysPending} ${daysLabel}</span>
-                        </div>
+                <div class="pending-item">
+                    <div class="pending-header">
+                        <span class="pending-title">${escapeHtml(action.title)}</span>
+                        <span class="badge pending-badge" style="background-color: ${statusColor};">${escapeHtml(action.status)}</span>
                     </div>
-                `;
+                    <div class="pending-meta">
+                        <span>${escapeHtml(action.studentName)}</span>
+                        <span>${escapeHtml(action.category)}</span>
+                        <span class="pending-days">${action.daysPending} ${daysLabel}</span>
+                    </div>
+                </div>
+            `;
             })
             .join('');
 
-        container.innerHTML = html;
+        const prevDisabled = !pagedResult.hasPreviousPage ? 'disabled' : '';
+        const nextDisabled = !pagedResult.hasNextPage ? 'disabled' : '';
+
+        const pagerHtml = `
+        <div class="d-flex justify-content-between align-items-center mt-2">
+            <button class="btn btn-sm btn-outline-secondary" ${prevDisabled} onclick="DashboardCharts.changePendingPage(${pagedResult.pageNumber - 1})">Previous</button>
+            <span style="font-size: 0.85rem; color: #666;">Page ${pagedResult.pageNumber} of ${pagedResult.totalPages}</span>
+            <button class="btn btn-sm btn-outline-secondary" ${nextDisabled} onclick="DashboardCharts.changePendingPage(${pagedResult.pageNumber + 1})">Next</button>
+        </div>
+    `;
+
+        container.innerHTML = html + pagerHtml;
+    }
+
+    async function changePendingPage(page) {
+        if (page < 1) return;
+
+        try {
+            const response = await fetch(`/api/v1/dashboard/pending-actions?page=${page}`);
+            if (!response.ok) return;
+
+            const result = await response.json();
+            currentPendingPage = page;
+            renderPendingActions(result);
+        } catch (error) {
+            console.error('Error changing pending actions page:', error);
+        }
     }
 
     function generateLast30Days() {
@@ -263,5 +340,5 @@ const DashboardCharts = (function () {
 
     document.addEventListener('DOMContentLoaded', init);
 
-    return { init };
+    return { init, loadMoreActivity, changePendingPage };
 })();

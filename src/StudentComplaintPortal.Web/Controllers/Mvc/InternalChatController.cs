@@ -36,6 +36,16 @@ public class InternalChatController : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> GetMessagesPaged(int conversationId, string? cursor = null, int pageSize = 20, bool forward = true)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Forbid();
+
+        var result = await _conversationService.GetMessagesPagedAsync(conversationId, cursor, pageSize, forward);
+        return Json(result);
+    }
+
+    [HttpGet]
     public async Task<IActionResult> GetMembers(int conversationId)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
