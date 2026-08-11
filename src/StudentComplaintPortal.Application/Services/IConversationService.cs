@@ -12,4 +12,5 @@ public interface IConversationService
     Task MarkAllAsReadAsync(int conversationId, string readerUserId);
     Task<List<ParticipantDto>> GetParticipantsAsync(int conversationId);
     Task<List<ParticipantDto>> GetContactsAsync(string currentUserId);
+    Task<InternalMessageDto> CreateMessageWithAttachmentAsync(int conversationId, string senderId, Stream fileStream, string fileName, string contentType, StudentComplaintPortal.Domain.Enums.FileType fileType, string? content = null);
 }
