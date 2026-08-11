@@ -55,4 +55,9 @@ public class ComplaintController : Controller
         var messages = await _messageService.GetConversationAsync(complaintId);
         return Json(messages);
     }
+    public async Task<IActionResult> GetMessagesPaged(int complaintId, string? cursor = null, int pageSize = 20, bool forward = true)
+    {
+        var result = await _messageService.GetConversationPagedAsync(complaintId, cursor, pageSize, forward);
+        return Json(result);
+    }
 }

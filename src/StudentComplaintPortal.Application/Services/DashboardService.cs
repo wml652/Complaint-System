@@ -1,4 +1,5 @@
 using StudentComplaintPortal.Application.DTOs;
+using StudentComplaintPortal.Application.ServiceHelper;
 using StudentComplaintPortal.Data.Repositories;
 using StudentComplaintPortal.Domain.Entities;
 using StudentComplaintPortal.Domain.Enums;
@@ -77,25 +78,52 @@ public class DashboardService : IDashboardService
             })
             .ToList();
 
-        // Build recent activity (last 10 items)
-        stats.RecentActivity = await BuildRecentActivityAsync(complaints.ToList());
+        // Build recent activity (first page)
+        stats.RecentActivity = await GetRecentActivityAsync(userId, userRole, cursor: null);
 
-        // Build pending actions (complaints not resolved/closed, sorted by age)
-        stats.PendingActions = await BuildPendingActionsAsync(complaints
-            .Where(c => c.Status == ComplaintStatus.Open || c.Status == ComplaintStatus.InProgress)
-            .OrderByDescending(c => c.CreatedAt)
-            .Take(10)
-            .ToList());
+        // Build pending actions (first page)
+        stats.PendingActions = await GetPendingActionsAsync(userId, userRole, pageNumber: 1);
 
         return stats;
     }
 
-    private async Task<List<ActivityLogDto>> BuildRecentActivityAsync(List<Complaint> complaints)
+    public async Task<PagedResult<PendingActionDto>> GetPendingActionsAsync(string userId, string userRole, int pageNumber, int pageSize = 10)
+    {
+        var complaints = await _unitOfWork.Complaints.GetAllAsync();
+
+        if (userRole == "Student")
+        {
+            complaints = complaints.Where(c => c.StudentId == userId).ToList();
+        }
+
+        var pendingComplaints = complaints
+            .Where(c => c.Status == ComplaintStatus.Open || c.Status == ComplaintStatus.InProgress)
+            .ToList();
+
+        var pendingActions = await BuildPendingActionsAsync(pendingComplaints);
+
+        return PaginationHelper.PaginateByPage(pendingActions, pageNumber, pageSize);
+    }
+
+    public async Task<CursorResult<ActivityLogDto>> GetRecentActivityAsync(string userId, string userRole, string? cursor, int pageSize = 15, bool moveForward = true)
+    {
+        var complaints = await _unitOfWork.Complaints.GetAllAsync();
+
+        if (userRole == "Student")
+        {
+            complaints = complaints.Where(c => c.StudentId == userId).ToList();
+        }
+
+        var activities = await BuildAllActivitiesAsync(complaints.ToList());
+
+        return PaginationHelper.PaginateByCursorTimestamp(activities, a => a.Timestamp, cursor, pageSize, moveForward);
+    }
+
+    private async Task<List<ActivityLogDto>> BuildAllActivitiesAsync(List<Complaint> complaints)
     {
         var activities = new List<ActivityLogDto>();
-        var latestComplaints = complaints.OrderByDescending(c => c.CreatedAt).Take(10).ToList();
 
-        foreach (var complaint in latestComplaints)
+        foreach (var complaint in complaints)
         {
             var student = await _userManager.FindByIdAsync(complaint.StudentId);
             activities.Add(new ActivityLogDto
@@ -107,7 +135,6 @@ public class DashboardService : IDashboardService
                 InitiatedBy = student?.FullName ?? "Unknown"
             });
 
-            // Add status change activity if complaint was updated
             if (complaint.UpdatedAt > complaint.CreatedAt.AddSeconds(1))
             {
                 activities.Add(new ActivityLogDto
@@ -121,7 +148,7 @@ public class DashboardService : IDashboardService
             }
         }
 
-        return activities.OrderByDescending(a => a.Timestamp).Take(15).ToList();
+        return activities.OrderByDescending(a => a.Timestamp).ToList();
     }
 
     private async Task<List<PendingActionDto>> BuildPendingActionsAsync(List<Complaint> complaints)

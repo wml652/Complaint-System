@@ -4,6 +4,8 @@
     let currentChatId = null;
     let currentOtherUserId = null;
     let currentComplaintStatus = null;
+    let messageCursor = null;
+    let isLoadingOlderMessages = false;
 
     // Client-side cache: jab bhi list re-render ho, isse dubara apply kar sakein
     const onlineUserIds = new Set();
@@ -218,10 +220,14 @@
 
         connection.invoke("JoinComplaintGroup", complaintId)
             .then(() => {
-                fetch(`/Complaint/GetMessages?complaintId=${complaintId}`)
+                messageCursor = null;
+                fetch(`/Complaint/GetMessagesPaged?complaintId=${complaintId}`)
                     .then(res => res.json())
-                    .then(messages => {
+                    .then(result => {
+                        const messages = result.items.slice().reverse();
                         renderMessages(messages, false);
+                        messageCursor = result.nextCursor;
+                        setupScrollListener();
                         connection.invoke("MarkAsRead", complaintId)
                             .then(() => loadStudentChats())
                             .catch(err => console.error(err));
@@ -252,10 +258,15 @@
             .then(members => renderMembersPanel(members))
             .catch(err => console.error("Failed to load group members:", err));
 
-        fetch(`/InternalChat/GetMessages?conversationId=${conversationId}`)
+        messageCursor = null;
+
+        fetch(`/InternalChat/GetMessagesPaged?conversationId=${conversationId}`)
             .then(res => res.json())
-            .then(messages => {
+            .then(result => {
+                const messages = result.items.slice().reverse();
                 renderMessages(messages, true);
+                messageCursor = result.nextCursor;
+                setupScrollListener();
                 connection.invoke("MarkInternalMessagesAsRead", conversationId)
                     .then(() => loadTeamChats())
                     .catch(err => console.error(err));
@@ -304,14 +315,7 @@
         document.getElementById('infoPanel').style.display = 'none';
     }
 
-    function renderMessages(messages, isInternal) {
-    const currentUserId = document.body.dataset.currentUserId;
-    const userRole = document.body.dataset.userRole;
-    const isAdmin = userRole === 'Admin';
-    const body = document.getElementById('chatBody');
-    body.innerHTML = '';
-
-    messages.forEach((m, index) => {
+    function buildMessageBubble(m, index, totalCount, currentUserId, isAdmin) {
         const isOutgoing = m.senderId === currentUserId;
         const canEditDelete = isOutgoing || isAdmin;
         const bubble = document.createElement('div');
@@ -325,12 +329,12 @@
 
         let ticksHtml = '';
         if (isOutgoing) {
-         const seen = !!m.readAt;
-         const isLastMessage = index === messages.length - 1;
-         const icon = seen ? 'bi-check2-all' : 'bi-check';
-         const label = isLastMessage ? `<span class="tick-label">${seen ? 'seen' : 'sent'}</span>` : '';
-         ticksHtml = `<div class="chat-bubble-ticks ${seen ? 'seen' : ''}"><i class="bi ${icon}"></i>${label}</div>`;
-    }
+            const seen = !!m.readAt;
+            const isLastMessage = index === totalCount - 1;
+            const icon = seen ? 'bi-check2-all' : 'bi-check';
+            const label = isLastMessage ? `<span class="tick-label">${seen ? 'seen' : 'sent'}</span>` : '';
+            ticksHtml = `<div class="chat-bubble-ticks ${seen ? 'seen' : ''}"><i class="bi ${icon}"></i>${label}</div>`;
+        }
 
         let contentHtml = escapeHtml(m.content || '');
         let editBadgeHtml = m.isEdited ? '<small class="text-muted ms-1 edited-badge" style="font-size: 0.7rem;">(edited)</small>' : '';
@@ -338,15 +342,15 @@
         let actionsHtml = '';
         if (canEditDelete && !m.deletedAt) {
             actionsHtml = `
-                <div class="message-actions" style="margin-top: 4px; display: flex; gap: 6px;">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" style="font-size: 0.75rem; padding: 2px 6px;" onclick="ChatWorkspace.editMessage(${m.id}, ${currentChatId}, '${escapeHtml(m.content || '').replace(/'/g, "\\'")}')">
-                        <i class="bi bi-pencil"></i> Edit
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-danger" style="font-size: 0.75rem; padding: 2px 6px;" onclick="ChatWorkspace.deleteMessage(${m.id}, ${currentChatId})">
-                        <i class="bi bi-trash"></i> Delete
-                    </button>
-                </div>
-            `;
+            <div class="message-actions" style="margin-top: 4px; display: flex; gap: 6px;">
+                <button type="button" class="btn btn-sm btn-outline-secondary" style="font-size: 0.75rem; padding: 2px 6px;" onclick="ChatWorkspace.editMessage(${m.id}, ${currentChatId}, '${escapeHtml(m.content || '').replace(/'/g, "\\'")}')">
+                    <i class="bi bi-pencil"></i> Edit
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" style="font-size: 0.75rem; padding: 2px 6px;" onclick="ChatWorkspace.deleteMessage(${m.id}, ${currentChatId})">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </div>
+        `;
         }
 
         let messageContent = `<p class="message-text mb-0">${contentHtml}${editBadgeHtml}</p>${actionsHtml}`;
@@ -355,13 +359,77 @@
         }
 
         bubble.innerHTML = `${attachmentsHtml}${messageContent}${ticksHtml}`;
-        body.appendChild(bubble);
-    });
+        return bubble;
+    }
 
-    body.scrollTop = body.scrollHeight;
-    if (window.voicePlayer) voicePlayer.setup();
-}
 
+    function renderMessages(messages, isInternal) {
+        const currentUserId = document.body.dataset.currentUserId;
+        const userRole = document.body.dataset.userRole;
+        const isAdmin = userRole === 'Admin';
+        const body = document.getElementById('chatBody');
+        body.innerHTML = '';
+
+        messages.forEach((m, index) => {
+            const bubble = buildMessageBubble(m, index, messages.length, currentUserId, isAdmin);
+            body.appendChild(bubble);
+        });
+
+        body.scrollTop = body.scrollHeight;
+        if (window.voicePlayer) voicePlayer.setup();
+    }
+
+    function prependMessages(messages) {
+        const currentUserId = document.body.dataset.currentUserId;
+        const userRole = document.body.dataset.userRole;
+        const isAdmin = userRole === 'Admin';
+        const body = document.getElementById('chatBody');
+
+        const fragment = document.createDocumentFragment();
+        messages.forEach((m, index) => {
+            const bubble = buildMessageBubble(m, index, messages.length, currentUserId, isAdmin);
+            fragment.appendChild(bubble);
+        });
+
+        body.insertBefore(fragment, body.firstChild);
+        if (window.voicePlayer) voicePlayer.setup();
+    }
+
+    function setupScrollListener() {
+        const body = document.getElementById('chatBody');
+        body.onscroll = function () {
+            if (body.scrollTop < 50 && !isLoadingOlderMessages && messageCursor) {
+                loadOlderMessages();
+            }
+        };
+    }
+
+    function loadOlderMessages() {
+        if (!messageCursor || isLoadingOlderMessages) return;
+        isLoadingOlderMessages = true;
+
+        const body = document.getElementById('chatBody');
+        const previousScrollHeight = body.scrollHeight;
+
+        const url = currentChatType === 'complaint'
+            ? `/Complaint/GetMessagesPaged?complaintId=${currentChatId}&cursor=${encodeURIComponent(messageCursor)}`
+            : `/InternalChat/GetMessagesPaged?conversationId=${currentChatId}&cursor=${encodeURIComponent(messageCursor)}`;
+
+        fetch(url)
+            .then(res => res.json())
+            .then(result => {
+                const olderMessages = result.items.slice().reverse();
+                messageCursor = result.nextCursor;
+
+                prependMessages(olderMessages);
+                body.scrollTop = body.scrollHeight - previousScrollHeight;
+                isLoadingOlderMessages = false;
+            })
+            .catch(err => {
+                console.error('Error loading older messages:', err);
+                isLoadingOlderMessages = false;
+            });
+    }
     function renderAttachment(attachment) {
     if (attachment.fileType === 'Photo') {
         return `<img src="${attachment.fileUrl}" class="attachment-media" alt="Photo" />`;
@@ -411,22 +479,26 @@
     }
 
     function uploadAttachment(file, fileType) {
-    const formData = new FormData();
-    formData.append('File', file);
-    formData.append('FileType', fileType);
+        const formData = new FormData();
+        formData.append('File', file);
+        formData.append('FileType', fileType);
 
-    fetch(`/api/v1/complaints/${currentChatId}/attachments`, {
-        method: 'POST',
-        body: formData
-    })
-        .then(res => {
-            if (!res.ok) {
-                console.error('Attachment upload failed, status:', res.status);
-            }
-            // ReceiveMessage SignalR event will add msg in chat — no need to manually render
-        })
-        .catch(err => console.error('Attachment upload error:', err));
-}
+        let url;
+        if (currentChatType === 'complaint') {
+            url = `/api/v1/complaints/${currentChatId}/attachments`;
+        } else {
+            url = `/InternalChat/UploadAttachment?conversationId=${currentChatId}`;   // new route internal-chat ke liye
+        }
+
+        fetch(url, { method: 'POST', body: formData })
+            .then(res => {
+                if (!res.ok) {
+                    console.error('Attachment upload failed, status:', res.status);
+                }
+                // SignalR ka "ReceiveInternalMessage" event khud message add kar dega  koi manual-render nahi chahiye
+            })
+            .catch(err => console.error('Attachment upload error:', err));
+    }
 
     function setupMessageInputToggle() {
         const input = document.getElementById('messageInput');
@@ -608,11 +680,13 @@
     }
 
     function refreshInternalTicks(conversationId) {
-        fetch(`/InternalChat/GetMessages?conversationId=${conversationId}`)
+        fetch(`/InternalChat/GetMessagesPaged?conversationId=${conversationId}`)
             .then(res => res.json())
-            .then(messages => {
+            .then(result => {
                 if (currentChatType !== 'internal' || currentChatId !== conversationId) return;
 
+                // GetMessagesPaged items newest-first deta hai, ascending order mein wapis karo
+                const messages = (result.items || []).slice().reverse();
                 const currentUserId = document.body.dataset.currentUserId;
                 const lastMessage = messages[messages.length - 1];
 

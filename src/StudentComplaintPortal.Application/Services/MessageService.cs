@@ -1,5 +1,6 @@
 ﻿using StudentComplaintPortal.Application.DTOs;
 using StudentComplaintPortal.Application.Exceptions;
+using StudentComplaintPortal.Application.ServiceHelper;
 using StudentComplaintPortal.Data.Repositories;
 using StudentComplaintPortal.Domain.Entities;
 using StudentComplaintPortal.Domain.Enums;
@@ -94,6 +95,14 @@ public class MessageService : IMessageService
     {
         var messages = await _unitOfWork.Messages.GetByComplaintIdAsync(complaintId);
         return messages.Select(MapToDto);
+    }
+
+    public async Task<CursorResult<MessageDto>> GetConversationPagedAsync(int complaintId, string? cursor, int pageSize = 20, bool moveForward = true)
+    {
+        var messages = await _unitOfWork.Messages.GetByComplaintIdAsync(complaintId);
+        var messageDtos = messages.Select(MapToDto).ToList();
+
+        return PaginationHelper.PaginateByCursorId(messageDtos, m => m.Id, cursor, pageSize, moveForward);
     }
 
     public async Task<MessageDto> GetMessageByIdAsync(int messageId)
