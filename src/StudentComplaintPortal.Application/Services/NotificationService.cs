@@ -79,9 +79,3 @@ public class NotificationService : INotificationService
         };
     }
 }
-
-// Interface for real-time push (implemented by SignalR integration)
-public interface INotificationPushService
-{
-    Task PushNotificationAsync(string userId, NotificationDto notification);
-}

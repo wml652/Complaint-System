@@ -3,6 +3,7 @@ using StudentComplaintPortal.Application.Exceptions;
 using StudentComplaintPortal.Data.Repositories;
 using StudentComplaintPortal.Domain.Entities;
 using StudentComplaintPortal.Domain.Enums;
+using StudentComplaintPortal.Application.ServiceHelper;
 
 namespace StudentComplaintPortal.Application.Services;
 
@@ -101,6 +102,42 @@ public class ComplaintService : IComplaintService
         // Team decision (update): a Closed complaint CAN be moved to any other
         // status again - status changes are no longer one-way.
         return true;
+    }
+
+    public async Task<CursorResult<ComplaintDto>> GetByStudentPagedAsync(string studentId, string? cursor, int pageSize = 20, bool moveForward = true)
+        => await BuildChatListPageAsync((ct, ps, mf) => _unitOfWork.Complaints.GetByStudentIdPagedAsync(studentId, ct, ps, mf), cursor, pageSize, moveForward);
+
+    public async Task<CursorResult<ComplaintDto>> GetAllPagedAsync(string? cursor, int pageSize = 20, bool moveForward = true)
+        => await BuildChatListPageAsync((ct, ps, mf) => _unitOfWork.Complaints.GetAllPagedAsync(ct, ps, mf), cursor, pageSize, moveForward);
+
+    public async Task<CursorResult<ComplaintDto>> GetAssignedComplaintsPagedAsync(string staffUserId, string? cursor, int pageSize = 20, bool moveForward = true)
+        => await BuildChatListPageAsync((ct, ps, mf) => _unitOfWork.Complaints.GetAssignedToStaffPagedAsync(staffUserId, ct, ps, mf), cursor, pageSize, moveForward);
+
+    private async Task<CursorResult<ComplaintDto>> BuildChatListPageAsync(
+        Func<DateTime?, int, bool, Task<List<Complaint>>> fetchPage,
+        string? cursor, int pageSize, bool moveForward)
+    {
+        if (pageSize < 1) pageSize = 10;
+        var cursorTimestamp = PaginationHelper.DecodeTimestampCursor(cursor);
+
+        var complaints = await fetchPage(cursorTimestamp, pageSize, moveForward);
+
+        var hasMore = complaints.Count > pageSize;
+        if (hasMore) complaints = complaints.Take(pageSize).ToList();
+
+        var dtos = complaints.Select(MapToDto).ToList();
+
+        string? nextCursor = hasMore ? PaginationHelper.EncodeTimestampCursor(complaints.Last().LastMessageAt ?? complaints.Last().CreatedAt) : null;
+        string? previousCursor = complaints.Count > 0 ? PaginationHelper.EncodeTimestampCursor(complaints.First().LastMessageAt ?? complaints.First().CreatedAt) : null;
+
+        return new CursorResult<ComplaintDto>
+        {
+            Items = dtos,
+            NextCursor = nextCursor,
+            PreviousCursor = previousCursor,
+            HasMore = hasMore,
+            PageSize = pageSize
+        };
     }
 
     private ComplaintDto MapToDto(Complaint complaint)

@@ -1,68 +1,54 @@
-using Microsoft.EntityFrameworkCore;
-using StudentComplaintPortal.Data;
+using StudentComplaintPortal.Data.Repositories;
 
 namespace StudentComplaintPortal.Application.Services;
 
-public interface IMessageReadTrackingService
-{
-    Task MarkMessageAsReadAsync(int messageId, string userId);
-    Task MarkMultipleMessagesAsReadAsync(List<int> messageIds, string userId);
-    Task<List<int>> GetUnreadMessageIdsAsync(int complaintId, string userId);
-}
-
 public class MessageReadTrackingService : IMessageReadTrackingService
 {
-    private readonly AppDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public MessageReadTrackingService(AppDbContext context)
+    public MessageReadTrackingService(IUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task MarkMessageAsReadAsync(int messageId, string userId)
     {
-        var message = await _context.Messages.FindAsync(messageId);
+        var message = await _unitOfWork.Messages.GetByIdAsync(messageId);
 
         if (message == null)
             throw new KeyNotFoundException($"Message {messageId} not found");
 
-        // Don't mark own messages as read
         if (message.SenderId == userId)
             return;
 
-        // Don't overwrite existing read receipt
         if (message.ReadAt.HasValue)
             return;
 
         message.ReadAt = DateTime.UtcNow;
         message.ReadByUserId = userId;
 
-        await _context.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task MarkMultipleMessagesAsReadAsync(List<int> messageIds, string userId)
     {
-        var messages = await _context.Messages
-            .Where(m => messageIds.Contains(m.Id) && m.SenderId != userId && !m.ReadAt.HasValue)
-            .ToListAsync();
+        var messages = await _unitOfWork.Messages
+            .FindAsync(m => messageIds.Contains(m.Id) && m.SenderId != userId && !m.ReadAt.HasValue);
 
-        foreach (var message in messages)
+        var messageList = messages.ToList();
+
+        foreach (var message in messageList)
         {
             message.ReadAt = DateTime.UtcNow;
             message.ReadByUserId = userId;
         }
 
-        if (messages.Any())
-            await _context.SaveChangesAsync();
+        if (messageList.Any())
+            await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task<List<int>> GetUnreadMessageIdsAsync(int complaintId, string userId)
     {
-        return await _context.Messages
-            .Where(m => m.ComplaintId == complaintId
-                     && m.SenderId != userId
-                     && !m.ReadAt.HasValue)
-            .Select(m => m.Id)
-            .ToListAsync();
+        return await _unitOfWork.Messages.GetUnreadMessageIdsAsync(complaintId, userId);
     }
 }

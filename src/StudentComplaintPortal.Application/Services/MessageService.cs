@@ -41,6 +41,9 @@ public class MessageService : IMessageService
             IsRead = false
         };
 
+        complaint.LastMessageAt = message.SentAt;
+        _unitOfWork.Complaints.Update(complaint);
+
         await _unitOfWork.Messages.AddAsync(message);
         await _unitOfWork.SaveChangesAsync();
 
@@ -99,10 +102,28 @@ public class MessageService : IMessageService
 
     public async Task<CursorResult<MessageDto>> GetConversationPagedAsync(int complaintId, string? cursor, int pageSize = 20, bool moveForward = true)
     {
-        var messages = await _unitOfWork.Messages.GetByComplaintIdAsync(complaintId);
+        if (pageSize < 1) pageSize = 10;
+
+        var cursorId = PaginationHelper.DecodeIdCursor(cursor);
+
+        var messages = await _unitOfWork.Messages.GetByComplaintIdPagedAsync(complaintId, cursorId, pageSize, moveForward);
+
+        var hasMore = messages.Count > pageSize;
+        if (hasMore) messages = messages.Take(pageSize).ToList();
+
         var messageDtos = messages.Select(MapToDto).ToList();
 
-        return PaginationHelper.PaginateByCursorId(messageDtos, m => m.Id, cursor, pageSize, moveForward);
+        string? nextCursor = messageDtos.Count > 0 ? PaginationHelper.EncodeIdCursor(messageDtos.Last().Id) : null;
+        string? previousCursor = messageDtos.Count > 0 ? PaginationHelper.EncodeIdCursor(messageDtos.First().Id) : null;
+
+        return new CursorResult<MessageDto>
+        {
+            Items = messageDtos,
+            NextCursor = nextCursor,
+            PreviousCursor = previousCursor,
+            HasMore = hasMore,
+            PageSize = pageSize
+        };
     }
 
     public async Task<MessageDto> GetMessageByIdAsync(int messageId)

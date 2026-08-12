@@ -120,4 +120,34 @@ public static class PaginationHelper
             return null; // invalid/tampered cursor, treat as no cursor
         }
     }
+
+    public static int? DecodeIdCursor(string? cursor)
+    {
+        var decoded = DecodeCursor(cursor);
+        if (!string.IsNullOrEmpty(decoded) && int.TryParse(decoded, out var id))
+        {
+            return id;
+        }
+        return null;
+    }
+
+    public static string EncodeIdCursor(int id)
+    {
+        return EncodeCursor(id.ToString());
+    }
+
+    public static DateTime? DecodeTimestampCursor(string? cursor)
+    {
+        var decoded = DecodeCursor(cursor);
+        if (!string.IsNullOrEmpty(decoded) && DateTime.TryParse(decoded, out var timestamp))
+        {
+            return timestamp;
+        }
+        return null;
+    }
+
+    public static string EncodeTimestampCursor(DateTime timestamp)
+    {
+        return EncodeCursor(timestamp.ToString("o"));
+    }
 }

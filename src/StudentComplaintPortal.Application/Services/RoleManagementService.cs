@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using StudentComplaintPortal.Application.DTOs;
+using StudentComplaintPortal.Data.Repositories;
 using StudentComplaintPortal.Domain.Entities;
 using StudentComplaintPortal.Domain.Enums;
 using System.Security.Claims;
-using StudentComplaintPortal.Data;
 
 namespace StudentComplaintPortal.Application.Services;
 
@@ -14,30 +14,28 @@ public class RoleManagementService : IRoleManagementService
 
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly UserManager<AppUser> _userManager;
-    private readonly AppDbContext _dbContext;
+    private readonly IUnitOfWork _unitOfWork;   // AppDbContext ki jagah
 
     public RoleManagementService(
         RoleManager<IdentityRole> roleManager,
         UserManager<AppUser> userManager,
-        AppDbContext dbContext)
+        IUnitOfWork unitOfWork)
     {
         _roleManager = roleManager;
         _userManager = userManager;
-        _dbContext = dbContext;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<List<PermissionDto>> GetAllPermissionsAsync()
     {
-        return await _dbContext.Permissions
-            .OrderBy(p => p.Module).ThenBy(p => p.DisplayName)
-            .Select(p => new PermissionDto
-            {
-                Id = p.Id,
-                Code = p.Code,
-                DisplayName = p.DisplayName,
-                Module = p.Module
-            })
-            .ToListAsync();
+        var permissions = await _unitOfWork.Permissions.GetAllOrderedAsync();
+        return permissions.Select(p => new PermissionDto
+        {
+            Id = p.Id,
+            Code = p.Code,
+            DisplayName = p.DisplayName,
+            Module = p.Module
+        }).ToList();
     }
 
     public async Task<List<RoleDto>> GetAllRolesAsync()

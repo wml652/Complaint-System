@@ -1,32 +1,21 @@
-using Microsoft.EntityFrameworkCore;
-using StudentComplaintPortal.Data;
+using StudentComplaintPortal.Data.Repositories;
 using StudentComplaintPortal.Domain.Entities;
 using StudentComplaintPortal.Domain.Enums;
 
 namespace StudentComplaintPortal.Application.Services;
 
-public interface IMessageQuotaService
-{
-    Task<int> GetRemainingMessagesAsync(int complaintId, string studentId);
-    Task<bool> CanSendMessageAsync(int complaintId, string userId);
-    Task DecrementQuotaAsync(int complaintId, string studentId);
-    Task ResetQuotaForComplaintAsync(int complaintId);
-    Task InitializeQuotaAsync(int complaintId, string studentId);
-}
-
 public class MessageQuotaService : IMessageQuotaService
 {
-    private readonly AppDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public MessageQuotaService(AppDbContext context)
+    public MessageQuotaService(IUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<int> GetRemainingMessagesAsync(int complaintId, string studentId)
     {
-        var quota = await _context.MessageQuotas
-            .FirstOrDefaultAsync(q => q.ComplaintId == complaintId && q.StudentId == studentId);
+        var quota = await _unitOfWork.MessageQuotas.GetAsync(complaintId, studentId);
 
         if (quota == null)
         {
@@ -39,12 +28,11 @@ public class MessageQuotaService : IMessageQuotaService
 
     public async Task<bool> CanSendMessageAsync(int complaintId, string userId)
     {
-        var user = await _context.Users.FindAsync(userId);
+        var user = await _unitOfWork.Conversations.GetUserAsync(userId);
 
         if (user == null)
             return false;
 
-        // Staff and Admin have unlimited messages
         if (user.Role == UserRole.Staff || user.Role == UserRole.Admin)
             return true;
 
@@ -54,29 +42,25 @@ public class MessageQuotaService : IMessageQuotaService
 
     public async Task DecrementQuotaAsync(int complaintId, string studentId)
     {
-        var quota = await _context.MessageQuotas
-            .FirstOrDefaultAsync(q => q.ComplaintId == complaintId && q.StudentId == studentId);
+        var quota = await _unitOfWork.MessageQuotas.GetAsync(complaintId, studentId);
 
         if (quota == null)
         {
             await InitializeQuotaAsync(complaintId, studentId);
-            quota = await _context.MessageQuotas
-                .FirstAsync(q => q.ComplaintId == complaintId && q.StudentId == studentId);
+            quota = await _unitOfWork.MessageQuotas.GetAsync(complaintId, studentId);
         }
 
-        if (quota.MessagesRemaining > 0)
+        if (quota != null && quota.MessagesRemaining > 0)
         {
             quota.MessagesRemaining--;
             quota.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
     }
 
     public async Task ResetQuotaForComplaintAsync(int complaintId)
     {
-        var quotas = await _context.MessageQuotas
-            .Where(q => q.ComplaintId == complaintId)
-            .ToListAsync();
+        var quotas = await _unitOfWork.MessageQuotas.GetAllForComplaintAsync(complaintId);
 
         foreach (var quota in quotas)
         {
@@ -87,14 +71,13 @@ public class MessageQuotaService : IMessageQuotaService
 
         if (quotas.Any())
         {
-            await _context.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
     }
 
     public async Task InitializeQuotaAsync(int complaintId, string studentId)
     {
-        var exists = await _context.MessageQuotas
-            .AnyAsync(q => q.ComplaintId == complaintId && q.StudentId == studentId);
+        var exists = await _unitOfWork.MessageQuotas.ExistsAsync(complaintId, studentId);
 
         if (!exists)
         {
@@ -107,8 +90,8 @@ public class MessageQuotaService : IMessageQuotaService
                 UpdatedAt = DateTime.UtcNow
             };
 
-            _context.MessageQuotas.Add(quota);
-            await _context.SaveChangesAsync();
+            await _unitOfWork.MessageQuotas.AddAsync(quota);
+            await _unitOfWork.SaveChangesAsync();
         }
     }
 }
