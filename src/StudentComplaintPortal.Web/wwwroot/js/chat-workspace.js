@@ -539,22 +539,26 @@
     }
 
     function uploadAttachment(file, fileType) {
-    const formData = new FormData();
-    formData.append('File', file);
-    formData.append('FileType', fileType);
+        const formData = new FormData();
+        formData.append('File', file);
+        formData.append('FileType', fileType);
 
-    fetch(`/api/v1/complaints/${currentChatId}/attachments`, {
-        method: 'POST',
-        body: formData
-    })
-        .then(res => {
-            if (!res.ok) {
-                console.error('Attachment upload failed, status:', res.status);
-            }
-            // ReceiveMessage SignalR event will add msg in chat — no need to manually render
-        })
-        .catch(err => console.error('Attachment upload error:', err));
-}
+        let url;
+        if (currentChatType === 'complaint') {
+            url = `/api/v1/complaints/${currentChatId}/attachments`;
+        } else {
+            url = `/InternalChat/UploadAttachment?conversationId=${currentChatId}`;   // new route internal-chat ke liye
+        }
+
+        fetch(url, { method: 'POST', body: formData })
+            .then(res => {
+                if (!res.ok) {
+                    console.error('Attachment upload failed, status:', res.status);
+                }
+                // SignalR ka "ReceiveInternalMessage" event khud message add kar dega  koi manual-render nahi chahiye
+            })
+            .catch(err => console.error('Attachment upload error:', err));
+    }
 
     function setupMessageInputToggle() {
         const input = document.getElementById('messageInput');

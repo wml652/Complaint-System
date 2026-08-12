@@ -1,22 +1,33 @@
 ﻿using StudentComplaintPortal.Application.DTOs;
 using StudentComplaintPortal.Application.ServiceHelper;
+using StudentComplaintPortal.Application.DTOs;
+using StudentComplaintPortal.Application.ServiceHelper;
+using StudentComplaintPortal.Application.Services.FileStorage;
 using StudentComplaintPortal.Data.Repositories;
 using StudentComplaintPortal.Domain.Entities;
+using StudentComplaintPortal.Domain.Enums;
 
 namespace StudentComplaintPortal.Application.Services;
 
 public class ConversationService : IConversationService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly AppDbContext _dbContext;
+    private readonly IFileStorageService _fileStorageService;
 
     // Har user-pair ke liye ek lock, taake "+" button do dafa jaldi jaldi
     // dabne se 2 log ek sath duplicate conversation na bana sakein.
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, SemaphoreSlim> _directConversationLocks = new();
 
-    public ConversationService(IUnitOfWork unitOfWork)
-    {
-        _unitOfWork = unitOfWork;
-    }
+public ConversationService(
+    IUnitOfWork unitOfWork, 
+    AppDbContext dbContext, 
+    IFileStorageService fileStorageService)
+{
+    _unitOfWork = unitOfWork;
+    _dbContext = dbContext;
+    _fileStorageService = fileStorageService;
+}
 
     public async Task<List<ConversationDto>> GetConversationsForUserAsync(string userId)
     {
@@ -109,8 +120,46 @@ public class ConversationService : IConversationService
 
     public async Task<List<InternalMessageDto>> GetMessagesAsync(int conversationId)
     {
-        var participants = await _unitOfWork.Conversations.GetParticipantsAsync(conversationId);
-        var messages = await _unitOfWork.Conversations.GetMessagesWithSenderAsync(conversationId);
+        var participants = await _dbContext.ConversationParticipants
+            .Where(p => p.ConversationId == conversationId)
+            .ToListAsync();
+
+        var messages = await _dbContext.InternalMessages
+            .Include(m => m.Sender)
+            .Include(m => m.Attachments)   // 👈 NAYA
+            .Where(m => m.ConversationId == conversationId)
+            .OrderBy(m => m.SentAt)
+            .ToListAsync();
+
+        var result = new List<InternalMessageDto>();
+        foreach (var m in messages)
+        {
+            var others = participants.Where(p => p.UserId != m.SenderId).ToList();
+
+            DateTime? seenByAllAt = null;
+            if (others.Count > 0 && others.All(p => p.LastReadAt.HasValue && p.LastReadAt.Value >= m.SentAt))
+            {
+                seenByAllAt = others.Max(p => p.LastReadAt!.Value);
+            }
+
+            result.Add(new InternalMessageDto
+            {
+                Id = m.Id,
+                ConversationId = m.ConversationId,
+                SenderId = m.SenderId,
+                SenderName = m.Sender.FullName,
+                Content = m.Content,
+                SentAt = m.SentAt,
+                ReadAt = seenByAllAt,
+                Attachments = m.Attachments.Select(a => new InternalAttachmentDto   // 👈 NAYA
+                {
+                    Id = a.Id,
+                    FileUrl = a.FileUrl,
+                    FileType = a.FileType.ToString(),
+                    FileSizeBytes = a.FileSizeBytes
+                }).ToList()
+            });
+        }
 
         return BuildMessageDtos(messages, participants);
     }
@@ -146,7 +195,14 @@ public class ConversationService : IConversationService
                 SenderName = m.Sender.FullName,
                 Content = m.Content,
                 SentAt = m.SentAt,
-                ReadAt = seenByAllAt
+                ReadAt = seenByAllAt,
+                Attachments = m.Attachments.Select(a => new InternalAttachmentDto   // 👈 NAYA
+                {
+                    Id = a.Id,
+                    FileUrl = a.FileUrl,
+                    FileType = a.FileType.ToString(),
+                    FileSizeBytes = a.FileSizeBytes
+                }).ToList()
             });
         }
         return result;
@@ -287,6 +343,56 @@ public class ConversationService : IConversationService
             UnreadCount = unreadCount,
             LastMessagePreview = lastMessage?.Content,
             LastMessageAt = lastMessage?.SentAt
+        };
+    }
+    public async Task<InternalMessageDto> CreateMessageWithAttachmentAsync(
+    int conversationId, string senderId, Stream fileStream, string fileName, string contentType,
+    FileType fileType, string? content = null)
+    {
+        var fileUrl = await _fileStorageService.UploadAsync(fileStream, fileName, contentType, fileType, conversationId);
+
+        var message = new InternalMessage
+        {
+            ConversationId = conversationId,
+            SenderId = senderId,
+            Content = content,
+            SentAt = DateTime.UtcNow
+        };
+        _dbContext.InternalMessages.Add(message);
+        await _dbContext.SaveChangesAsync();
+
+        var attachment = new StudentComplaintPortal.Domain.Entities.InternalAttachment
+        {
+            InternalMessageId = message.Id,
+            FileUrl = fileUrl,
+            FileType = fileType,
+            FileSizeBytes = fileStream.Length,
+            UploadedAt = DateTime.UtcNow
+        };
+        _dbContext.InternalAttachments.Add(attachment);
+        await _dbContext.SaveChangesAsync();
+
+        var sender = await _dbContext.Users.FindAsync(senderId);
+
+        return new InternalMessageDto
+        {
+            Id = message.Id,
+            ConversationId = message.ConversationId,
+            SenderId = message.SenderId,
+            SenderName = sender?.FullName ?? string.Empty,
+            Content = message.Content,
+            SentAt = message.SentAt,
+            ReadAt = message.ReadAt,
+            Attachments = new List<InternalAttachmentDto>
+        {
+            new InternalAttachmentDto
+            {
+                Id = attachment.Id,
+                FileUrl = attachment.FileUrl,
+                FileType = attachment.FileType.ToString(),
+                FileSizeBytes = attachment.FileSizeBytes
+            }
+        }
         };
     }
 }

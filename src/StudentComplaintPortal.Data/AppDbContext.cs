@@ -23,6 +23,8 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<CategoryAssignee> CategoryAssignees { get; set; }
     public DbSet<MessageQuota> MessageQuotas { get; set; }
 
+    public DbSet<InternalAttachment> InternalAttachments { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -204,6 +206,19 @@ public class AppDbContext : IdentityDbContext<AppUser>
 
             entity.HasIndex(e => e.ConversationId);
             entity.HasIndex(e => e.SentAt);
+        });
+        // Attachments for internalMessages
+        modelBuilder.Entity<InternalAttachment>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.FileUrl).IsRequired().HasMaxLength(500);
+
+            entity.HasOne(e => e.InternalMessage)
+                .WithMany(m => m.Attachments)
+                .HasForeignKey(e => e.InternalMessageId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.InternalMessageId);
         });
 
         // MessageQuota configuration
