@@ -33,28 +33,28 @@ public class ChatWorkspaceController : Controller
 
     // Students tab ke liye — complaint-based chats
     [HttpGet]
-    public async Task<IActionResult> GetStudentChats()
+    public async Task<IActionResult> GetStudentChats(string? cursor = null, int pageSize = 20, bool moveForward = true)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId)) return Forbid();
 
-        IEnumerable<ComplaintDto> complaints;
+        CursorResult<ComplaintDto> pagedComplaints;
 
         if (User.IsInRole("Student"))
         {
-            complaints = await _complaintService.GetByStudentAsync(userId);
+            pagedComplaints = await _complaintService.GetByStudentPagedAsync(userId, cursor, pageSize, moveForward);
         }
         else if (User.IsInRole("Admin") || User.HasClaim("Permission", "Complaints.ViewAll"))
         {
-            complaints = await _complaintService.GetAllAsync();
+            pagedComplaints = await _complaintService.GetAllPagedAsync(cursor, pageSize, moveForward);
         }
         else
         {
-            complaints = await _complaintService.GetAssignedComplaintsAsync(userId);
+            pagedComplaints = await _complaintService.GetAssignedComplaintsPagedAsync(userId, cursor, pageSize, moveForward);
         }
 
         var result = new List<object>();
-        foreach (var complaint in complaints)
+        foreach (var complaint in pagedComplaints.Items)
         {
             var messages = (await _messageService.GetConversationAsync(complaint.Id)).ToList();
             var lastMessage = messages.LastOrDefault();
@@ -65,7 +65,7 @@ public class ChatWorkspaceController : Controller
                 complaintId = complaint.Id,
                 studentName = User.IsInRole("Student") ? "Support Team" : complaint.StudentName,
                 studentId = complaint.StudentId,
-                isSupportTeamView = User.IsInRole("Student"),   // naya flag
+                isSupportTeamView = User.IsInRole("Student"),
                 title = complaint.Title,
                 status = complaint.Status,
                 lastMessagePreview = lastMessage?.Content,
@@ -74,19 +74,21 @@ public class ChatWorkspaceController : Controller
             });
         }
 
-        return Json(result.OrderByDescending(r => ((dynamic)r).lastMessageAt));
+        return Json(new { items = result, nextCursor = pagedComplaints.NextCursor, hasMore = pagedComplaints.HasMore });
     }
 
     // Team tab ke liye — internal conversations
     [HttpGet]
-    public async Task<IActionResult> GetTeamChats()
+    public async Task<IActionResult> GetTeamChats(string? cursor = null, int pageSize = 20, bool moveForward = true)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId)) return Forbid();
 
-        var conversations = await _conversationService.GetConversationsForUserAsync(userId);
-        return Json(conversations);
+        var pagedConversations = await _conversationService.GetConversationsPagedForUserAsync(userId, cursor, pageSize, moveForward);
+
+        return Json(new { items = pagedConversations.Items, nextCursor = pagedConversations.NextCursor, hasMore = pagedConversations.HasMore });
     }
+
     //4th panel i.e info
     [HttpGet]
     public async Task<IActionResult> GetComplaintDetails(int complaintId)

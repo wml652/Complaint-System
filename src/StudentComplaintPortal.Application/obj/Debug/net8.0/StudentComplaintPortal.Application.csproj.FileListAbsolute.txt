@@ -34,3 +34,21 @@ D:\Internship\ChatApp\Complaint-System\src\StudentComplaintPortal.Application\ob
 D:\Internship\ChatApp\Complaint-System\src\StudentComplaintPortal.Application\obj\Debug\net8.0\refint\StudentComplaintPortal.Application.dll
 D:\Internship\ChatApp\Complaint-System\src\StudentComplaintPortal.Application\obj\Debug\net8.0\StudentComplaintPortal.Application.pdb
 D:\Internship\ChatApp\Complaint-System\src\StudentComplaintPortal.Application\obj\Debug\net8.0\ref\StudentComplaintPortal.Application.dll
+D:\Internship\ChatApp\Complaint-System - Copy\src\StudentComplaintPortal.Application\bin\Debug\net8.0\StudentComplaintPortal.Application.deps.json
+D:\Internship\ChatApp\Complaint-System - Copy\src\StudentComplaintPortal.Application\bin\Debug\net8.0\StudentComplaintPortal.Application.dll
+D:\Internship\ChatApp\Complaint-System - Copy\src\StudentComplaintPortal.Application\bin\Debug\net8.0\StudentComplaintPortal.Application.pdb
+D:\Internship\ChatApp\Complaint-System - Copy\src\StudentComplaintPortal.Application\bin\Debug\net8.0\StudentComplaintPortal.Data.dll
+D:\Internship\ChatApp\Complaint-System - Copy\src\StudentComplaintPortal.Application\bin\Debug\net8.0\StudentComplaintPortal.Domain.dll
+D:\Internship\ChatApp\Complaint-System - Copy\src\StudentComplaintPortal.Application\bin\Debug\net8.0\StudentComplaintPortal.Domain.pdb
+D:\Internship\ChatApp\Complaint-System - Copy\src\StudentComplaintPortal.Application\bin\Debug\net8.0\StudentComplaintPortal.Data.pdb
+D:\Internship\ChatApp\Complaint-System - Copy\src\StudentComplaintPortal.Application\obj\Debug\net8.0\StudentComplaintPortal.Application.csproj.AssemblyReference.cache
+D:\Internship\ChatApp\Complaint-System - Copy\src\StudentComplaintPortal.Application\obj\Debug\net8.0\StudentComplaintPortal.Application.GeneratedMSBuildEditorConfig.editorconfig
+D:\Internship\ChatApp\Complaint-System - Copy\src\StudentComplaintPortal.Application\obj\Debug\net8.0\StudentComplaintPortal.Application.AssemblyInfoInputs.cache
+D:\Internship\ChatApp\Complaint-System - Copy\src\StudentComplaintPortal.Application\obj\Debug\net8.0\StudentComplaintPortal.Application.AssemblyInfo.cs
+D:\Internship\ChatApp\Complaint-System - Copy\src\StudentComplaintPortal.Application\obj\Debug\net8.0\StudentComplaintPortal.Application.csproj.CoreCompileInputs.cache
+D:\Internship\ChatApp\Complaint-System - Copy\src\StudentComplaintPortal.Application\obj\Debug\net8.0\StudentComplaintPortal.Application.sourcelink.json
+D:\Internship\ChatApp\Complaint-System - Copy\src\StudentComplaintPortal.Application\obj\Debug\net8.0\StudentC.1A955AFC.Up2Date
+D:\Internship\ChatApp\Complaint-System - Copy\src\StudentComplaintPortal.Application\obj\Debug\net8.0\StudentComplaintPortal.Application.dll
+D:\Internship\ChatApp\Complaint-System - Copy\src\StudentComplaintPortal.Application\obj\Debug\net8.0\refint\StudentComplaintPortal.Application.dll
+D:\Internship\ChatApp\Complaint-System - Copy\src\StudentComplaintPortal.Application\obj\Debug\net8.0\StudentComplaintPortal.Application.pdb
+D:\Internship\ChatApp\Complaint-System - Copy\src\StudentComplaintPortal.Application\obj\Debug\net8.0\ref\StudentComplaintPortal.Application.dll

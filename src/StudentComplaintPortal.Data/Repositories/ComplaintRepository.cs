@@ -27,6 +27,48 @@ public class ComplaintRepository : GenericRepository<Complaint>, IComplaintRepos
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
+    public async Task<List<Complaint>> GetByStudentIdPagedAsync(string studentId, DateTime? cursorTimestamp, int pageSize, bool moveForward = true)
+    {
+        var query = _dbSet.Where(c => c.StudentId == studentId).Include(c => c.Student).AsQueryable();
+
+        if (cursorTimestamp.HasValue)
+        {
+            query = moveForward
+                ? query.Where(c => (c.LastMessageAt ?? c.CreatedAt) < cursorTimestamp.Value)
+                : query.Where(c => (c.LastMessageAt ?? c.CreatedAt) > cursorTimestamp.Value);
+        }
+
+        return await query.OrderByDescending(c => c.LastMessageAt ?? c.CreatedAt).Take(pageSize + 1).ToListAsync();
+    }
+
+    public async Task<List<Complaint>> GetAllPagedAsync(DateTime? cursorTimestamp, int pageSize, bool moveForward = true)
+    {
+        var query = _dbSet.Include(c => c.Student).AsQueryable();
+
+        if (cursorTimestamp.HasValue)
+        {
+            query = moveForward
+                ? query.Where(c => (c.LastMessageAt ?? c.CreatedAt) < cursorTimestamp.Value)
+                : query.Where(c => (c.LastMessageAt ?? c.CreatedAt) > cursorTimestamp.Value);
+        }
+
+        return await query.OrderByDescending(c => c.LastMessageAt ?? c.CreatedAt).Take(pageSize + 1).ToListAsync();
+    }
+
+    public async Task<List<Complaint>> GetAssignedToStaffPagedAsync(string staffUserId, DateTime? cursorTimestamp, int pageSize, bool moveForward = true)
+    {
+        var query = _dbSet.Include(c => c.Student).AsQueryable();
+
+        if (cursorTimestamp.HasValue)
+        {
+            query = moveForward
+                ? query.Where(c => (c.LastMessageAt ?? c.CreatedAt) < cursorTimestamp.Value)
+                : query.Where(c => (c.LastMessageAt ?? c.CreatedAt) > cursorTimestamp.Value);
+        }
+
+        return await query.OrderByDescending(c => c.LastMessageAt ?? c.CreatedAt).Take(pageSize + 1).ToListAsync();
+    }
+
     public override async Task<Complaint?> GetByIdAsync(int id)
     {
         return await _dbSet

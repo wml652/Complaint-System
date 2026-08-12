@@ -6,6 +6,10 @@
     let currentComplaintStatus = null;
     let messageCursor = null;
     let isLoadingOlderMessages = false;
+    let studentChatsCursor = null;
+    let teamChatsCursor = null;
+    let isLoadingMoreStudentChats = false;
+    let isLoadingMoreTeamChats = false;
 
     // Client-side cache: jab bhi list re-render ho, isse dubara apply kar sakein
     const onlineUserIds = new Set();
@@ -120,13 +124,40 @@
     }
 
     function loadStudentChats() {
+        studentChatsCursor = null;
         fetch('/ChatWorkspace/GetStudentChats')
             .then(res => res.json())
-            .then(chats => {
-                renderStudentList(chats);
-                maybeOpenPreselectedComplaint(chats);
+            .then(data => {
+                renderStudentList(data.items, true);
+                studentChatsCursor = data.nextCursor;
+                maybeOpenPreselectedComplaint(data.items);
+                setupStudentListScrollListener();
             })
             .catch(err => console.error("Failed to load student chats:", err));
+    }
+
+    function loadMoreStudentChats() {
+        if (!studentChatsCursor || isLoadingMoreStudentChats) return;
+        isLoadingMoreStudentChats = true;
+        fetch(`/ChatWorkspace/GetStudentChats?cursor=${encodeURIComponent(studentChatsCursor)}`)
+            .then(res => res.json())
+            .then(data => {
+                renderStudentList(data.items, false);
+                studentChatsCursor = data.nextCursor;
+            })
+            .catch(err => console.error("Failed to load more student chats:", err))
+            .finally(() => { isLoadingMoreStudentChats = false; });
+    }
+
+    function setupStudentListScrollListener() {
+        const container = document.getElementById('listStudents');
+        if (!container || container.dataset.scrollBound) return;
+        container.dataset.scrollBound = 'true';
+        container.onscroll = function () {
+            if (container.scrollTop + container.clientHeight >= container.scrollHeight - 50) {
+                loadMoreStudentChats();
+            }
+        };
     }
 
     function maybeOpenPreselectedComplaint(chats) {
@@ -143,15 +174,44 @@
     }
 
     function loadTeamChats() {
+        teamChatsCursor = null;
         fetch('/ChatWorkspace/GetTeamChats')
             .then(res => res.json())
-            .then(chats => renderTeamList(chats))
+            .then(data => {
+                renderTeamList(data.items, true);
+                teamChatsCursor = data.nextCursor;
+                setupTeamListScrollListener();
+            })
             .catch(err => console.error("Failed to load team chats:", err));
     }
 
-    function renderStudentList(chats) {
-    const container = document.getElementById('listStudents');
-    container.innerHTML = '';
+    function loadMoreTeamChats() {
+        if (!teamChatsCursor || isLoadingMoreTeamChats) return;
+        isLoadingMoreTeamChats = true;
+        fetch(`/ChatWorkspace/GetTeamChats?cursor=${encodeURIComponent(teamChatsCursor)}`)
+            .then(res => res.json())
+            .then(data => {
+                renderTeamList(data.items, false);
+                teamChatsCursor = data.nextCursor;
+            })
+            .catch(err => console.error("Failed to load more team chats:", err))
+            .finally(() => { isLoadingMoreTeamChats = false; });
+    }
+
+    function setupTeamListScrollListener() {
+        const container = document.getElementById('listStaff');
+        if (!container || container.dataset.scrollBound) return;
+        container.dataset.scrollBound = 'true';
+        container.onscroll = function () {
+            if (container.scrollTop + container.clientHeight >= container.scrollHeight - 50) {
+                loadMoreTeamChats();
+            }
+        };
+    }
+
+    function renderStudentList(chats, replace = true) {
+        const container = document.getElementById('listStudents');
+        if (replace) container.innerHTML = '';
 
     chats.forEach(chat => {
         const item = document.createElement('div');
@@ -180,10 +240,10 @@
         applyPresenceToList();
 }
 
-    function renderTeamList(chats) {
+    function renderTeamList(chats, replace = true) {
         const container = document.getElementById('listStaff');
         if (!container) return;
-        container.innerHTML = '';
+        if (replace) container.innerHTML = '';
 
         chats.forEach(chat => {
             const item = document.createElement('div');
@@ -663,8 +723,13 @@
     if (window.voicePlayer) voicePlayer.setup();
 }
 
-    function onComplaintMessagesRead(complaintId) {
-        if (currentChatType === 'complaint' && complaintId === currentChatId) {
+    function onComplaintMessagesRead(complaintId, readByUserId) {
+        const currentUserId = document.body.dataset.currentUserId;
+        // Sirf tab "seen" mark karo jab DOOSRI party ne padha ho - khud
+        // apne hi chat re-open karne se MarkAsRead trigger hota hai aur
+        // wahi event wapas humein bhi mil jata hai, jisse apna hi abhi
+        // bheja hua message galat tarah se "seen" ban jata tha.
+        if (currentChatType === 'complaint' && complaintId === currentChatId && readByUserId !== currentUserId) {
             markVisibleBubblesSeen();
         }
     }

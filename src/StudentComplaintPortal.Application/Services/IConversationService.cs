@@ -12,4 +12,5 @@ public interface IConversationService
     Task MarkAllAsReadAsync(int conversationId, string readerUserId);
     Task<List<ParticipantDto>> GetParticipantsAsync(int conversationId);
     Task<List<ParticipantDto>> GetContactsAsync(string currentUserId);
+    Task<CursorResult<ConversationDto>> GetConversationsPagedForUserAsync(string userId, string? cursor, int pageSize = 20, bool moveForward = true);
 }
