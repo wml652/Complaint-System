@@ -50,7 +50,7 @@ public static class PaginationHelper
         var hasMore = items.Count > pageSize;
         if (hasMore) items = items.Take(pageSize).ToList();
 
-        string? nextCursor = items.Count > 0 ? EncodeCursor(timestampSelector(items.Last()).ToString("o")) : null;
+        string? nextCursor = hasMore ? EncodeCursor(timestampSelector(items.Last()).ToString("o")) : null;
         string? previousCursor = items.Count > 0 ? EncodeCursor(timestampSelector(items.First()).ToString("o")) : null;
 
         return new CursorResult<T>
@@ -88,7 +88,7 @@ public static class PaginationHelper
         var hasMore = items.Count > pageSize;
         if (hasMore) items = items.Take(pageSize).ToList();
 
-        string? nextCursor = items.Count > 0 ? EncodeCursor(idSelector(items.Last()).ToString()) : null;
+        string? nextCursor = hasMore ? EncodeCursor(idSelector(items.Last()).ToString()) : null;
         string? previousCursor = items.Count > 0 ? EncodeCursor(idSelector(items.First()).ToString()) : null;
 
         return new CursorResult<T>

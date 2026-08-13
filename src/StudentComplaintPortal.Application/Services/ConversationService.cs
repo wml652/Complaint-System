@@ -1,7 +1,5 @@
 ﻿using StudentComplaintPortal.Application.DTOs;
 using StudentComplaintPortal.Application.ServiceHelper;
-using StudentComplaintPortal.Application.DTOs;
-using StudentComplaintPortal.Application.ServiceHelper;
 using StudentComplaintPortal.Application.Services.FileStorage;
 using StudentComplaintPortal.Data.Repositories;
 using StudentComplaintPortal.Domain.Entities;
@@ -12,22 +10,15 @@ namespace StudentComplaintPortal.Application.Services;
 public class ConversationService : IConversationService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly AppDbContext _dbContext;
     private readonly IFileStorageService _fileStorageService;
 
-    // Har user-pair ke liye ek lock, taake "+" button do dafa jaldi jaldi
-    // dabne se 2 log ek sath duplicate conversation na bana sakein.
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, SemaphoreSlim> _directConversationLocks = new();
 
-public ConversationService(
-    IUnitOfWork unitOfWork, 
-    AppDbContext dbContext, 
-    IFileStorageService fileStorageService)
-{
-    _unitOfWork = unitOfWork;
-    _dbContext = dbContext;
-    _fileStorageService = fileStorageService;
-}
+    public ConversationService(IUnitOfWork unitOfWork, IFileStorageService fileStorageService)
+    {
+        _unitOfWork = unitOfWork;
+        _fileStorageService = fileStorageService;
+    }
 
     public async Task<List<ConversationDto>> GetConversationsForUserAsync(string userId)
     {
@@ -120,46 +111,8 @@ public ConversationService(
 
     public async Task<List<InternalMessageDto>> GetMessagesAsync(int conversationId)
     {
-        var participants = await _dbContext.ConversationParticipants
-            .Where(p => p.ConversationId == conversationId)
-            .ToListAsync();
-
-        var messages = await _dbContext.InternalMessages
-            .Include(m => m.Sender)
-            .Include(m => m.Attachments)   // 👈 NAYA
-            .Where(m => m.ConversationId == conversationId)
-            .OrderBy(m => m.SentAt)
-            .ToListAsync();
-
-        var result = new List<InternalMessageDto>();
-        foreach (var m in messages)
-        {
-            var others = participants.Where(p => p.UserId != m.SenderId).ToList();
-
-            DateTime? seenByAllAt = null;
-            if (others.Count > 0 && others.All(p => p.LastReadAt.HasValue && p.LastReadAt.Value >= m.SentAt))
-            {
-                seenByAllAt = others.Max(p => p.LastReadAt!.Value);
-            }
-
-            result.Add(new InternalMessageDto
-            {
-                Id = m.Id,
-                ConversationId = m.ConversationId,
-                SenderId = m.SenderId,
-                SenderName = m.Sender.FullName,
-                Content = m.Content,
-                SentAt = m.SentAt,
-                ReadAt = seenByAllAt,
-                Attachments = m.Attachments.Select(a => new InternalAttachmentDto   // 👈 NAYA
-                {
-                    Id = a.Id,
-                    FileUrl = a.FileUrl,
-                    FileType = a.FileType.ToString(),
-                    FileSizeBytes = a.FileSizeBytes
-                }).ToList()
-            });
-        }
+        var participants = await _unitOfWork.Conversations.GetParticipantsAsync(conversationId);
+        var messages = await _unitOfWork.Conversations.GetMessagesWithSenderAsync(conversationId);
 
         return BuildMessageDtos(messages, participants);
     }
@@ -346,8 +299,8 @@ public ConversationService(
         };
     }
     public async Task<InternalMessageDto> CreateMessageWithAttachmentAsync(
-    int conversationId, string senderId, Stream fileStream, string fileName, string contentType,
-    FileType fileType, string? content = null)
+        int conversationId, string senderId, Stream fileStream, string fileName, string contentType,
+        FileType fileType, string? content = null)
     {
         var fileUrl = await _fileStorageService.UploadAsync(fileStream, fileName, contentType, fileType, conversationId);
 
@@ -358,10 +311,10 @@ public ConversationService(
             Content = content,
             SentAt = DateTime.UtcNow
         };
-        _dbContext.InternalMessages.Add(message);
-        await _dbContext.SaveChangesAsync();
+        await _unitOfWork.Conversations.AddMessageAsync(message);
+        await _unitOfWork.SaveChangesAsync();
 
-        var attachment = new StudentComplaintPortal.Domain.Entities.InternalAttachment
+        var attachment = new InternalAttachment
         {
             InternalMessageId = message.Id,
             FileUrl = fileUrl,
@@ -369,10 +322,10 @@ public ConversationService(
             FileSizeBytes = fileStream.Length,
             UploadedAt = DateTime.UtcNow
         };
-        _dbContext.InternalAttachments.Add(attachment);
-        await _dbContext.SaveChangesAsync();
+        await _unitOfWork.Conversations.AddAttachmentAsync(attachment);
+        await _unitOfWork.SaveChangesAsync();
 
-        var sender = await _dbContext.Users.FindAsync(senderId);
+        var sender = await _unitOfWork.Conversations.GetUserAsync(senderId);
 
         return new InternalMessageDto
         {
@@ -384,15 +337,15 @@ public ConversationService(
             SentAt = message.SentAt,
             ReadAt = message.ReadAt,
             Attachments = new List<InternalAttachmentDto>
-        {
-            new InternalAttachmentDto
             {
-                Id = attachment.Id,
-                FileUrl = attachment.FileUrl,
-                FileType = attachment.FileType.ToString(),
-                FileSizeBytes = attachment.FileSizeBytes
+                new InternalAttachmentDto
+                {
+                    Id = attachment.Id,
+                    FileUrl = attachment.FileUrl,
+                    FileType = attachment.FileType.ToString(),
+                    FileSizeBytes = attachment.FileSizeBytes
+                }
             }
-        }
         };
     }
 }
