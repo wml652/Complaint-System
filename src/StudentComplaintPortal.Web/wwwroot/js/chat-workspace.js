@@ -4,6 +4,12 @@
     let currentChatId = null;
     let currentOtherUserId = null;
     let currentComplaintStatus = null;
+    let messageCursor = null;
+    let isLoadingOlderMessages = false;
+    let studentChatsCursor = null;
+    let teamChatsCursor = null;
+    let isLoadingMoreStudentChats = false;
+    let isLoadingMoreTeamChats = false;
 
     // Client-side cache: jab bhi list re-render ho, isse dubara apply kar sakein
     const onlineUserIds = new Set();
@@ -11,7 +17,8 @@
 
     // Typing indicator tracking
     let typingTimeout = null;
-    const typingSet = new Set();
+    let typingStopTimeout = null;
+    const typingUsers = new Map(); // userName -> timeout
 
     function init() {
         connection = AppHub.connection;
@@ -20,11 +27,12 @@
         connection.on("ReceiveInternalMessage", onInternalMessageReceived);
         connection.on("MessagesRead", onComplaintMessagesRead);
         connection.on("InternalMessagesRead", onInternalMessagesRead);
-        connection.on("UserTyping", (userId, userName) => {
-            showTypingIndicator(userName);
-        });
-        connection.on("UserStoppedTyping", (userId) => {
-            hideTypingIndicator();
+        connection.on("UserTyping", (userName, isTyping) => {
+            if (isTyping) {
+                showTypingIndicator(userName);
+            } else {
+                hideTypingIndicatorForUser(userName);
+            }
         });
         connection.on("UserOnline", (userId) => {
             onlineUserIds.add(userId);
@@ -34,6 +42,33 @@
             onlineUserIds.delete(userId);
             lastSeenCache.set(userId, lastSeenAt);
             updatePresenceUi(userId, false, lastSeenAt);
+        });
+        connection.on("MessageEdited", (updatedMessage) => {
+            const msgEl = document.querySelector(`[data-message-id="${updatedMessage.id}"]`);
+            if (msgEl) {
+                const textEl = msgEl.querySelector('.message-text') || msgEl.querySelector('p');
+                if (textEl) {
+                    textEl.textContent = updatedMessage.content;
+                    if (!textEl.querySelector('.edited-badge')) {
+                        const badge = document.createElement('small');
+                        badge.className = 'text-muted ms-1 edited-badge';
+                        badge.style.fontSize = '0.7rem';
+                        badge.textContent = '(edited)';
+                        textEl.appendChild(badge);
+                    }
+                }
+            }
+        });
+        connection.on("MessageDeleted", (messageId) => {
+            const msgEl = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (msgEl) {
+                const textEl = msgEl.querySelector('.message-text') || msgEl.querySelector('p');
+                if (textEl) {
+                    textEl.innerHTML = '<span class="text-muted fst-italic">[Message deleted]</span>';
+                }
+                const actionsEl = msgEl.querySelector('.message-actions');
+                if (actionsEl) actionsEl.remove();
+            }
         });
 
         AppHub.ensureStarted()
@@ -89,13 +124,40 @@
     }
 
     function loadStudentChats() {
+        studentChatsCursor = null;
         fetch('/ChatWorkspace/GetStudentChats')
             .then(res => res.json())
-            .then(chats => {
-                renderStudentList(chats);
-                maybeOpenPreselectedComplaint(chats);
+            .then(data => {
+                renderStudentList(data.items, true);
+                studentChatsCursor = data.nextCursor;
+                maybeOpenPreselectedComplaint(data.items);
+                setupStudentListScrollListener();
             })
             .catch(err => console.error("Failed to load student chats:", err));
+    }
+
+    function loadMoreStudentChats() {
+        if (!studentChatsCursor || isLoadingMoreStudentChats) return;
+        isLoadingMoreStudentChats = true;
+        fetch(`/ChatWorkspace/GetStudentChats?cursor=${encodeURIComponent(studentChatsCursor)}`)
+            .then(res => res.json())
+            .then(data => {
+                renderStudentList(data.items, false);
+                studentChatsCursor = data.nextCursor;
+            })
+            .catch(err => console.error("Failed to load more student chats:", err))
+            .finally(() => { isLoadingMoreStudentChats = false; });
+    }
+
+    function setupStudentListScrollListener() {
+        const container = document.getElementById('listStudents');
+        if (!container || container.dataset.scrollBound) return;
+        container.dataset.scrollBound = 'true';
+        container.onscroll = function () {
+            if (container.scrollTop + container.clientHeight >= container.scrollHeight - 50) {
+                loadMoreStudentChats();
+            }
+        };
     }
 
     function maybeOpenPreselectedComplaint(chats) {
@@ -112,15 +174,44 @@
     }
 
     function loadTeamChats() {
+        teamChatsCursor = null;
         fetch('/ChatWorkspace/GetTeamChats')
             .then(res => res.json())
-            .then(chats => renderTeamList(chats))
+            .then(data => {
+                renderTeamList(data.items, true);
+                teamChatsCursor = data.nextCursor;
+                setupTeamListScrollListener();
+            })
             .catch(err => console.error("Failed to load team chats:", err));
     }
 
-    function renderStudentList(chats) {
-    const container = document.getElementById('listStudents');
-    container.innerHTML = '';
+    function loadMoreTeamChats() {
+        if (!teamChatsCursor || isLoadingMoreTeamChats) return;
+        isLoadingMoreTeamChats = true;
+        fetch(`/ChatWorkspace/GetTeamChats?cursor=${encodeURIComponent(teamChatsCursor)}`)
+            .then(res => res.json())
+            .then(data => {
+                renderTeamList(data.items, false);
+                teamChatsCursor = data.nextCursor;
+            })
+            .catch(err => console.error("Failed to load more team chats:", err))
+            .finally(() => { isLoadingMoreTeamChats = false; });
+    }
+
+    function setupTeamListScrollListener() {
+        const container = document.getElementById('listStaff');
+        if (!container || container.dataset.scrollBound) return;
+        container.dataset.scrollBound = 'true';
+        container.onscroll = function () {
+            if (container.scrollTop + container.clientHeight >= container.scrollHeight - 50) {
+                loadMoreTeamChats();
+            }
+        };
+    }
+
+    function renderStudentList(chats, replace = true) {
+        const container = document.getElementById('listStudents');
+        if (replace) container.innerHTML = '';
 
     chats.forEach(chat => {
         const item = document.createElement('div');
@@ -149,10 +240,10 @@
         applyPresenceToList();
 }
 
-    function renderTeamList(chats) {
+    function renderTeamList(chats, replace = true) {
         const container = document.getElementById('listStaff');
         if (!container) return;
-        container.innerHTML = '';
+        if (replace) container.innerHTML = '';
 
         chats.forEach(chat => {
             const item = document.createElement('div');
@@ -189,10 +280,14 @@
 
         connection.invoke("JoinComplaintGroup", complaintId)
             .then(() => {
-                fetch(`/Complaint/GetMessages?complaintId=${complaintId}`)
+                messageCursor = null;
+                fetch(`/Complaint/GetMessagesPaged?complaintId=${complaintId}`)
                     .then(res => res.json())
-                    .then(messages => {
+                    .then(result => {
+                        const messages = result.items.slice().reverse();
                         renderMessages(messages, false);
+                        messageCursor = result.nextCursor;
+                        setupScrollListener();
                         connection.invoke("MarkAsRead", complaintId)
                             .then(() => loadStudentChats())
                             .catch(err => console.error(err));
@@ -223,10 +318,15 @@
             .then(members => renderMembersPanel(members))
             .catch(err => console.error("Failed to load group members:", err));
 
-        fetch(`/InternalChat/GetMessages?conversationId=${conversationId}`)
+        messageCursor = null;
+
+        fetch(`/InternalChat/GetMessagesPaged?conversationId=${conversationId}`)
             .then(res => res.json())
-            .then(messages => {
+            .then(result => {
+                const messages = result.items.slice().reverse();
                 renderMessages(messages, true);
+                messageCursor = result.nextCursor;
+                setupScrollListener();
                 connection.invoke("MarkInternalMessagesAsRead", conversationId)
                     .then(() => loadTeamChats())
                     .catch(err => console.error(err));
@@ -275,13 +375,9 @@
         document.getElementById('infoPanel').style.display = 'none';
     }
 
-    function renderMessages(messages, isInternal) {
-    const currentUserId = document.body.dataset.currentUserId;
-    const body = document.getElementById('chatBody');
-    body.innerHTML = '';
-
-    messages.forEach((m, index) => {
+    function buildMessageBubble(m, index, totalCount, currentUserId, isAdmin) {
         const isOutgoing = m.senderId === currentUserId;
+        const canEditDelete = isOutgoing || isAdmin;
         const bubble = document.createElement('div');
         bubble.className = `chat-bubble ${isOutgoing ? 'outgoing' : 'incoming'}`;
         bubble.dataset.messageId = m.id;
@@ -293,33 +389,114 @@
 
         let ticksHtml = '';
         if (isOutgoing) {
-         const seen = !!m.readAt;
-         const isLastMessage = index === messages.length - 1;
-         const icon = seen ? 'bi-check2-all' : 'bi-check';
-         const label = isLastMessage ? `<span class="tick-label">${seen ? 'seen' : 'sent'}</span>` : '';
-         ticksHtml = `<div class="chat-bubble-ticks ${seen ? 'seen' : ''}"><i class="bi ${icon}"></i>${label}</div>`;
+            const seen = !!m.readAt;
+            const isLastMessage = index === totalCount - 1;
+            const icon = seen ? 'bi-check2-all' : 'bi-check';
+            const label = isLastMessage ? `<span class="tick-label">${seen ? 'seen' : 'sent'}</span>` : '';
+            ticksHtml = `<div class="chat-bubble-ticks ${seen ? 'seen' : ''}"><i class="bi ${icon}"></i>${label}</div>`;
+        }
+
+        let contentHtml = escapeHtml(m.content || '');
+        let editBadgeHtml = m.isEdited ? '<small class="text-muted ms-1 edited-badge" style="font-size: 0.7rem;">(edited)</small>' : '';
+
+        let actionsHtml = '';
+        if (canEditDelete && !m.deletedAt) {
+            actionsHtml = `
+            <div class="message-actions" style="margin-top: 4px; display: flex; gap: 6px;">
+                <button type="button" class="btn btn-sm btn-outline-secondary" style="font-size: 0.75rem; padding: 2px 6px;" onclick="ChatWorkspace.editMessage(${m.id}, ${currentChatId}, '${escapeHtml(m.content || '').replace(/'/g, "\\'")}')">
+                    <i class="bi bi-pencil"></i> Edit
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" style="font-size: 0.75rem; padding: 2px 6px;" onclick="ChatWorkspace.deleteMessage(${m.id}, ${currentChatId})">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </div>
+        `;
+        }
+
+        let messageContent = `<p class="message-text mb-0">${contentHtml}${editBadgeHtml}</p>${actionsHtml}`;
+        if (m.deletedAt) {
+            messageContent = `<p class="message-text mb-0"><span class="text-muted fst-italic">[Message deleted]</span></p>`;
+        }
+
+        bubble.innerHTML = `${attachmentsHtml}${messageContent}${ticksHtml}`;
+        return bubble;
     }
 
-        bubble.innerHTML = `${attachmentsHtml}${escapeHtml(m.content || '')}${ticksHtml}`;
-        body.appendChild(bubble);
-    });
 
-    body.scrollTop = body.scrollHeight;
-    if (window.voicePlayer) voicePlayer.setup();
-}
+    function renderMessages(messages, isInternal) {
+        const currentUserId = document.body.dataset.currentUserId;
+        const userRole = document.body.dataset.userRole;
+        const isAdmin = userRole === 'Admin';
+        const body = document.getElementById('chatBody');
+        body.innerHTML = '';
 
+        messages.forEach((m, index) => {
+            const bubble = buildMessageBubble(m, index, messages.length, currentUserId, isAdmin);
+            body.appendChild(bubble);
+        });
+
+        body.scrollTop = body.scrollHeight;
+        if (window.voicePlayer) voicePlayer.setup();
+    }
+
+    function prependMessages(messages) {
+        const currentUserId = document.body.dataset.currentUserId;
+        const userRole = document.body.dataset.userRole;
+        const isAdmin = userRole === 'Admin';
+        const body = document.getElementById('chatBody');
+
+        const fragment = document.createDocumentFragment();
+        messages.forEach((m, index) => {
+            const bubble = buildMessageBubble(m, index, messages.length, currentUserId, isAdmin);
+            fragment.appendChild(bubble);
+        });
+
+        body.insertBefore(fragment, body.firstChild);
+        if (window.voicePlayer) voicePlayer.setup();
+    }
+
+    function setupScrollListener() {
+        const body = document.getElementById('chatBody');
+        body.onscroll = function () {
+            if (body.scrollTop < 50 && !isLoadingOlderMessages && messageCursor) {
+                loadOlderMessages();
+            }
+        };
+    }
+
+    function loadOlderMessages() {
+        if (!messageCursor || isLoadingOlderMessages) return;
+        isLoadingOlderMessages = true;
+
+        const body = document.getElementById('chatBody');
+        const previousScrollHeight = body.scrollHeight;
+
+        const url = currentChatType === 'complaint'
+            ? `/Complaint/GetMessagesPaged?complaintId=${currentChatId}&cursor=${encodeURIComponent(messageCursor)}`
+            : `/InternalChat/GetMessagesPaged?conversationId=${currentChatId}&cursor=${encodeURIComponent(messageCursor)}`;
+
+        fetch(url)
+            .then(res => res.json())
+            .then(result => {
+                const olderMessages = result.items.slice().reverse();
+                messageCursor = result.nextCursor;
+
+                prependMessages(olderMessages);
+                body.scrollTop = body.scrollHeight - previousScrollHeight;
+                isLoadingOlderMessages = false;
+            })
+            .catch(err => {
+                console.error('Error loading older messages:', err);
+                isLoadingOlderMessages = false;
+            });
+    }
     function renderAttachment(attachment) {
     if (attachment.fileType === 'Photo') {
         return `<img src="${attachment.fileUrl}" class="attachment-media" alt="Photo" />`;
     } else if (attachment.fileType === 'Video') {
         return `<video controls class="attachment-media"><source src="${attachment.fileUrl}" type="video/mp4" /></video>`;
-    } else if (attachment.fileType === 'VoiceNote') {
-        return `<div class="voice-bubble">
-            <button type="button" class="voice-play-btn"><i class="bi bi-play-fill"></i></button>
-            <div class="voice-progress-track"><div class="voice-progress-fill"></div></div>
-            <span class="voice-duration">0:00</span>
-            <audio src="${attachment.fileUrl}" preload="metadata" style="display:none;"></audio>
-        </div>`;
+    } else if (attachment.fileType === 'VoiceNote' || attachment.fileType === 'Audio' || attachment.fileUrl.match(/\.(webm|mp3|mp4|ogg|wav)$/i)) {
+        return `<audio controls class="attachment-media" style="min-width: 250px; max-width: 100%; margin-top: 8px;"><source src="${attachment.fileUrl}" /></audio>`;
     }
     return '';
 }
@@ -362,22 +539,26 @@
     }
 
     function uploadAttachment(file, fileType) {
-    const formData = new FormData();
-    formData.append('File', file);
-    formData.append('FileType', fileType);
+        const formData = new FormData();
+        formData.append('File', file);
+        formData.append('FileType', fileType);
 
-    fetch(`/api/v1/complaints/${currentChatId}/attachments`, {
-        method: 'POST',
-        body: formData
-    })
-        .then(res => {
-            if (!res.ok) {
-                console.error('Attachment upload failed, status:', res.status);
-            }
-            // ReceiveMessage SignalR event will add msg in chat — no need to manually render
-        })
-        .catch(err => console.error('Attachment upload error:', err));
-}
+        let url;
+        if (currentChatType === 'complaint') {
+            url = `/api/v1/complaints/${currentChatId}/attachments`;
+        } else {
+            url = `/InternalChat/UploadAttachment?conversationId=${currentChatId}`;   // new route internal-chat ke liye
+        }
+
+        fetch(url, { method: 'POST', body: formData })
+            .then(res => {
+                if (!res.ok) {
+                    console.error('Attachment upload failed, status:', res.status);
+                }
+                // SignalR ka "ReceiveInternalMessage" event khud message add kar dega  koi manual-render nahi chahiye
+            })
+            .catch(err => console.error('Attachment upload error:', err));
+    }
 
     function setupMessageInputToggle() {
         const input = document.getElementById('messageInput');
@@ -385,7 +566,19 @@
 
         input.addEventListener('input', () => {
             const hasText = input.value.trim().length > 0;
-            document.getElementById('micButton').style.display = hasText ? 'none' : 'flex';
+
+            // Check if user role allows voice recording
+            const userRole = document.body.dataset.userRole;
+            const canRecord = userRole === 'Admin' || userRole === 'Staff';
+
+            // Show mic button only if user can record AND no text input
+            const micBtn = document.getElementById('micButton');
+            if (micBtn && canRecord) {
+                micBtn.style.display = hasText ? 'none' : 'flex';
+            } else if (micBtn) {
+                micBtn.style.display = 'none';
+            }
+
             document.getElementById('sendButton').style.display = hasText ? 'flex' : 'none';
 
             // Notify typing
@@ -405,35 +598,75 @@
     }
 
     function notifyTyping() {
-        if (currentChatId) {
+        if (!currentChatId) return;
+
+        // Send typing started on first keystroke
+        if (!typingTimeout) {
             connection.invoke("UserStartedTyping", currentChatId).catch(err => console.error(err));
         }
 
+        // Clear existing timeout
         clearTimeout(typingTimeout);
+
+        // Set new timeout to notify typing stopped after 1.5 seconds of inactivity
         typingTimeout = setTimeout(() => {
-            if (currentChatId) {
-                connection.invoke("UserStoppedTyping", currentChatId).catch(err => console.error(err));
-            }
-        }, 3000);
+            connection.invoke("UserStoppedTyping", currentChatId).catch(err => console.error(err));
+            typingTimeout = null;
+        }, 1500);
     }
 
     function showTypingIndicator(userName) {
-        typingSet.add(userName);
-        const typingNames = Array.from(typingSet).join(", ");
         const indicator = document.getElementById('typingIndicator');
-        if (indicator) {
-            document.getElementById('typingText').textContent =
-                typingNames + (typingSet.size === 1 ? " is typing..." : " are typing...");
-            indicator.style.display = 'block';
+        if (!indicator) return;
+
+        // Clear existing timeout for this user if any
+        if (typingUsers.has(userName)) {
+            clearTimeout(typingUsers.get(userName));
         }
+
+        // Add user to typing set
+        typingUsers.set(userName, null);
+
+        // Update display
+        updateTypingDisplay();
+
+        // Show indicator
+        indicator.style.display = 'block';
+
+        // Set auto-hide timeout (3 seconds) in case we don't get UserTyping(false) event
+        const timeout = setTimeout(() => {
+            typingUsers.delete(userName);
+            updateTypingDisplay();
+        }, 3000);
+
+        typingUsers.set(userName, timeout);
     }
 
-    function hideTypingIndicator() {
-        typingSet.clear();
-        const indicator = document.getElementById('typingIndicator');
-        if (indicator) {
-            indicator.style.display = 'none';
+    function hideTypingIndicatorForUser(userName) {
+        if (typingUsers.has(userName)) {
+            clearTimeout(typingUsers.get(userName));
+            typingUsers.delete(userName);
         }
+        updateTypingDisplay();
+    }
+
+    function updateTypingDisplay() {
+        const indicator = document.getElementById('typingIndicator');
+        const typingText = document.getElementById('typingText');
+        if (!indicator || !typingText) return;
+
+        if (typingUsers.size === 0) {
+            indicator.style.display = 'none';
+            return;
+        }
+
+        const userNames = Array.from(typingUsers.keys());
+        const text = userNames.length === 1
+            ? `${userNames[0]} is typing...`
+            : `${userNames.join(', ')} are typing...`;
+
+        typingText.textContent = text;
+        indicator.style.display = 'block';
     }
 
     function onComplaintMessageReceived(message) {
@@ -494,8 +727,13 @@
     if (window.voicePlayer) voicePlayer.setup();
 }
 
-    function onComplaintMessagesRead(complaintId) {
-        if (currentChatType === 'complaint' && complaintId === currentChatId) {
+    function onComplaintMessagesRead(complaintId, readByUserId) {
+        const currentUserId = document.body.dataset.currentUserId;
+        // Sirf tab "seen" mark karo jab DOOSRI party ne padha ho - khud
+        // apne hi chat re-open karne se MarkAsRead trigger hota hai aur
+        // wahi event wapas humein bhi mil jata hai, jisse apna hi abhi
+        // bheja hua message galat tarah se "seen" ban jata tha.
+        if (currentChatType === 'complaint' && complaintId === currentChatId && readByUserId !== currentUserId) {
             markVisibleBubblesSeen();
         }
     }
@@ -507,11 +745,13 @@
     }
 
     function refreshInternalTicks(conversationId) {
-        fetch(`/InternalChat/GetMessages?conversationId=${conversationId}`)
+        fetch(`/InternalChat/GetMessagesPaged?conversationId=${conversationId}`)
             .then(res => res.json())
-            .then(messages => {
+            .then(result => {
                 if (currentChatType !== 'internal' || currentChatId !== conversationId) return;
 
+                // GetMessagesPaged items newest-first deta hai, ascending order mein wapis karo
+                const messages = (result.items || []).slice().reverse();
                 const currentUserId = document.body.dataset.currentUserId;
                 const lastMessage = messages[messages.length - 1];
 
@@ -709,56 +949,84 @@ function setInfoPanelLoading() {
             inputBar.style.display = 'flex';
         }
     }
-    function startRecording() {
-    audioRecorder.startCapture()
-        .then(() => {
-            document.getElementById('messageInput').style.display = 'none';
-            document.getElementById('attachButton').style.display = 'none';
-            document.getElementById('recordingBar').style.display = 'flex';
+        function startRecording() {
+        const userRole = document.body.dataset.userRole;
 
+        // Final authorization check (fail-safe)
+        if (userRole !== 'Admin' && userRole !== 'Staff') {
+            alert('Only Admin and Staff members can send voice messages.');
+            return;
+        }
+
+        if (!currentChatId || currentChatType !== 'complaint') {
+            alert('Please select a complaint chat to send a voice message.');
+            return;
+        }
+
+        audioRecorder.start()
+            .then(() => {
+                document.getElementById('messageInput').style.display = 'none';
+                document.getElementById('attachButton').style.display = 'none';
+                document.getElementById('recordingBar').style.display = 'flex';
+
+                const micBtn = document.getElementById('micButton');
+                micBtn.onclick = () => stopAndSendRecording();
+                micBtn.innerHTML = '<i class="bi bi-send"></i>';
+                micBtn.title = 'Stop recording and send';
+            })
+            .catch(err => {
+                console.error('Failed to start recording:', err);
+                alert('Microphone access denied or unavailable. Please check your browser permissions.');
+            });
+    }
+
+    function cancelRecording() {
+        // For now, we'll stop and discard
+        audioRecorder.stop()
+            .then(() => {
+                resetRecordingUi();
+            })
+            .catch(err => {
+                console.error('Error canceling recording:', err);
+                resetRecordingUi();
+            });
+    }
+
+    async function stopAndSendRecording() {
+        try {
+            const recordingData = await audioRecorder.stop();
+            resetRecordingUi();
+
+            // Show upload progress
             const micBtn = document.getElementById('micButton');
-            micBtn.onclick = () => stopAndSendRecording();
-            micBtn.innerHTML = '<i class="bi bi-send"></i>';
+            micBtn.disabled = true;
+            micBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
-            setTimeout(() => {
-                audioRecorder.attachVisualizer('waveformBars', 'recordingTimer');
-            }, 50);
-        })
-        .catch(err => {
-            console.error('Failed to start recording:', err);
-            alert('Microphone access denied or unavailable.');
-        });
-}
+            // Upload voice message using the new endpoint
+            const messageDto = await audioRecorder.uploadVoiceMessage(currentChatId, recordingData.blob);
 
-function cancelRecording() {
-    audioRecorder.cancel();
-    resetRecordingUi();
-}
-
-function stopAndSendRecording() {
-    audioRecorder.stop()
-        .then(audioBytes => {
+            console.log('Voice message sent successfully');
+            micBtn.disabled = false;
+            micBtn.innerHTML = '<i class="bi bi-mic"></i>';
+        } catch (err) {
+            console.error('Failed to send voice message:', err);
+            alert(`Error sending voice message: ${err.message}`);
             resetRecordingUi();
-            const blob = new Blob([audioBytes], { type: 'audio/webm' });
-            const file = new File([blob], `voice-${Date.now()}.webm`, { type: 'audio/webm' });
-            uploadAttachment(file, 'VoiceNote');
-        })
-        .catch(err => {
-            console.error('Failed to stop recording:', err);
-            resetRecordingUi();
-        });
-}
+        }
+    }
 
-function resetRecordingUi() {
-    document.getElementById('messageInput').style.display = 'block';
-    document.getElementById('attachButton').style.display = 'flex';
-    document.getElementById('recordingBar').style.display = 'none';
+    function resetRecordingUi() {
+        document.getElementById('messageInput').style.display = 'block';
+        document.getElementById('attachButton').style.display = 'flex';
+        document.getElementById('recordingBar').style.display = 'none';
 
-    const micBtn = document.getElementById('micButton');
-    micBtn.style.display = 'flex';
-    micBtn.onclick = () => startRecording();
-    micBtn.innerHTML = '<i class="bi bi-mic"></i>';
-}
+        const micBtn = document.getElementById('micButton');
+        micBtn.style.display = 'flex';
+        micBtn.onclick = () => startRecording();
+        micBtn.innerHTML = '<i class="bi bi-mic"></i>';
+        micBtn.title = 'Record voice message';
+        micBtn.disabled = false;
+    }
 
 function updateStatus() {
     const select = document.getElementById('statusSelect');
@@ -793,7 +1061,57 @@ function updateStatus() {
         return div.innerHTML;
     }
 
+    async function editMessage(messageId, complaintId, currentContent) {
+        const newContent = prompt('Edit message:', currentContent);
+        if (newContent === null || newContent.trim() === '') return;
+
+        try {
+            const response = await fetch(`/api/v1/complaints/${complaintId}/messages/${messageId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+                },
+                body: JSON.stringify({ content: newContent.trim() })
+            });
+
+            if (!response.ok) {
+                alert(`Error editing message: ${response.status}`);
+                return;
+            }
+
+            const updatedMessage = await response.json();
+            console.log('Message edited:', updatedMessage);
+        } catch (err) {
+            console.error('Error editing message:', err);
+            alert('Failed to edit message');
+        }
+    }
+
+    async function deleteMessage(messageId, complaintId) {
+        if (!confirm('Are you sure you want to delete this message?')) return;
+
+        try {
+            const response = await fetch(`/api/v1/complaints/${complaintId}/messages/${messageId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+                }
+            });
+
+            if (!response.ok) {
+                alert(`Error deleting message: ${response.status}`);
+                return;
+            }
+
+            console.log('Message deleted:', messageId);
+        } catch (err) {
+            console.error('Error deleting message:', err);
+            alert('Failed to delete message');
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', init);
 
-    return { showTab, sendMessage, toggleInfo, updateStatus, toggleAttachMenu, handleFileSelected, startRecording, cancelRecording, openNewChatPicker, closeNewChatPicker };
+    return { showTab, sendMessage, toggleInfo, updateStatus, toggleAttachMenu, handleFileSelected, startRecording, cancelRecording, openNewChatPicker, closeNewChatPicker, editMessage, deleteMessage };
 })();

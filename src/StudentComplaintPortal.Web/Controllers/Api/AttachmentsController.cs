@@ -76,4 +76,64 @@ public class AttachmentsController : ControllerBase
 
         return CreatedAtAction("GetMessages", "Messages", new { id = complaintId }, messageDto);
     }
+
+    [HttpPost("{complaintId}/voice-message")]
+    [Authorize(Roles = "Admin,Staff")]
+    public async Task<IActionResult> UploadVoiceMessage(int complaintId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var userRole = User.FindFirstValue(ClaimTypes.Role)!;
+
+        // Double-check: enforce role-based access (fail-safe)
+        if (userRole != "Admin" && userRole != "Staff")
+        {
+            return Forbid();
+        }
+
+        // Verify complaint exists
+        var complaint = await _complaintService.GetByIdAsync(complaintId);
+        if (complaint == null)
+            return NotFound(new { message = $"Complaint with ID {complaintId} not found" });
+
+        try
+        {
+            using var memoryStream = new MemoryStream();
+            await Request.Body.CopyToAsync(memoryStream);
+
+            if (memoryStream.Length == 0)
+            {
+                return BadRequest(new { message = "Audio stream is empty" });
+            }
+
+            // Reset position so the service can read it from the beginning
+            memoryStream.Position = 0;
+
+            var messageDto = await _attachmentService.CreateMessageWithAttachmentAsync(
+                complaintId,
+                userId,
+                memoryStream,
+                $"voice_{DateTime.UtcNow:yyyyMMdd_HHmmss}.webm",
+                "audio/webm",
+                FileType.VoiceNote,
+                null
+            );
+
+            if (messageDto != null)
+            {
+                // Broadcast the voice note via SignalR
+                await _hubContext.Clients.Group($"complaint-{complaintId}").SendAsync("ReceiveMessage", messageDto);
+                return CreatedAtAction("GetMessages", "Messages", new { id = complaintId }, messageDto);
+            }
+
+            return BadRequest(new { message = "Failed to create voice message" });
+        }
+        catch (StudentComplaintPortal.Application.Exceptions.ComplaintClosedException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error uploading voice message", error = ex.Message });
+        }
+    }
 }

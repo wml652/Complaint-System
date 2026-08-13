@@ -1,5 +1,6 @@
 ﻿using StudentComplaintPortal.Application.DTOs;
 using StudentComplaintPortal.Application.Exceptions;
+using StudentComplaintPortal.Application.ServiceHelper;
 using StudentComplaintPortal.Data.Repositories;
 using StudentComplaintPortal.Domain.Entities;
 using StudentComplaintPortal.Domain.Enums;
@@ -39,6 +40,9 @@ public class MessageService : IMessageService
             SentAt = DateTime.UtcNow,
             IsRead = false
         };
+
+        complaint.LastMessageAt = message.SentAt;
+        _unitOfWork.Complaints.Update(complaint);
 
         await _unitOfWork.Messages.AddAsync(message);
         await _unitOfWork.SaveChangesAsync();
@@ -94,6 +98,32 @@ public class MessageService : IMessageService
     {
         var messages = await _unitOfWork.Messages.GetByComplaintIdAsync(complaintId);
         return messages.Select(MapToDto);
+    }
+
+    public async Task<CursorResult<MessageDto>> GetConversationPagedAsync(int complaintId, string? cursor, int pageSize = 20, bool moveForward = true)
+    {
+        if (pageSize < 1) pageSize = 10;
+
+        var cursorId = PaginationHelper.DecodeIdCursor(cursor);
+
+        var messages = await _unitOfWork.Messages.GetByComplaintIdPagedAsync(complaintId, cursorId, pageSize, moveForward);
+
+        var hasMore = messages.Count > pageSize;
+        if (hasMore) messages = messages.Take(pageSize).ToList();
+
+        var messageDtos = messages.Select(MapToDto).ToList();
+
+        string? nextCursor = hasMore ? PaginationHelper.EncodeIdCursor(messageDtos.Last().Id) : null;
+        string? previousCursor = messageDtos.Count > 0 ? PaginationHelper.EncodeIdCursor(messageDtos.First().Id) : null;
+
+        return new CursorResult<MessageDto>
+        {
+            Items = messageDtos,
+            NextCursor = nextCursor,
+            PreviousCursor = previousCursor,
+            HasMore = hasMore,
+            PageSize = pageSize
+        };
     }
 
     public async Task<MessageDto> GetMessageByIdAsync(int messageId)
@@ -177,5 +207,63 @@ public class MessageService : IMessageService
 
         // TODO: Re-enable when MessageBufferService is properly injected
         // _bufferService.MarkAsRead(complaintId, readerUserId);
+    }
+
+    public async Task<MessageDto?> EditMessageAsync(int messageId, string userId, string newContent, bool isAdmin)
+    {
+        var messages = await _unitOfWork.Messages.FindAsync(m => m.Id == messageId);
+        var message = messages.FirstOrDefault();
+
+        if (message == null)
+        {
+            throw new NotFoundException($"Message with ID {messageId} not found.");
+        }
+
+        // Only the sender can edit their message (Admins cannot edit other people's text)
+        if (message.SenderId != userId)
+        {
+            throw new UnauthorizedComplaintAccessException("Only the sender can edit this message.");
+        }
+
+        // Store original content if not already edited
+        if (!message.IsEdited)
+        {
+            message.OriginalContent = message.Content;
+        }
+
+        // Update message
+        message.Content = newContent;
+        message.IsEdited = true;
+        message.EditedAt = DateTime.UtcNow;
+
+        _unitOfWork.Messages.Update(message);
+        await _unitOfWork.SaveChangesAsync();
+
+        return MapToDto(message);
+    }
+
+    public async Task<bool> DeleteMessageAsync(int messageId, string userId, bool isAdmin)
+    {
+        var messages = await _unitOfWork.Messages.FindAsync(m => m.Id == messageId);
+        var message = messages.FirstOrDefault();
+
+        if (message == null)
+        {
+            throw new NotFoundException($"Message with ID {messageId} not found.");
+        }
+
+        // Sender can delete their own message, or Admin can delete any message
+        if (message.SenderId != userId && !isAdmin)
+        {
+            throw new UnauthorizedComplaintAccessException("You do not have permission to delete this message.");
+        }
+
+        // Soft delete
+        message.DeletedAt = DateTime.UtcNow;
+
+        _unitOfWork.Messages.Update(message);
+        await _unitOfWork.SaveChangesAsync();
+
+        return true;
     }
 }

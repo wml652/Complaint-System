@@ -14,13 +14,19 @@ using StudentComplaintPortal.Domain.Enums;
 using StudentComplaintPortal.Web.Hubs;
 using StudentComplaintPortal.Web.Middleware;
 using StudentComplaintPortal.Web.Services;
+using StudentComplaintPortal.Web.Serialization;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 #region Core Services
 // Add services to the container
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+.AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new UtcDateTimeConverter());
+    options.JsonSerializerOptions.Converters.Add(new UtcNullableDateTimeConverter());
+});
 
 // Phase 3: Add MVC with Views and Blazor Server
 builder.Services.AddControllersWithViews();
@@ -154,6 +160,7 @@ builder.Services.AddScoped<IConversationService, StudentComplaintPortal.Applicat
 builder.Services.AddScoped<IMessageReadTrackingService, MessageReadTrackingService>();
 builder.Services.AddScoped<IMessageQuotaService, MessageQuotaService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 #endregion
 
 #region Swagger Configuration

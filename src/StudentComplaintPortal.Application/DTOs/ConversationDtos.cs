@@ -20,6 +20,14 @@ public class InternalMessageDto
     public string? Content { get; set; }
     public DateTime SentAt { get; set; }
     public DateTime? ReadAt { get; set; }
+    public List<InternalAttachmentDto> Attachments { get; set; } = new();
+}
+public class InternalAttachmentDto   
+{
+    public int Id { get; set; }
+    public required string FileUrl { get; set; }
+    public required string FileType { get; set; }
+    public long FileSizeBytes { get; set; }
 }
 
 public class ParticipantDto

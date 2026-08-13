@@ -324,24 +324,25 @@ public class ChatHub : Hub
     public async Task UserStartedTyping(int complaintId)
     {
         var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var userName = Context.User?.FindFirst(ClaimTypes.GivenName)?.Value ?? "User";
+        if (string.IsNullOrEmpty(userId)) return;
 
-        if (!string.IsNullOrEmpty(userId))
-        {
-            await Clients.Group($"complaint-{complaintId}")
-                .SendAsync("UserTyping", userId, userName);
-        }
+        var user = await _userManager.FindByIdAsync(userId);
+        var userName = user?.FullName ?? "User";
+
+        await Clients.OthersInGroup($"complaint-{complaintId}")
+            .SendAsync("UserTyping", userName, true);
     }
 
     public async Task UserStoppedTyping(int complaintId)
     {
         var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return;
 
-        if (!string.IsNullOrEmpty(userId))
-        {
-            await Clients.Group($"complaint-{complaintId}")
-                .SendAsync("UserStoppedTyping", userId);
-        }
+        var user = await _userManager.FindByIdAsync(userId);
+        var userName = user?.FullName ?? "User";
+
+        await Clients.OthersInGroup($"complaint-{complaintId}")
+            .SendAsync("UserTyping", userName, false);
     }
 
     public async Task LeaveComplaintGroup(int complaintId)

@@ -12,4 +12,6 @@ public class InternalMessage
 
     public Conversation Conversation { get; set; } = null!;
     public AppUser Sender { get; set; } = null!;
+
+    public ICollection<InternalAttachment> Attachments { get; set; } = new List<InternalAttachment>();
 }
