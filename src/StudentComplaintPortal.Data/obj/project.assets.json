@@ -4304,11 +4304,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Complaint-System\\src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj",
+      "projectUniqueName": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj",
       "projectName": "StudentComplaintPortal.Data",
-      "projectPath": "D:\\Complaint-System\\src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj",
+      "projectPath": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj",
       "packagesPath": "C:\\Users\\Waqar Musa Loon\\.nuget\\packages\\",
-      "outputPath": "D:\\Complaint-System\\src\\StudentComplaintPortal.Data\\obj\\",
+      "outputPath": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -4331,8 +4331,8 @@
           "framework": "net8.0",
           "targetAlias": "net8.0",
           "projectReferences": {
-            "D:\\Complaint-System\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj": {
-              "projectPath": "D:\\Complaint-System\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj"
+            "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj": {
+              "projectPath": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj"
             }
           }
         }

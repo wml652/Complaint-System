@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Complaint-System\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj": {}
+    "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj": {}
   },
   "projects": {
-    "D:\\Complaint-System\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj": {
+    "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Complaint-System\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj",
+        "projectUniqueName": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj",
         "projectName": "StudentComplaintPortal.Domain",
-        "projectPath": "D:\\Complaint-System\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj",
+        "projectPath": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj",
         "packagesPath": "C:\\Users\\Waqar Musa Loon\\.nuget\\packages\\",
-        "outputPath": "D:\\Complaint-System\\src\\StudentComplaintPortal.Domain\\obj\\",
+        "outputPath": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

@@ -19,11 +19,19 @@ public class ComplaintService : IComplaintService
 
     public async Task<ComplaintDto> CreateComplaintAsync(string studentId, CreateComplaintDto dto)
     {
+        // Map category name string to enum
+        ComplaintCategory categoryEnum;
+        if (!Enum.TryParse<ComplaintCategory>(dto.Category, ignoreCase: true, out categoryEnum))
+        {
+            // If parsing fails, default to Other or throw exception
+            categoryEnum = ComplaintCategory.Other;
+        }
+
         var complaint = new Complaint
         {
             Title = dto.Title,
             Description = dto.Description,
-            Category = dto.Category,
+            Category = categoryEnum,  // Use the parsed enum value
             Status = ComplaintStatus.Open,
             StudentId = studentId,
             CreatedAt = DateTime.UtcNow,
@@ -37,7 +45,6 @@ public class ComplaintService : IComplaintService
         var created = await _unitOfWork.Complaints.GetByIdAsync(complaint.Id);
         return MapToDto(created!);
     }
-
     public async Task<ComplaintDto?> GetByIdAsync(int id)
     {
         var complaint = await _unitOfWork.Complaints.GetByIdAsync(id);

@@ -110,4 +110,22 @@ public class CategoryService : ICategoryService
 
         return categories.Select(MapToDto);
     }
+
+    public async Task<IEnumerable<CategoryListItemDto>> GetActiveCategoriesForDropdownAsync()
+    {
+        var categories = await _context.Categories
+            .Where(c => c.IsActive)
+            .OrderBy(c => c.Name)
+            .Select(c => new CategoryListItemDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Icon = c.Icon ?? "📋",
+                Color = c.Color ?? "#0d6efd"
+            })
+            .ToListAsync();
+
+        return categories;
+    }
+
 }

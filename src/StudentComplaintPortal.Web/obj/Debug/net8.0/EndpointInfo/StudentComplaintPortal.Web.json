@@ -703,16 +703,6 @@
         },
         "additionalProperties": false
       },
-      "ComplaintCategory": {
-        "enum": [
-          0,
-          1,
-          2,
-          3
-        ],
-        "type": "integer",
-        "format": "int32"
-      },
       "ComplaintStatus": {
         "enum": [
           0,
@@ -816,18 +806,26 @@
         "additionalProperties": false
       },
       "CreateComplaintDto": {
+        "required": [
+          "category",
+          "description",
+          "title"
+        ],
         "type": "object",
         "properties": {
           "title": {
-            "type": "string",
-            "nullable": true
+            "maxLength": 200,
+            "minLength": 0,
+            "type": "string"
           },
           "description": {
-            "type": "string",
-            "nullable": true
+            "maxLength": 2000,
+            "minLength": 0,
+            "type": "string"
           },
           "category": {
-            "$ref": "#/components/schemas/ComplaintCategory"
+            "minLength": 1,
+            "type": "string"
           }
         },
         "additionalProperties": false

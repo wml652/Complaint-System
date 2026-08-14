@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "yO4ho866ns4=",
+  "dgSpecHash": "2g14KLrZ+K8=",
   "success": true,
-  "projectFilePath": "D:\\Complaint-System\\tests\\StudentComplaintPortal.UnitTests\\StudentComplaintPortal.UnitTests.csproj",
+  "projectFilePath": "D:\\Complaint-System\\Complaint-System\\tests\\StudentComplaintPortal.UnitTests\\StudentComplaintPortal.UnitTests.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Waqar Musa Loon\\.nuget\\packages\\azure.core\\1.35.0\\azure.core.1.35.0.nupkg.sha512",
     "C:\\Users\\Waqar Musa Loon\\.nuget\\packages\\azure.identity\\1.10.3\\azure.identity.1.10.3.nupkg.sha512",
