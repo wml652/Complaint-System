@@ -3,8 +3,32 @@
   "WorkspaceRootPath": "D:\\Complaint-System\\Complaint-System\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{B1EE8FAC-BADF-4A1C-9FE3-A21E1476F412}|src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj|d:\\complaint-system\\complaint-system\\src\\studentcomplaintportal.data\\repositories\\complaintrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B1EE8FAC-BADF-4A1C-9FE3-A21E1476F412}|src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj|solutionrelative:src\\studentcomplaintportal.data\\repositories\\complaintrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B1EE8FAC-BADF-4A1C-9FE3-A21E1476F412}|src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj|d:\\complaint-system\\complaint-system\\src\\studentcomplaintportal.data\\repositories\\unitofwork.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B1EE8FAC-BADF-4A1C-9FE3-A21E1476F412}|src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj|solutionrelative:src\\studentcomplaintportal.data\\repositories\\unitofwork.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B1EE8FAC-BADF-4A1C-9FE3-A21E1476F412}|src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj|d:\\complaint-system\\complaint-system\\src\\studentcomplaintportal.data\\repositories\\iunitofwork.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B1EE8FAC-BADF-4A1C-9FE3-A21E1476F412}|src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj|solutionrelative:src\\studentcomplaintportal.data\\repositories\\iunitofwork.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{DD986F75-E35A-4808-9F80-97AB7ECB0028}|src\\StudentComplaintPortal.Application\\StudentComplaintPortal.Application.csproj|d:\\complaint-system\\complaint-system\\src\\studentcomplaintportal.application\\services\\complaintservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{DD986F75-E35A-4808-9F80-97AB7ECB0028}|src\\StudentComplaintPortal.Application\\StudentComplaintPortal.Application.csproj|solutionrelative:src\\studentcomplaintportal.application\\services\\complaintservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4A05A60B-B9A8-4CC0-AA28-5F597266372D}|src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj|d:\\complaint-system\\complaint-system\\src\\studentcomplaintportal.domain\\entities\\complaint.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4A05A60B-B9A8-4CC0-AA28-5F597266372D}|src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj|solutionrelative:src\\studentcomplaintportal.domain\\entities\\complaint.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B1EE8FAC-BADF-4A1C-9FE3-A21E1476F412}|src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj|d:\\complaint-system\\complaint-system\\src\\studentcomplaintportal.data\\repositories\\icomplaintrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B1EE8FAC-BADF-4A1C-9FE3-A21E1476F412}|src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj|solutionrelative:src\\studentcomplaintportal.data\\repositories\\icomplaintrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B1EE8FAC-BADF-4A1C-9FE3-A21E1476F412}|src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj|d:\\complaint-system\\complaint-system\\src\\studentcomplaintportal.data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B1EE8FAC-BADF-4A1C-9FE3-A21E1476F412}|src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj|solutionrelative:src\\studentcomplaintportal.data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{DD986F75-E35A-4808-9F80-97AB7ECB0028}|src\\StudentComplaintPortal.Application\\StudentComplaintPortal.Application.csproj|d:\\complaint-system\\complaint-system\\src\\studentcomplaintportal.application\\dtos\\createcomplaintdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -41,10 +65,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{4A05A60B-B9A8-4CC0-AA28-5F597266372D}|src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj|d:\\complaint-system\\complaint-system\\src\\studentcomplaintportal.domain\\entities\\category.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{4A05A60B-B9A8-4CC0-AA28-5F597266372D}|src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj|solutionrelative:src\\studentcomplaintportal.domain\\entities\\category.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B1EE8FAC-BADF-4A1C-9FE3-A21E1476F412}|src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj|d:\\complaint-system\\complaint-system\\src\\studentcomplaintportal.data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B1EE8FAC-BADF-4A1C-9FE3-A21E1476F412}|src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj|solutionrelative:src\\studentcomplaintportal.data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{DD986F75-E35A-4808-9F80-97AB7ECB0028}|src\\StudentComplaintPortal.Application\\StudentComplaintPortal.Application.csproj|d:\\complaint-system\\complaint-system\\src\\studentcomplaintportal.application\\dtos\\updatecategorydto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -182,16 +202,8 @@
       "RelativeMoniker": "D:0:0:{B1EE8FAC-BADF-4A1C-9FE3-A21E1476F412}|src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj|solutionrelative:src\\studentcomplaintportal.data\\repositories\\imessagerepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{B1EE8FAC-BADF-4A1C-9FE3-A21E1476F412}|src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj|d:\\complaint-system\\complaint-system\\src\\studentcomplaintportal.data\\repositories\\complaintrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B1EE8FAC-BADF-4A1C-9FE3-A21E1476F412}|src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj|solutionrelative:src\\studentcomplaintportal.data\\repositories\\complaintrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{B1EE8FAC-BADF-4A1C-9FE3-A21E1476F412}|src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj|d:\\complaint-system\\complaint-system\\src\\studentcomplaintportal.data\\repositories\\attachmentrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B1EE8FAC-BADF-4A1C-9FE3-A21E1476F412}|src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj|solutionrelative:src\\studentcomplaintportal.data\\repositories\\attachmentrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B1EE8FAC-BADF-4A1C-9FE3-A21E1476F412}|src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj|d:\\complaint-system\\complaint-system\\src\\studentcomplaintportal.data\\repositories\\unitofwork.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B1EE8FAC-BADF-4A1C-9FE3-A21E1476F412}|src\\StudentComplaintPortal.Data\\StudentComplaintPortal.Data.csproj|solutionrelative:src\\studentcomplaintportal.data\\repositories\\unitofwork.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{4A05A60B-B9A8-4CC0-AA28-5F597266372D}|src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj|d:\\complaint-system\\complaint-system\\src\\studentcomplaintportal.domain\\entities\\message.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -216,10 +228,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{4A05A60B-B9A8-4CC0-AA28-5F597266372D}|src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj|d:\\complaint-system\\complaint-system\\src\\studentcomplaintportal.domain\\entities\\notification.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{4A05A60B-B9A8-4CC0-AA28-5F597266372D}|src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj|solutionrelative:src\\studentcomplaintportal.domain\\entities\\notification.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4A05A60B-B9A8-4CC0-AA28-5F597266372D}|src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj|d:\\complaint-system\\complaint-system\\src\\studentcomplaintportal.domain\\entities\\complaint.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4A05A60B-B9A8-4CC0-AA28-5F597266372D}|src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj|solutionrelative:src\\studentcomplaintportal.domain\\entities\\complaint.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{4A05A60B-B9A8-4CC0-AA28-5F597266372D}|src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj|d:\\complaint-system\\complaint-system\\src\\studentcomplaintportal.domain\\entities\\attachment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -299,7 +307,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 5,
           "Children": [
             {
               "$type": "Bookmark",
@@ -311,46 +319,85 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
+              "Title": "IUnitOfWork.cs",
+              "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\Repositories\\IUnitOfWork.cs",
+              "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Data\\Repositories\\IUnitOfWork.cs",
+              "ToolTip": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\Repositories\\IUnitOfWork.cs",
+              "RelativeToolTip": "src\\StudentComplaintPortal.Data\\Repositories\\IUnitOfWork.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-14T23:44:35.872Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "ComplaintService.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\Services\\ComplaintService.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Application\\Services\\ComplaintService.cs",
-              "ToolTip": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\Services\\ComplaintService.cs*",
-              "RelativeToolTip": "src\\StudentComplaintPortal.Application\\Services\\ComplaintService.cs*",
-              "ViewState": "AgIAABsAAAAAAAAAAAAkwC4AAAAFAAAAAAAAAA==",
+              "ToolTip": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\Services\\ComplaintService.cs",
+              "RelativeToolTip": "src\\StudentComplaintPortal.Application\\Services\\ComplaintService.cs",
+              "ViewState": "AgIAABMAAAAAAAAAAAAQwAkAAAAxAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-08-14T23:29:16.885Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "CreateComplaintDto.cs",
-              "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\DTOs\\CreateComplaintDto.cs",
-              "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Application\\DTOs\\CreateComplaintDto.cs",
-              "ToolTip": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\DTOs\\CreateComplaintDto.cs*",
-              "RelativeToolTip": "src\\StudentComplaintPortal.Application\\DTOs\\CreateComplaintDto.cs*",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAuAAAAAAAAAA==",
+              "DocumentIndex": 4,
+              "Title": "Complaint.cs",
+              "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Domain\\Entities\\Complaint.cs",
+              "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Domain\\Entities\\Complaint.cs",
+              "ToolTip": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Domain\\Entities\\Complaint.cs",
+              "RelativeToolTip": "src\\StudentComplaintPortal.Domain\\Entities\\Complaint.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAywBcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-14T23:28:17.918Z",
+              "WhenOpened": "2026-07-21T00:35:30.781Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "NewComplaint.cshtml",
-              "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Views\\Dashboard\\NewComplaint.cshtml",
-              "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Views\\Dashboard\\NewComplaint.cshtml",
-              "ToolTip": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Views\\Dashboard\\NewComplaint.cshtml*",
-              "RelativeToolTip": "src\\StudentComplaintPortal.Web\\Views\\Dashboard\\NewComplaint.cshtml*",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAD4AAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-08-14T23:27:19.629Z",
+              "DocumentIndex": 0,
+              "Title": "ComplaintRepository.cs",
+              "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\Repositories\\ComplaintRepository.cs",
+              "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Data\\Repositories\\ComplaintRepository.cs",
+              "ToolTip": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\Repositories\\ComplaintRepository.cs*",
+              "RelativeToolTip": "src\\StudentComplaintPortal.Data\\Repositories\\ComplaintRepository.cs*",
+              "ViewState": "AgIAAEcAAAAAAAAAAAAgwFUAAAAvAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-21T00:45:45.862Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "UnitOfWork.cs",
+              "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\Repositories\\UnitOfWork.cs",
+              "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Data\\Repositories\\UnitOfWork.cs",
+              "ToolTip": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\Repositories\\UnitOfWork.cs",
+              "RelativeToolTip": "src\\StudentComplaintPortal.Data\\Repositories\\UnitOfWork.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-21T00:45:19.588Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 5,
+              "Title": "IComplaintRepository.cs",
+              "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\Repositories\\IComplaintRepository.cs",
+              "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Data\\Repositories\\IComplaintRepository.cs",
+              "ToolTip": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\Repositories\\IComplaintRepository.cs",
+              "RelativeToolTip": "src\\StudentComplaintPortal.Data\\Repositories\\IComplaintRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-14T23:38:37.108Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
               "Title": "DashboardController.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Controllers\\Api\\DashboardController.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Controllers\\Api\\DashboardController.cs",
@@ -364,11 +411,50 @@
             {
               "$type": "Document",
               "DocumentIndex": 7,
+              "Title": "CreateComplaintDto.cs",
+              "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\DTOs\\CreateComplaintDto.cs",
+              "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Application\\DTOs\\CreateComplaintDto.cs",
+              "ToolTip": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\DTOs\\CreateComplaintDto.cs",
+              "RelativeToolTip": "src\\StudentComplaintPortal.Application\\DTOs\\CreateComplaintDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAuAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-14T23:28:17.918Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "AppDbContext.cs",
+              "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\AppDbContext.cs",
+              "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Data\\AppDbContext.cs",
+              "ToolTip": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\AppDbContext.cs",
+              "RelativeToolTip": "src\\StudentComplaintPortal.Data\\AppDbContext.cs",
+              "ViewState": "AgIAACIAAAAAAAAAAAAkwDcAAAAgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-21T01:40:53.573Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "NewComplaint.cshtml",
+              "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Views\\Dashboard\\NewComplaint.cshtml",
+              "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Views\\Dashboard\\NewComplaint.cshtml",
+              "ToolTip": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Views\\Dashboard\\NewComplaint.cshtml",
+              "RelativeToolTip": "src\\StudentComplaintPortal.Web\\Views\\Dashboard\\NewComplaint.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAD4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-08-14T23:27:19.629Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
               "Title": "ICategoryService.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\Services\\ICategoryService.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Application\\Services\\ICategoryService.cs",
-              "ToolTip": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\Services\\ICategoryService.cs*",
-              "RelativeToolTip": "src\\StudentComplaintPortal.Application\\Services\\ICategoryService.cs*",
+              "ToolTip": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\Services\\ICategoryService.cs",
+              "RelativeToolTip": "src\\StudentComplaintPortal.Application\\Services\\ICategoryService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAABRAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-08-03T21:32:26.974Z",
@@ -376,7 +462,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 8,
               "Title": "CategoryListItemDto.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\DTOs\\CategoryListItemDto.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Application\\DTOs\\CategoryListItemDto.cs",
@@ -389,7 +475,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 14,
               "Title": "Categories.cshtml",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Views\\Dashboard\\Categories.cshtml",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Views\\Dashboard\\Categories.cshtml",
@@ -402,7 +488,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 15,
               "Title": "Category.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Domain\\Entities\\Category.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Domain\\Entities\\Category.cs",
@@ -414,12 +500,12 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 10,
               "Title": "DashboardController.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Controllers\\Mvc\\DashboardController.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Controllers\\Mvc\\DashboardController.cs",
-              "ToolTip": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Controllers\\Mvc\\DashboardController.cs*",
-              "RelativeToolTip": "src\\StudentComplaintPortal.Web\\Controllers\\Mvc\\DashboardController.cs*",
+              "ToolTip": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Controllers\\Mvc\\DashboardController.cs",
+              "RelativeToolTip": "src\\StudentComplaintPortal.Web\\Controllers\\Mvc\\DashboardController.cs",
               "ViewState": "AgIAAGkAAAAAAAAAAAAAAHgAAAAgAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-07-21T01:33:08.867Z",
@@ -427,24 +513,12 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
-              "Title": "AppDbContext.cs",
-              "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\AppDbContext.cs",
-              "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Data\\AppDbContext.cs",
-              "ToolTip": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\AppDbContext.cs",
-              "RelativeToolTip": "src\\StudentComplaintPortal.Data\\AppDbContext.cs",
-              "ViewState": "AgIAAAcAAAAAAAAAAAAuwBcAAAARAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-21T01:40:53.573Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 12,
               "Title": "CategoryService.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\Services\\CategoryService.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Application\\Services\\CategoryService.cs",
-              "ToolTip": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\Services\\CategoryService.cs*",
-              "RelativeToolTip": "src\\StudentComplaintPortal.Application\\Services\\CategoryService.cs*",
+              "ToolTip": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\Services\\CategoryService.cs",
+              "RelativeToolTip": "src\\StudentComplaintPortal.Application\\Services\\CategoryService.cs",
               "ViewState": "AgIAAHMAAAAAAAAAAAAAAIEAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-08-04T00:00:16.398Z",
@@ -452,7 +526,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 17,
               "Title": "ChatHub.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Hubs\\ChatHub.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Hubs\\ChatHub.cs",
@@ -464,7 +538,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 16,
               "Title": "UpdateCategoryDto.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\DTOs\\UpdateCategoryDto.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Application\\DTOs\\UpdateCategoryDto.cs",
@@ -476,7 +550,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 18,
               "Title": "plan-category-management-system-implementation.md [Preview]",
               "DocumentMoniker": "C:\\Users\\Waqar Musa Loon\\.copilot\\plans\\plan-category-management-system-implementation.md",
               "ToolTip": "C:\\Users\\Waqar Musa Loon\\.copilot\\plans\\plan-category-management-system-implementation.md [Preview]",
@@ -486,7 +560,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 68,
+              "DocumentIndex": 70,
               "Title": "CategoriesController.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Controllers\\Api\\CategoriesController.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Controllers\\Api\\CategoriesController.cs",
@@ -498,7 +572,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 72,
+              "DocumentIndex": 74,
               "Title": "_Sidebar.cshtml",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Views\\Shared\\_Sidebar.cshtml",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Views\\Shared\\_Sidebar.cshtml",
@@ -510,7 +584,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 19,
               "Title": "Program.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Program.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Program.cs",
@@ -522,7 +596,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 70,
+              "DocumentIndex": 72,
               "Title": "CategoryDetails.cshtml",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Views\\Dashboard\\CategoryDetails.cshtml",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Views\\Dashboard\\CategoryDetails.cshtml",
@@ -534,7 +608,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 71,
+              "DocumentIndex": 73,
               "Title": "category-management.js",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\wwwroot\\js\\category-management.js",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\wwwroot\\js\\category-management.js",
@@ -546,7 +620,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 66,
+              "DocumentIndex": 68,
               "Title": "CategoryStatsDto.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\DTOs\\CategoryStatsDto.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Application\\DTOs\\CategoryStatsDto.cs",
@@ -558,7 +632,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 69,
+              "DocumentIndex": 71,
               "Title": "EditCategory.cshtml",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Views\\Dashboard\\EditCategory.cshtml",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Views\\Dashboard\\EditCategory.cshtml",
@@ -570,7 +644,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 65,
+              "DocumentIndex": 67,
               "Title": "StaffAssigneeDto.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\DTOs\\StaffAssigneeDto.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Application\\DTOs\\StaffAssigneeDto.cs",
@@ -582,7 +656,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 67,
+              "DocumentIndex": 69,
               "Title": "PagedResult.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\DTOs\\PagedResult.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Application\\DTOs\\PagedResult.cs",
@@ -594,7 +668,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 20,
               "Title": "CookieHandler.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Services\\CookieHandler.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Services\\CookieHandler.cs",
@@ -606,7 +680,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 21,
               "Title": "AppUserClaimsPrincipalFactory.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Services\\AppUserClaimsPrincipalFactory.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Services\\AppUserClaimsPrincipalFactory.cs",
@@ -618,7 +692,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 22,
               "Title": "SendMessageRequest.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Models\\SendMessageRequest.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Models\\SendMessageRequest.cs",
@@ -630,7 +704,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 23,
               "Title": "RegisterRequest.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Models\\RegisterRequest.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Models\\RegisterRequest.cs",
@@ -642,7 +716,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
+              "DocumentIndex": 24,
               "Title": "LoginResponse.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Models\\LoginResponse.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Models\\LoginResponse.cs",
@@ -654,7 +728,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 20,
+              "DocumentIndex": 25,
               "Title": "LoginRequest.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Models\\LoginRequest.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Models\\LoginRequest.cs",
@@ -666,7 +740,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 21,
+              "DocumentIndex": 26,
               "Title": "ExceptionHandlingMiddleware.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Middleware\\ExceptionHandlingMiddleware.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Middleware\\ExceptionHandlingMiddleware.cs",
@@ -678,7 +752,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 23,
+              "DocumentIndex": 28,
               "Title": "AccountController.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Controllers\\Mvc\\AccountController.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Controllers\\Mvc\\AccountController.cs",
@@ -690,7 +764,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 22,
+              "DocumentIndex": 27,
               "Title": "FileUploadOperationFilter.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Filters\\FileUploadOperationFilter.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Filters\\FileUploadOperationFilter.cs",
@@ -702,7 +776,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 24,
+              "DocumentIndex": 29,
               "Title": "NotificationsController.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Controllers\\Api\\NotificationsController.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Controllers\\Api\\NotificationsController.cs",
@@ -714,7 +788,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 25,
+              "DocumentIndex": 30,
               "Title": "MessagesController.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Controllers\\Api\\MessagesController.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Controllers\\Api\\MessagesController.cs",
@@ -726,7 +800,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 26,
+              "DocumentIndex": 31,
               "Title": "ComplaintsController.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Controllers\\Api\\ComplaintsController.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Controllers\\Api\\ComplaintsController.cs",
@@ -738,7 +812,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 27,
+              "DocumentIndex": 32,
               "Title": "AuthController.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Controllers\\Api\\AuthController.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Controllers\\Api\\AuthController.cs",
@@ -750,7 +824,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 28,
+              "DocumentIndex": 33,
               "Title": "AttachmentsController.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Controllers\\Api\\AttachmentsController.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Controllers\\Api\\AttachmentsController.cs",
@@ -762,7 +836,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 29,
+              "DocumentIndex": 34,
               "Title": "App.razor",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\Components\\App.razor",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\Components\\App.razor",
@@ -774,7 +848,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 64,
+              "DocumentIndex": 66,
               "Title": "ComplaintChat.razor",
               "DocumentMoniker": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Web\\Components\\ComplaintChat.razor",
               "ToolTip": "C:\\Users\\Waqar Musa Loon\\Desktop\\Complaint SYstem\\Complaint SYstem\\src\\StudentComplaintPortal.Web\\Components\\ComplaintChat.razor",
@@ -784,7 +858,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 30,
+              "DocumentIndex": 35,
               "Title": "MessageDto.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\DTOs\\MessageDto.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Application\\DTOs\\MessageDto.cs",
@@ -796,7 +870,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 31,
+              "DocumentIndex": 36,
               "Title": "AttachmentDto.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\DTOs\\AttachmentDto.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Application\\DTOs\\AttachmentDto.cs",
@@ -808,7 +882,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 32,
+              "DocumentIndex": 37,
               "Title": "UnauthorizedComplaintAccessException.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\Exceptions\\UnauthorizedComplaintAccessException.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Application\\Exceptions\\UnauthorizedComplaintAccessException.cs",
@@ -820,7 +894,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 33,
+              "DocumentIndex": 38,
               "Title": "NotFoundException.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\Exceptions\\NotFoundException.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Application\\Exceptions\\NotFoundException.cs",
@@ -832,7 +906,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 34,
+              "DocumentIndex": 39,
               "Title": "InvalidStatusTransitionException.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\Exceptions\\InvalidStatusTransitionException.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Application\\Exceptions\\InvalidStatusTransitionException.cs",
@@ -844,7 +918,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 35,
+              "DocumentIndex": 40,
               "Title": "InvalidFileException.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\Exceptions\\InvalidFileException.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Application\\Exceptions\\InvalidFileException.cs",
@@ -856,7 +930,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 39,
+              "DocumentIndex": 44,
               "Title": "MessageService.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\Services\\MessageService.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Application\\Services\\MessageService.cs",
@@ -868,7 +942,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 37,
+              "DocumentIndex": 42,
               "Title": "INotificationService.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\Services\\INotificationService.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Application\\Services\\INotificationService.cs",
@@ -880,7 +954,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 38,
+              "DocumentIndex": 43,
               "Title": "IMessageService.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\Services\\IMessageService.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Application\\Services\\IMessageService.cs",
@@ -892,7 +966,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 36,
+              "DocumentIndex": 41,
               "Title": "IComplaintService.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\Services\\IComplaintService.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Application\\Services\\IComplaintService.cs",
@@ -904,7 +978,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 40,
+              "DocumentIndex": 45,
               "Title": "IAttachmentService.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\Services\\IAttachmentService.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Application\\Services\\IAttachmentService.cs",
@@ -916,7 +990,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 43,
+              "DocumentIndex": 48,
               "Title": "INotificationRepository.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\Repositories\\INotificationRepository.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Data\\Repositories\\INotificationRepository.cs",
@@ -928,7 +1002,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 44,
+              "DocumentIndex": 49,
               "Title": "IMessageRepository.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\Repositories\\IMessageRepository.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Data\\Repositories\\IMessageRepository.cs",
@@ -940,7 +1014,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 42,
+              "DocumentIndex": 47,
               "Title": "IGenericRepository.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\Repositories\\IGenericRepository.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Data\\Repositories\\IGenericRepository.cs",
@@ -952,7 +1026,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 41,
+              "DocumentIndex": 46,
               "Title": "GenericRepository.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\Repositories\\GenericRepository.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Data\\Repositories\\GenericRepository.cs",
@@ -964,19 +1038,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 45,
-              "Title": "ComplaintRepository.cs",
-              "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\Repositories\\ComplaintRepository.cs",
-              "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Data\\Repositories\\ComplaintRepository.cs",
-              "ToolTip": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\Repositories\\ComplaintRepository.cs",
-              "RelativeToolTip": "src\\StudentComplaintPortal.Data\\Repositories\\ComplaintRepository.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-21T00:45:45.862Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 46,
+              "DocumentIndex": 50,
               "Title": "AttachmentRepository.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\Repositories\\AttachmentRepository.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Data\\Repositories\\AttachmentRepository.cs",
@@ -988,19 +1050,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 47,
-              "Title": "UnitOfWork.cs",
-              "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\Repositories\\UnitOfWork.cs",
-              "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Data\\Repositories\\UnitOfWork.cs",
-              "ToolTip": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Data\\Repositories\\UnitOfWork.cs",
-              "RelativeToolTip": "src\\StudentComplaintPortal.Data\\Repositories\\UnitOfWork.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-21T00:45:19.588Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 50,
+              "DocumentIndex": 53,
               "Title": "UserRole.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Domain\\Enums\\UserRole.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Domain\\Enums\\UserRole.cs",
@@ -1012,7 +1062,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 51,
+              "DocumentIndex": 54,
               "Title": "NotificationType.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Domain\\Enums\\NotificationType.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Domain\\Enums\\NotificationType.cs",
@@ -1024,7 +1074,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 48,
+              "DocumentIndex": 51,
               "Title": "Message.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Domain\\Entities\\Message.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Domain\\Entities\\Message.cs",
@@ -1036,7 +1086,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 49,
+              "DocumentIndex": 52,
               "Title": "ComplaintStatus.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Domain\\Enums\\ComplaintStatus.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Domain\\Enums\\ComplaintStatus.cs",
@@ -1048,7 +1098,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 52,
+              "DocumentIndex": 55,
               "Title": "FileType.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Domain\\Enums\\FileType.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Domain\\Enums\\FileType.cs",
@@ -1060,7 +1110,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 53,
+              "DocumentIndex": 56,
               "Title": "Notification.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Domain\\Entities\\Notification.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Domain\\Entities\\Notification.cs",
@@ -1072,19 +1122,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 54,
-              "Title": "Complaint.cs",
-              "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Domain\\Entities\\Complaint.cs",
-              "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Domain\\Entities\\Complaint.cs",
-              "ToolTip": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Domain\\Entities\\Complaint.cs",
-              "RelativeToolTip": "src\\StudentComplaintPortal.Domain\\Entities\\Complaint.cs",
-              "ViewState": "AgIAAAUAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-21T00:35:30.781Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 55,
+              "DocumentIndex": 57,
               "Title": "Attachment.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Domain\\Entities\\Attachment.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Domain\\Entities\\Attachment.cs",
@@ -1096,7 +1134,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 56,
+              "DocumentIndex": 58,
               "Title": "AppUser.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Domain\\Entities\\AppUser.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Domain\\Entities\\AppUser.cs",
@@ -1108,7 +1146,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 57,
+              "DocumentIndex": 59,
               "Title": "Microsoft.Common.CurrentVersion.targets",
               "DocumentMoniker": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
               "ToolTip": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
@@ -1118,7 +1156,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 58,
+              "DocumentIndex": 60,
               "Title": "appsettings.json",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\appsettings.json",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\appsettings.json",
@@ -1130,7 +1168,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 59,
+              "DocumentIndex": 61,
               "Title": "StudentComplaintPortal.UnitTests.csproj",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\tests\\StudentComplaintPortal.UnitTests\\StudentComplaintPortal.UnitTests.csproj",
               "RelativeDocumentMoniker": "tests\\StudentComplaintPortal.UnitTests\\StudentComplaintPortal.UnitTests.csproj",
@@ -1142,7 +1180,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 61,
+              "DocumentIndex": 63,
               "Title": "AttachmentService.cs",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Application\\Services\\AttachmentService.cs",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Application\\Services\\AttachmentService.cs",
@@ -1154,7 +1192,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 60,
+              "DocumentIndex": 62,
               "Title": "StudentComplaintPortal.IntegrationTests.csproj",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\tests\\StudentComplaintPortal.IntegrationTests\\StudentComplaintPortal.IntegrationTests.csproj",
               "RelativeDocumentMoniker": "tests\\StudentComplaintPortal.IntegrationTests\\StudentComplaintPortal.IntegrationTests.csproj",
@@ -1166,7 +1204,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 62,
+              "DocumentIndex": 64,
               "Title": "StudentComplaintPortal.Web.csproj",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Web\\StudentComplaintPortal.Web.csproj",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Web\\StudentComplaintPortal.Web.csproj",
@@ -1178,7 +1216,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 63,
+              "DocumentIndex": 65,
               "Title": "StudentComplaintPortal.Domain.csproj",
               "DocumentMoniker": "D:\\Complaint-System\\Complaint-System\\src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj",
               "RelativeDocumentMoniker": "src\\StudentComplaintPortal.Domain\\StudentComplaintPortal.Domain.csproj",

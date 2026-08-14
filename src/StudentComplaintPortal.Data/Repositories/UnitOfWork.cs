@@ -25,6 +25,8 @@ public class UnitOfWork : IUnitOfWork
     public INotificationRepository Notifications => 
         _notifications ??= new NotificationRepository(_context);
 
+    public AppDbContext Context => _context;
+
     public async Task<int> SaveChangesAsync()
     {
         return await _context.SaveChangesAsync();

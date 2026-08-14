@@ -35,15 +35,22 @@ public class AppDbContext : IdentityDbContext<AppUser>
             entity.Property(e => e.Description).IsRequired().HasMaxLength(2000);
             entity.Property(e => e.Status).HasConversion<string>();
             entity.Property(e => e.Category).HasConversion<string>();
-            
+
             entity.HasOne(e => e.Student)
                 .WithMany(u => u.Complaints)
                 .HasForeignKey(e => e.StudentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // NEW: Add relationship to Category table
+            entity.HasOne(e => e.CategoryEntity)
+                .WithMany(c => c.Complaints)
+                .HasForeignKey(e => e.CategoryId)
+                .OnDelete(DeleteBehavior.SetNull);  // Donwhen category is deleted
+
             entity.HasIndex(e => e.StudentId);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => e.CategoryId);  // Add index for performance
         });
 
         // Message configuration

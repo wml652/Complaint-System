@@ -3,6 +3,7 @@ using StudentComplaintPortal.Application.Exceptions;
 using StudentComplaintPortal.Data.Repositories;
 using StudentComplaintPortal.Domain.Entities;
 using StudentComplaintPortal.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace StudentComplaintPortal.Application.Services;
 
@@ -23,15 +24,19 @@ public class ComplaintService : IComplaintService
         ComplaintCategory categoryEnum;
         if (!Enum.TryParse<ComplaintCategory>(dto.Category, ignoreCase: true, out categoryEnum))
         {
-            // If parsing fails, default to Other or throw exception
             categoryEnum = ComplaintCategory.Other;
         }
+
+        // NEW: Find the Category entity by name to get CategoryId
+        var categoryEntity = await _unitOfWork.Context.Categories
+            .FirstOrDefaultAsync(c => c.Name.ToLower() == dto.Category.ToLower() && c.IsActive);
 
         var complaint = new Complaint
         {
             Title = dto.Title,
             Description = dto.Description,
-            Category = categoryEnum,  // Use the parsed enum value
+            Category = categoryEnum,  // Keep enum for backward compatibility
+            CategoryId = categoryEntity?.Id,  // NEW: Set CategoryId if found
             Status = ComplaintStatus.Open,
             StudentId = studentId,
             CreatedAt = DateTime.UtcNow,

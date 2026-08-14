@@ -1,4 +1,6 @@
-﻿namespace StudentComplaintPortal.Data.Repositories;
+﻿using StudentComplaintPortal.Data;
+
+namespace StudentComplaintPortal.Data.Repositories;
 
 public interface IUnitOfWork : IDisposable
 {
@@ -6,6 +8,7 @@ public interface IUnitOfWork : IDisposable
     IMessageRepository Messages { get; }
     IAttachmentRepository Attachments { get; }
     INotificationRepository Notifications { get; }
-    
+
+    AppDbContext Context { get; }
     Task<int> SaveChangesAsync();
 }
