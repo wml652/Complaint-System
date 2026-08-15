@@ -74,7 +74,7 @@ public class ComplaintRepository : GenericRepository<Complaint>, IComplaintRepos
         return await query.OrderByDescending(c => c.LastMessageAt ?? c.CreatedAt).Take(pageSize + 1).ToListAsync();
     }
 
-    public async Task<List<Complaint>> GetFilteredPagedAsync(int? categoryId, ComplaintStatus? status, bool unreadOnly, string? currentUserId, string? staffScopeUserId, DateTime? cursorTimestamp, int pageSize, bool moveForward = true)
+    public async Task<List<Complaint>> GetFilteredPagedAsync(int? categoryId, ComplaintStatus? status, bool unreadOnly, string? currentUserId, string? staffScopeUserId, DateTime? startDate, DateTime? endDate, DateTime? cursorTimestamp, int pageSize, bool moveForward = true)
     {
         var query = _dbSet.Include(c => c.Student).AsQueryable();
 
@@ -100,6 +100,16 @@ public class ComplaintRepository : GenericRepository<Complaint>, IComplaintRepos
         if (unreadOnly)
         {
             query = query.Where(c => c.Messages.Any(m => !m.IsRead && m.SenderId != currentUserId));
+        }
+
+        if (startDate.HasValue)
+        {
+            query = query.Where(c => c.CreatedAt >= startDate.Value);
+        }
+
+        if (endDate.HasValue)
+        {
+            query = query.Where(c => c.CreatedAt <= endDate.Value);
         }
 
         if (cursorTimestamp.HasValue)
