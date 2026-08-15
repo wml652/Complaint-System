@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StudentComplaintPortal.Data;
 
@@ -11,9 +12,11 @@ using StudentComplaintPortal.Data;
 namespace StudentComplaintPortal.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260814233753_AddCategoryIdToComplaint")]
+    partial class AddCategoryIdToComplaint
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -379,9 +382,6 @@ namespace StudentComplaintPortal.Data.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
-                    b.Property<DateTime?>("LastMessageAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -422,9 +422,6 @@ namespace StudentComplaintPortal.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("LastMessageAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("Name")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -463,38 +460,6 @@ namespace StudentComplaintPortal.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("ConversationParticipants");
-                });
-
-            modelBuilder.Entity("StudentComplaintPortal.Domain.Entities.InternalAttachment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<long>("FileSizeBytes")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("FileType")
-                        .HasColumnType("int");
-
-                    b.Property<string>("FileUrl")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("InternalMessageId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("InternalMessageId");
-
-                    b.ToTable("InternalAttachments");
                 });
 
             modelBuilder.Entity("StudentComplaintPortal.Domain.Entities.InternalMessage", b =>
@@ -825,17 +790,6 @@ namespace StudentComplaintPortal.Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("StudentComplaintPortal.Domain.Entities.InternalAttachment", b =>
-                {
-                    b.HasOne("StudentComplaintPortal.Domain.Entities.InternalMessage", "InternalMessage")
-                        .WithMany("Attachments")
-                        .HasForeignKey("InternalMessageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("InternalMessage");
-                });
-
             modelBuilder.Entity("StudentComplaintPortal.Domain.Entities.InternalMessage", b =>
                 {
                     b.HasOne("StudentComplaintPortal.Domain.Entities.Conversation", "Conversation")
@@ -939,11 +893,6 @@ namespace StudentComplaintPortal.Data.Migrations
                     b.Navigation("Messages");
 
                     b.Navigation("Participants");
-                });
-
-            modelBuilder.Entity("StudentComplaintPortal.Domain.Entities.InternalMessage", b =>
-                {
-                    b.Navigation("Attachments");
                 });
 
             modelBuilder.Entity("StudentComplaintPortal.Domain.Entities.Message", b =>

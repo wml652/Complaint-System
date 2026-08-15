@@ -108,29 +108,13 @@ public class DashboardController : Controller
 
     [HttpGet]
     [Authorize(Roles = "Student")]
-    public IActionResult NewComplaint()
+    public async Task<IActionResult> NewComplaint()
     {
+        // Fetch active categories from database
+        var categories = await _categoryService.GetActiveCategoriesForDropdownAsync();
+        ViewBag.Categories = categories;
+
         return View();
-    }
-
-    [HttpPost]
-    [Authorize(Roles = "Student")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> NewComplaint(CreateComplaintDto model)
-    {
-        if (!ModelState.IsValid)
-        {
-            return View(model);
-        }
-
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId))
-        {
-            return Forbid();
-        }
-
-        var complaint = await _complaintService.CreateComplaintAsync(userId, model);
-        return RedirectToAction("Index", "ChatWorkspace", new { complaintId = complaint.Id });
     }
 
     [HttpGet]

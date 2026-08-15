@@ -71,6 +71,24 @@ public class CategoryService : ICategoryService
         return categories.Select(MapToDto);
     }
 
+    // FIX 1: Fetch dynamic categories for the dropdown
+    public async Task<IEnumerable<CategoryListItemDto>> GetActiveCategoriesForDropdownAsync()
+    {
+        // Use the Repository instead of the DbContext directly
+        var categories = await _unitOfWork.Categories.GetAllActiveWithDetailsAsync();
+
+        return categories
+            .OrderBy(c => c.Name)
+            .Select(c => new CategoryListItemDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Icon = c.Icon ?? "📋",
+                Color = c.Color ?? "#0d6efd"
+            })
+            .ToList();
+    }
+
     private CategoryDto MapToDto(Category category)
     {
         return new CategoryDto
