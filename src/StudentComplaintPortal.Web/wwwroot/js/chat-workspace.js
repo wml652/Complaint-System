@@ -1,4 +1,4 @@
-﻿const ChatWorkspace = (function () {
+const ChatWorkspace = (function () {
     let connection = null;
     let currentChatType = null;   // "complaint" or "internal"
     let currentChatId = null;
@@ -14,7 +14,7 @@
     let isLoadingMoreStudentChats = false;
     let isLoadingMoreTeamChats = false;
 
-    // Client-side cache: jab bhi list re-render ho, isse dubara apply kar sakein
+    // Client-side cache
     const onlineUserIds = new Set();
     const lastSeenCache = new Map(); // userId -> lastSeenAt string
 
@@ -46,31 +46,42 @@
             lastSeenCache.set(userId, lastSeenAt);
             updatePresenceUi(userId, false, lastSeenAt);
         });
+
+        // FIX 3: Updated MessageEdited handler to maintain dropdown UI
         connection.on("MessageEdited", (updatedMessage) => {
             const msgEl = document.querySelector(`[data-message-id="${updatedMessage.id}"]`);
             if (msgEl) {
-                const textEl = msgEl.querySelector('.message-text') || msgEl.querySelector('p');
+                const textEl = msgEl.querySelector('.message-text');
                 if (textEl) {
-                    textEl.textContent = updatedMessage.content;
-                    if (!textEl.querySelector('.edited-badge')) {
-                        const badge = document.createElement('small');
-                        badge.className = 'text-muted ms-1 edited-badge';
-                        badge.style.fontSize = '0.7rem';
-                        badge.textContent = '(edited)';
-                        textEl.appendChild(badge);
+                    const contentSpan = textEl.querySelector('.message-content');
+                    if (contentSpan) {
+                        contentSpan.textContent = updatedMessage.content;
+                    } else {
+                        textEl.textContent = updatedMessage.content;
+                    }
+
+                    let editedBadge = textEl.querySelector('.edited-badge');
+                    if (!editedBadge) {
+                        editedBadge = document.createElement('small');
+                        editedBadge.className = 'text-muted ms-1 edited-badge';
+                        editedBadge.style.fontSize = '0.7rem';
+                        editedBadge.textContent = '(edited)';
+                        textEl.appendChild(editedBadge);
                     }
                 }
             }
         });
+
+        // FIX 3: Updated MessageDeleted handler to properly remove dropdown menu
         connection.on("MessageDeleted", (messageId) => {
             const msgEl = document.querySelector(`[data-message-id="${messageId}"]`);
             if (msgEl) {
-                const textEl = msgEl.querySelector('.message-text') || msgEl.querySelector('p');
+                const textEl = msgEl.querySelector('.message-text');
                 if (textEl) {
                     textEl.innerHTML = '<span class="text-muted fst-italic">[Message deleted]</span>';
                 }
-                const actionsEl = msgEl.querySelector('.message-actions');
-                if (actionsEl) actionsEl.remove();
+                const optionsMenu = msgEl.querySelector('.message-options-container');
+                if (optionsMenu) optionsMenu.remove();
             }
         });
 
@@ -84,6 +95,7 @@
             .catch(err => console.error("SignalR connection error:", err));
 
         setupMessageInputToggle();
+        setupDropdownClickOutside();
 
         const micBtn = document.getElementById('micButton');
         if (micBtn) {
@@ -91,6 +103,18 @@
         }
         showTab('students');
     }
+
+    // FIX 3: Close dropdown when clicking outside
+    function setupDropdownClickOutside() {
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.message-options-container')) {
+                document.querySelectorAll('.message-options-menu.show').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+            }
+        });
+    }
+
     function updatePresenceUi(userId, isOnline, lastSeenAt) {
         document.querySelectorAll(`.chat-list-item[data-user-id="${userId}"] .online-dot`)
             .forEach(dot => dot.style.display = isOnline ? 'block' : 'none');
@@ -102,7 +126,6 @@
         }
     }
 
-    // Fresh render hone ke baad cached online state ko dobara dots par apply karta hai
     function applyPresenceToList() {
         document.querySelectorAll('.chat-list-item[data-user-id]').forEach(item => {
             const uid = item.dataset.userId;
@@ -110,6 +133,7 @@
             if (dot) dot.style.display = onlineUserIds.has(uid) ? 'block' : 'none';
         });
     }
+
     function showTab(tab) {
         const isStudents = tab === 'students';
         document.getElementById('listStudents').style.display = isStudents ? 'block' : 'none';
@@ -313,32 +337,32 @@
         const container = document.getElementById('listStudents');
         if (replace) container.innerHTML = '';
 
-    chats.forEach(chat => {
-        const item = document.createElement('div');
-        item.className = 'chat-list-item';
-        item.dataset.userId = chat.studentId;
-        item.onclick = () => openComplaintChat(chat.complaintId, chat.studentName, chat.studentId, chat.title);
+        chats.forEach(chat => {
+            const item = document.createElement('div');
+            item.className = 'chat-list-item';
+            item.dataset.userId = chat.studentId;
+            item.onclick = () => openComplaintChat(chat.complaintId, chat.studentName, chat.studentId, chat.title);
 
-        item.innerHTML = `
-        <div class="chat-avatar-small">
-            ${chat.isSupportTeamView ? '' : '<span class="online-dot"></span>'}
-        </div>
-        <div style="flex:1; min-width:0;">
-            <div class="chat-list-row-top">
-                <span class="chat-list-name">${escapeHtml(chat.title)}</span>
-                <span class="chat-list-time">${formatTime(chat.lastMessageAt)}</span>
+            item.innerHTML = `
+            <div class="chat-avatar-small">
+                ${chat.isSupportTeamView ? '' : '<span class="online-dot"></span>'}
             </div>
-            <div class="chat-list-preview">
-                <span class="status-pill status-${chat.status}">${escapeHtml(chat.status)}</span>
-                ${escapeHtml(chat.lastMessagePreview || chat.studentName)}
+            <div style="flex:1; min-width:0;">
+                <div class="chat-list-row-top">
+                    <span class="chat-list-name">${escapeHtml(chat.title)}</span>
+                    <span class="chat-list-time">${formatTime(chat.lastMessageAt)}</span>
+                </div>
+                <div class="chat-list-preview">
+                    <span class="status-pill status-${chat.status}">${escapeHtml(chat.status)}</span>
+                    ${escapeHtml(chat.lastMessagePreview || chat.studentName)}
+                </div>
             </div>
-        </div>
-    ${chat.unreadCount > 0 ? `<div class="unread-badge">${chat.unreadCount}</div>` : ''}
-`;
-        container.appendChild(item);
-    });
+            ${chat.unreadCount > 0 ? `<div class="unread-badge">${chat.unreadCount}</div>` : ''}
+            `;
+            container.appendChild(item);
+        });
         applyPresenceToList();
-}
+    }
 
     function renderTeamList(chats, replace = true) {
         const container = document.getElementById('listStaff');
@@ -443,7 +467,6 @@
             return;
         }
 
-        // Pehle jo humein pata hai wahi turant dikhao (flash of wrong status na ho)
         if (onlineUserIds.has(userId)) {
             document.getElementById('chatStatus').textContent = 'online';
         } else {
@@ -453,10 +476,9 @@
                 : 'offline';
         }
 
-        // Phir server se authoritative/live status confirm kar lo
         connection.invoke("GetUserPresence", userId)
             .then(presence => {
-                if (currentOtherUserId !== userId) return; // user ne is dauran chat badal li ho
+                if (currentOtherUserId !== userId) return;
                 if (presence.isOnline) {
                     onlineUserIds.add(userId);
                     document.getElementById('chatStatus').textContent = 'online';
@@ -475,6 +497,7 @@
         document.getElementById('infoPanel').style.display = 'none';
     }
 
+    // FIX 3 (Merged): Shared function to build chat bubbles with dropdowns
     function buildMessageBubble(m, index, totalCount, currentUserId, isAdmin) {
         const isOutgoing = m.senderId === currentUserId;
         const canEditDelete = isOutgoing || isAdmin;
@@ -499,21 +522,38 @@
         let contentHtml = escapeHtml(m.content || '');
         let editBadgeHtml = m.isEdited ? '<small class="text-muted ms-1 edited-badge" style="font-size: 0.7rem;">(edited)</small>' : '';
 
-        let actionsHtml = '';
+        // FIX 3: WhatsApp-style dropdown menu instead of inline buttons
+        let optionsHtml = '';
         if (canEditDelete && !m.deletedAt) {
-            actionsHtml = `
-            <div class="message-actions" style="margin-top: 4px; display: flex; gap: 6px;">
-                <button type="button" class="btn btn-sm btn-outline-secondary" style="font-size: 0.75rem; padding: 2px 6px;" onclick="ChatWorkspace.editMessage(${m.id}, ${currentChatId}, '${escapeHtml(m.content || '').replace(/'/g, "\\'")}')">
-                    <i class="bi bi-pencil"></i> Edit
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-danger" style="font-size: 0.75rem; padding: 2px 6px;" onclick="ChatWorkspace.deleteMessage(${m.id}, ${currentChatId})">
-                    <i class="bi bi-trash"></i> Delete
-                </button>
-            </div>
-        `;
+            const escapedContent = escapeHtml(m.content || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            optionsHtml = `
+                <div class="message-options-container">
+                    <button type="button" class="message-options-btn" onclick="ChatWorkspace.toggleMessageOptions(event, ${m.id})">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <div class="message-options-menu" id="options-${m.id}">
+                        <div class="message-option-item" onclick="ChatWorkspace.editMessage(${m.id}, ${currentChatId}, '${escapedContent}')">
+                            <i class="bi bi-pencil"></i>
+                            <span>Edit</span>
+                        </div>
+                        <div class="message-option-item message-option-delete" onclick="ChatWorkspace.deleteMessage(${m.id}, ${currentChatId})">
+                            <i class="bi bi-trash"></i>
+                            <span>Delete</span>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
-        let messageContent = `<p class="message-text mb-0">${contentHtml}${editBadgeHtml}</p>${actionsHtml}`;
+        let messageContent = `
+            <div class="message-text-wrapper">
+                <p class="message-text mb-0">
+                    <span class="message-content">${contentHtml}</span>${editBadgeHtml}
+                </p>
+                ${optionsHtml}
+            </div>
+        `;
+
         if (m.deletedAt) {
             messageContent = `<p class="message-text mb-0"><span class="text-muted fst-italic">[Message deleted]</span></p>`;
         }
@@ -522,6 +562,22 @@
         return bubble;
     }
 
+    // FIX 3: Toggle dropdown menu
+    function toggleMessageOptions(event, messageId) {
+        event.stopPropagation();
+        const menu = document.getElementById(`options-${messageId}`);
+        const wasShown = menu.classList.contains('show');
+
+        // Close all other open menus
+        document.querySelectorAll('.message-options-menu.show').forEach(m => {
+            m.classList.remove('show');
+        });
+
+        // Toggle this menu
+        if (!wasShown) {
+            menu.classList.add('show');
+        }
+    }
 
     function renderMessages(messages, isInternal) {
         const currentUserId = document.body.dataset.currentUserId;
@@ -590,37 +646,39 @@
                 isLoadingOlderMessages = false;
             });
     }
+
     function renderAttachment(attachment) {
-    if (attachment.fileType === 'Photo') {
-        return `<img src="${attachment.fileUrl}" class="attachment-media" alt="Photo" />`;
-    } else if (attachment.fileType === 'Video') {
-        return `<video controls class="attachment-media"><source src="${attachment.fileUrl}" type="video/mp4" /></video>`;
-    } else if (attachment.fileType === 'VoiceNote' || attachment.fileType === 'Audio' || attachment.fileUrl.match(/\.(webm|mp3|mp4|ogg|wav)$/i)) {
-        return `<audio controls class="attachment-media" style="min-width: 250px; max-width: 100%; margin-top: 8px;"><source src="${attachment.fileUrl}" /></audio>`;
+        if (attachment.fileType === 'Photo') {
+            return `<img src="${attachment.fileUrl}" class="attachment-media" alt="Photo" />`;
+        } else if (attachment.fileType === 'Video') {
+            return `<video controls class="attachment-media"><source src="${attachment.fileUrl}" type="video/mp4" /></video>`;
+        } else if (attachment.fileType === 'VoiceNote' || attachment.fileType === 'Audio' || attachment.fileUrl.match(/\.(webm|mp3|mp4|ogg|wav)$/i)) {
+            return `<audio controls class="attachment-media" style="min-width: 250px; max-width: 100%; margin-top: 8px;"><source src="${attachment.fileUrl}" /></audio>`;
+        }
+        return '';
     }
-    return '';
-}
 
     function toggleAttachMenu() {
         const menu = document.getElementById('attachMenu');
         menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
     }
-    document.addEventListener('click', (e) => {
-    const menu = document.getElementById('attachMenu');
-    const attachBtn = document.getElementById('attachButton');
-    if (!menu || menu.style.display === 'none') return;
 
-    if (!menu.contains(e.target) && e.target !== attachBtn && !attachBtn.contains(e.target)) {
-        menu.style.display = 'none';
-    }
-});
+    document.addEventListener('click', (e) => {
+        const menu = document.getElementById('attachMenu');
+        const attachBtn = document.getElementById('attachButton');
+        if (!menu || menu.style.display === 'none') return;
+
+        if (!menu.contains(e.target) && e.target !== attachBtn && !attachBtn.contains(e.target)) {
+            menu.style.display = 'none';
+        }
+    });
 
     function handleFileSelected(inputEl, fileType) {
         const file = inputEl.files[0];
         if (!file) return;
 
         uploadAttachment(file, fileType);
-        inputEl.value = ''; // reset, so that same file can not be selected in future
+        inputEl.value = '';
         document.getElementById('attachMenu').style.display = 'none';
     }
 
@@ -647,7 +705,7 @@
         if (currentChatType === 'complaint') {
             url = `/api/v1/complaints/${currentChatId}/attachments`;
         } else {
-            url = `/InternalChat/UploadAttachment?conversationId=${currentChatId}`;   // new route internal-chat ke liye
+            url = `/InternalChat/UploadAttachment?conversationId=${currentChatId}`;
         }
 
         fetch(url, { method: 'POST', body: formData })
@@ -655,7 +713,6 @@
                 if (!res.ok) {
                     console.error('Attachment upload failed, status:', res.status);
                 }
-                // SignalR ka "ReceiveInternalMessage" event khud message add kar dega  koi manual-render nahi chahiye
             })
             .catch(err => console.error('Attachment upload error:', err));
     }
@@ -664,32 +721,40 @@
         const input = document.getElementById('messageInput');
         if (!input) return;
 
-        input.addEventListener('input', () => {
-            const hasText = input.value.trim().length > 0;
+        const sendBtn = document.getElementById('sendButton');
+        const micBtn = document.getElementById('micButton');
 
-            // Check if user role allows voice recording
+        function syncInputButtons() {
+            const hasText = input.value.trim().length > 0;
             const userRole = document.body.dataset.userRole;
             const canRecord = userRole === 'Admin' || userRole === 'Staff';
 
-            // Show mic button only if user can record AND no text input
-            const micBtn = document.getElementById('micButton');
             if (micBtn && canRecord) {
                 micBtn.style.display = hasText ? 'none' : 'flex';
             } else if (micBtn) {
                 micBtn.style.display = 'none';
             }
 
-            document.getElementById('sendButton').style.display = hasText ? 'flex' : 'none';
+            if (sendBtn) {
+                sendBtn.style.display = hasText ? 'flex' : 'none';
+            }
+        }
 
-            // Notify typing
+        syncInputButtons();
+
+        input.addEventListener('input', () => {
+            syncInputButtons();
             notifyTyping();
         });
+
+        input.addEventListener('keyup', syncInputButtons);
+        input.addEventListener('paste', () => setTimeout(syncInputButtons, 10));
+        input.addEventListener('cut', () => setTimeout(syncInputButtons, 10));
 
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
-                // Stop typing indicator after send
                 if (currentChatId) {
                     connection.invoke("UserStoppedTyping", currentChatId).catch(err => console.error(err));
                 }
@@ -700,15 +765,12 @@
     function notifyTyping() {
         if (!currentChatId) return;
 
-        // Send typing started on first keystroke
         if (!typingTimeout) {
             connection.invoke("UserStartedTyping", currentChatId).catch(err => console.error(err));
         }
 
-        // Clear existing timeout
         clearTimeout(typingTimeout);
 
-        // Set new timeout to notify typing stopped after 1.5 seconds of inactivity
         typingTimeout = setTimeout(() => {
             connection.invoke("UserStoppedTyping", currentChatId).catch(err => console.error(err));
             typingTimeout = null;
@@ -719,21 +781,14 @@
         const indicator = document.getElementById('typingIndicator');
         if (!indicator) return;
 
-        // Clear existing timeout for this user if any
         if (typingUsers.has(userName)) {
             clearTimeout(typingUsers.get(userName));
         }
 
-        // Add user to typing set
         typingUsers.set(userName, null);
-
-        // Update display
         updateTypingDisplay();
-
-        // Show indicator
         indicator.style.display = 'block';
 
-        // Set auto-hide timeout (3 seconds) in case we don't get UserTyping(false) event
         const timeout = setTimeout(() => {
             typingUsers.delete(userName);
             updateTypingDisplay();
@@ -774,15 +829,13 @@
             appendIncomingMessage(message);
 
             const currentUserId = document.body.dataset.currentUserId;
-            // Sirf doosre banday ka message "read" karo - apna hi wapas aaya
-            // hua message dobara "read" mat karo, warna apna hi last-sent
-            // message turant "seen" ban jata hai (asal bug yehi tha).
             if (message.senderId !== currentUserId) {
                 connection.invoke("MarkAsRead", currentChatId).catch(err => console.error(err));
             }
         }
         loadStudentChats();
     }
+
     function onInternalMessageReceived(message) {
         if (currentChatType === 'internal' && message.conversationId === currentChatId) {
             appendIncomingMessage(message);
@@ -796,8 +849,10 @@
     }
 
     function appendIncomingMessage(message) {
-    const currentUserId = document.body.dataset.currentUserId;
-    const isOutgoing = message.senderId === currentUserId;
+        const currentUserId = document.body.dataset.currentUserId;
+        const userRole = document.body.dataset.userRole;
+        const isAdmin = userRole === 'Admin';
+        const isOutgoing = message.senderId === currentUserId;
         const body = document.getElementById('chatBody');
 
         const allLabels = body.querySelectorAll('.chat-bubble.outgoing .tick-label');
@@ -805,14 +860,14 @@
             allLabels[allLabels.length - 1].remove();
         }
 
-    const bubble = document.createElement('div');
-    bubble.className = `chat-bubble ${isOutgoing ? 'outgoing' : 'incoming'}`;
-    bubble.dataset.messageId = message.id;
+        const bubble = document.createElement('div');
+        bubble.className = `chat-bubble ${isOutgoing ? 'outgoing' : 'incoming'}`;
+        bubble.dataset.messageId = message.id;
 
-    let attachmentsHtml = '';
-    if (message.attachments && message.attachments.length > 0) {
-        attachmentsHtml = message.attachments.map(renderAttachment).join('');
-    }
+        let attachmentsHtml = '';
+        if (message.attachments && message.attachments.length > 0) {
+            attachmentsHtml = message.attachments.map(renderAttachment).join('');
+        }
 
         let ticksHtml = '';
         if (isOutgoing) {
@@ -821,18 +876,50 @@
             ticksHtml = `<div class="chat-bubble-ticks ${seen ? 'seen' : ''}"><i class="bi ${icon}"></i><span class="tick-label">${seen ? 'seen' : 'sent'}</span></div>`;
         }
 
-        bubble.innerHTML = `${attachmentsHtml}${escapeHtml(message.content || '')}${ticksHtml}`;
-    body.appendChild(bubble);
-    body.scrollTop = body.scrollHeight;
-    if (window.voicePlayer) voicePlayer.setup();
-}
+        const canEditDelete = isOutgoing || isAdmin;
+        let optionsHtml = '';
+        if (canEditDelete && !message.deletedAt) {
+            const escapedContent = escapeHtml(message.content || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            optionsHtml = `
+                <div class="message-options-container">
+                    <button type="button" class="message-options-btn" onclick="ChatWorkspace.toggleMessageOptions(event, ${message.id})">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <div class="message-options-menu" id="options-${message.id}">
+                        <div class="message-option-item" onclick="ChatWorkspace.editMessage(${message.id}, ${currentChatId}, '${escapedContent}')">
+                            <i class="bi bi-pencil"></i>
+                            <span>Edit</span>
+                        </div>
+                        <div class="message-option-item message-option-delete" onclick="ChatWorkspace.deleteMessage(${message.id}, ${currentChatId})">
+                            <i class="bi bi-trash"></i>
+                            <span>Delete</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        let messageContent = `
+            <div class="message-text-wrapper">
+                <p class="message-text mb-0">
+                    <span class="message-content">${escapeHtml(message.content || '')}</span>
+                </p>
+                ${optionsHtml}
+            </div>
+        `;
+
+        if (message.deletedAt) {
+            messageContent = `<p class="message-text mb-0"><span class="text-muted fst-italic">[Message deleted]</span></p>`;
+        }
+
+        bubble.innerHTML = `${attachmentsHtml}${messageContent}${ticksHtml}`;
+        body.appendChild(bubble);
+        body.scrollTop = body.scrollHeight;
+        if (window.voicePlayer) voicePlayer.setup();
+    }
 
     function onComplaintMessagesRead(complaintId, readByUserId) {
         const currentUserId = document.body.dataset.currentUserId;
-        // Sirf tab "seen" mark karo jab DOOSRI party ne padha ho - khud
-        // apne hi chat re-open karne se MarkAsRead trigger hota hai aur
-        // wahi event wapas humein bhi mil jata hai, jisse apna hi abhi
-        // bheja hua message galat tarah se "seen" ban jata tha.
         if (currentChatType === 'complaint' && complaintId === currentChatId && readByUserId !== currentUserId) {
             markVisibleBubblesSeen();
         }
@@ -850,7 +937,6 @@
             .then(result => {
                 if (currentChatType !== 'internal' || currentChatId !== conversationId) return;
 
-                // GetMessagesPaged items newest-first deta hai, ascending order mein wapis karo
                 const messages = (result.items || []).slice().reverse();
                 const currentUserId = document.body.dataset.currentUserId;
                 const lastMessage = messages[messages.length - 1];
@@ -877,15 +963,11 @@
     function markVisibleBubblesSeen() {
         const allTicks = document.querySelectorAll('.chat-bubble.outgoing .chat-bubble-ticks');
 
-        // Sab outgoing messages ka icon double-tick ho jayega (sab padh liye gaye)
         allTicks.forEach(el => {
             el.classList.add('seen');
             el.innerHTML = '<i class="bi bi-check2-all"></i>';
         });
 
-        // "seen" word sirf tab lagega jab POORI CHAT ka sabse aakhri message
-        // (incoming ya outgoing, dono mila kar) khud outgoing ho - warna label
-        // kisi purani (ab last na rahi) outgoing bubble pe wapas chipak jata tha.
         const body = document.getElementById('chatBody');
         const allBubbles = body.querySelectorAll('.chat-bubble');
         const lastBubble = allBubbles[allBubbles.length - 1];
@@ -957,6 +1039,7 @@
             })
             .catch(err => console.error("Failed to start conversation:", err));
     }
+
     function formatTime(dateStr) {
         if (!dateStr) return '';
         const date = new Date(dateStr);
@@ -979,10 +1062,9 @@
         }
     }
 
-
-function setInfoPanelLoading() {
-    document.getElementById('infoPanel').innerHTML = `<div class="chat-info-panel-field">Loading...</div>`;
-}
+    function setInfoPanelLoading() {
+        document.getElementById('infoPanel').innerHTML = `<div class="chat-info-panel-field">Loading...</div>`;
+    }
 
     function renderInfoPanel(details) {
         const canChangeStatus = document.body.dataset.canChangeStatus === 'true';
@@ -996,22 +1078,46 @@ function setInfoPanelLoading() {
 </select>`
             : `<span class="status-pill status-${details.status}">${escapeHtml(details.status)}</span>`;
 
+        let complaintFieldsHtml = `
+            <div class="chat-info-panel-field">
+                <div class="chat-info-panel-label">Title</div>
+                <div class="chat-info-panel-value">${escapeHtml(details.title)}</div>
+            </div>
+            <div class="chat-info-panel-field">
+                <div class="chat-info-panel-label">Description</div>
+                <div class="chat-info-panel-value" style="color:#6c757d;">${escapeHtml(details.description || 'No description provided')}</div>
+            </div>
+            <div class="chat-info-panel-field">
+                <div class="chat-info-panel-label">Category</div>
+                <div class="chat-info-panel-value">${escapeHtml(details.category || 'N/A')}</div>
+            </div>
+            <div class="chat-info-panel-field">
+                <div class="chat-info-panel-label">Status</div>
+                ${statusFieldHtml}
+            </div>
+        `;
+
+        let studentInfoHtml = '';
+        if (details.studentInfo && Object.keys(details.studentInfo).length > 0) {
+            studentInfoHtml = '<div class="chat-info-panel-divider"></div>';
+            studentInfoHtml += '<div class="chat-info-panel-title" style="font-size: 14px; margin-top: 16px; margin-bottom: 12px;">Student Information</div>';
+
+            for (const [key, value] of Object.entries(details.studentInfo)) {
+                studentInfoHtml += `
+                    <div class="chat-info-panel-field">
+                        <div class="chat-info-panel-label">${escapeHtml(key)}</div>
+                        <div class="chat-info-panel-value">${escapeHtml(value)}</div>
+                    </div>
+                `;
+            }
+        }
+
         document.getElementById('infoPanel').innerHTML = `
-        <div class="chat-info-panel-title">Complaint details</div>
-        <div class="chat-info-panel-field">
-            <div class="chat-info-panel-label">Title</div>
-            <div class="chat-info-panel-value">${escapeHtml(details.title)}</div>
-        </div>
-        <div class="chat-info-panel-field">
-            <div class="chat-info-panel-label">Description</div>
-            <div class="chat-info-panel-value" style="color:#6c757d;">${escapeHtml(details.description || 'No description provided')}</div>
-        </div>
-        <div class="chat-info-panel-field">
-            <div class="chat-info-panel-label">Status</div>
-            ${statusFieldHtml}
-        </div>
-        ${canChangeStatus ? '<button class="btn btn-sm btn-primary" onclick="ChatWorkspace.updateStatus()">Update Status</button>' : ''}
-    `;
+            <div class="chat-info-panel-title">Complaint Details</div>
+            ${complaintFieldsHtml}
+            ${canChangeStatus ? '<button class="btn btn-sm btn-primary" onclick="ChatWorkspace.updateStatus()">Update Status</button>' : ''}
+            ${studentInfoHtml}
+        `;
         updateChatInputForStatus(details.status);
     }
 
@@ -1049,10 +1155,10 @@ function setInfoPanelLoading() {
             inputBar.style.display = 'flex';
         }
     }
-        function startRecording() {
+
+    function startRecording() {
         const userRole = document.body.dataset.userRole;
 
-        // Final authorization check (fail-safe)
         if (userRole !== 'Admin' && userRole !== 'Staff') {
             alert('Only Admin and Staff members can send voice messages.');
             return;
@@ -1081,7 +1187,6 @@ function setInfoPanelLoading() {
     }
 
     function cancelRecording() {
-        // For now, we'll stop and discard
         audioRecorder.stop()
             .then(() => {
                 resetRecordingUi();
@@ -1097,12 +1202,10 @@ function setInfoPanelLoading() {
             const recordingData = await audioRecorder.stop();
             resetRecordingUi();
 
-            // Show upload progress
             const micBtn = document.getElementById('micButton');
             micBtn.disabled = true;
             micBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
-            // Upload voice message using the new endpoint
             const messageDto = await audioRecorder.uploadVoiceMessage(currentChatId, recordingData.blob);
 
             console.log('Voice message sent successfully');
@@ -1116,45 +1219,68 @@ function setInfoPanelLoading() {
     }
 
     function resetRecordingUi() {
-        document.getElementById('messageInput').style.display = 'block';
-        document.getElementById('attachButton').style.display = 'flex';
-        document.getElementById('recordingBar').style.display = 'none';
-
+        const messageInput = document.getElementById('messageInput');
+        const attachButton = document.getElementById('attachButton');
+        const recordingBar = document.getElementById('recordingBar');
         const micBtn = document.getElementById('micButton');
-        micBtn.style.display = 'flex';
+        const sendBtn = document.getElementById('sendButton');
+
+        messageInput.style.display = 'block';
+        attachButton.style.display = 'flex';
+        recordingBar.style.display = 'none';
+
         micBtn.onclick = () => startRecording();
         micBtn.innerHTML = '<i class="bi bi-mic"></i>';
         micBtn.title = 'Record voice message';
         micBtn.disabled = false;
-    }
 
-function updateStatus() {
-    const select = document.getElementById('statusSelect');
-    const newStatus = select.value;
-    if (newStatus === 'Closed' && !confirm('Are you sure you want to close this complaint? The chat will become read-only while it stays closed.')) {
-        select.value = currentComplaintStatus || select.value;
-        return;
-    }
-    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        const userRole = document.body.dataset.userRole;
+        const canRecord = userRole === 'Admin' || userRole === 'Staff';
+        const hasText = messageInput.value.trim().length > 0;
 
-    fetch('/Complaint/UpdateStatus', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: `id=${currentChatId}&newStatus=${newStatus}&__RequestVerificationToken=${encodeURIComponent(token)}`
-    })
-        .then(res => {
-            if (res.ok) {
-                updateChatInputForStatus(newStatus);
-                loadStudentChats();
-            } else {
-                console.error('Failed to update status, HTTP status:', res.status);
+        if (hasText) {
+            sendBtn.style.display = 'flex';
+            if (canRecord) {
+                micBtn.style.display = 'none';
             }
+        } else {
+            sendBtn.style.display = 'none';
+            if (canRecord) {
+                micBtn.style.display = 'flex';
+            } else {
+                micBtn.style.display = 'none';
+            }
+        }
+    }
+
+    function updateStatus() {
+        const select = document.getElementById('statusSelect');
+        const newStatus = select.value;
+        if (newStatus === 'Closed' && !confirm('Are you sure you want to close this complaint? The chat will become read-only while it stays closed.')) {
+            select.value = currentComplaintStatus || select.value;
+            return;
+        }
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+        fetch('/Complaint/UpdateStatus', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: `id=${currentChatId}&newStatus=${newStatus}&__RequestVerificationToken=${encodeURIComponent(token)}`
         })
-        .catch(err => console.error(err));
-}
+            .then(res => {
+                if (res.ok) {
+                    updateChatInputForStatus(newStatus);
+                    loadStudentChats();
+                } else {
+                    console.error('Failed to update status, HTTP status:', res.status);
+                }
+            })
+            .catch(err => console.error(err));
+    }
+
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
@@ -1213,5 +1339,25 @@ function updateStatus() {
 
     document.addEventListener('DOMContentLoaded', init);
 
-    return { showTab, sendMessage, toggleInfo, updateStatus, toggleAttachMenu, handleFileSelected, startRecording, cancelRecording, openNewChatPicker, closeNewChatPicker, editMessage, deleteMessage, selectCategoryChip, toggleFilterPopover, selectStatusOption, toggleUnreadSwitch, clearStatusFilter, clearUnreadFilter };
+    return {
+        showTab,
+        sendMessage,
+        toggleInfo,
+        updateStatus,
+        toggleAttachMenu,
+        handleFileSelected,
+        startRecording,
+        cancelRecording,
+        openNewChatPicker,
+        closeNewChatPicker,
+        editMessage,
+        deleteMessage,
+        toggleMessageOptions,
+        selectCategoryChip,
+        toggleFilterPopover,
+        selectStatusOption,
+        toggleUnreadSwitch,
+        clearStatusFilter,
+        clearUnreadFilter
+    };
 })();

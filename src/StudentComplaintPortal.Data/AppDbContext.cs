@@ -37,21 +37,22 @@ public class AppDbContext : IdentityDbContext<AppUser>
             entity.Property(e => e.Description).IsRequired().HasMaxLength(2000);
             entity.Property(e => e.Status).HasConversion<string>();
             entity.Property(e => e.Category).HasConversion<string>();
-            
+
             entity.HasOne(e => e.Student)
                 .WithMany(u => u.Complaints)
                 .HasForeignKey(e => e.StudentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasOne(e => e.AssignedCategory)
-            .WithMany(c => c.Complaints)
-            .HasForeignKey(e => e.CategoryId)
-            .OnDelete(DeleteBehavior.SetNull);
+            // NEW: Add relationship to Category table
+            entity.HasOne(e => e.CategoryEntity)
+                .WithMany(c => c.Complaints)
+                .HasForeignKey(e => e.CategoryId)
+                .OnDelete(DeleteBehavior.SetNull);  // Don when category is deleted
 
-            entity.HasIndex(e => e.CategoryId);
             entity.HasIndex(e => e.StudentId);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => e.CategoryId);  // Add index for performance
         });
 
         // Message configuration
@@ -86,7 +87,7 @@ public class AppDbContext : IdentityDbContext<AppUser>
             entity.HasKey(e => e.Id);
             entity.Property(e => e.FileUrl).IsRequired().HasMaxLength(500);
             entity.Property(e => e.FileType).HasConversion<string>();
-            
+
             entity.HasOne(e => e.Message)
                 .WithMany(m => m.Attachments)
                 .HasForeignKey(e => e.MessageId)
@@ -100,7 +101,7 @@ public class AppDbContext : IdentityDbContext<AppUser>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Message).IsRequired().HasMaxLength(500);
-            
+
             entity.HasOne(e => e.User)
                 .WithMany(u => u.Notifications)
                 .HasForeignKey(e => e.UserId)
