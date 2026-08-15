@@ -1,8 +1,8 @@
-﻿using StudentComplaintPortal.Application.DTOs;
-using StudentComplaintPortal.Application.ServiceHelper;
+﻿using Microsoft.EntityFrameworkCore;
 using StudentComplaintPortal.Application.DTOs;
 using StudentComplaintPortal.Application.ServiceHelper;
 using StudentComplaintPortal.Application.Services.FileStorage;
+using StudentComplaintPortal.Data;
 using StudentComplaintPortal.Data.Repositories;
 using StudentComplaintPortal.Domain.Entities;
 using StudentComplaintPortal.Domain.Enums;
@@ -19,7 +19,8 @@ public class ConversationService : IConversationService
     // dabne se 2 log ek sath duplicate conversation na bana sakein.
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, SemaphoreSlim> _directConversationLocks = new();
 
-public ConversationService(
+
+    public ConversationService(
     IUnitOfWork unitOfWork, 
     AppDbContext dbContext, 
     IFileStorageService fileStorageService)

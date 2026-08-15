@@ -1,9 +1,9 @@
 ﻿using StudentComplaintPortal.Application.DTOs;
 using StudentComplaintPortal.Application.Exceptions;
+using StudentComplaintPortal.Application.ServiceHelper;
 using StudentComplaintPortal.Data.Repositories;
 using StudentComplaintPortal.Domain.Entities;
 using StudentComplaintPortal.Domain.Enums;
-using StudentComplaintPortal.Application.ServiceHelper;
 
 namespace StudentComplaintPortal.Application.Services;
 
@@ -20,11 +20,24 @@ public class ComplaintService : IComplaintService
 
     public async Task<ComplaintDto> CreateComplaintAsync(string studentId, CreateComplaintDto dto)
     {
+        // Map category name string to enum
+        ComplaintCategory categoryEnum;
+        if (!Enum.TryParse<ComplaintCategory>(dto.Category, ignoreCase: true, out categoryEnum))
+        {
+            categoryEnum = ComplaintCategory.Other;
+        }
+
+        // NEW: Fetch active categories via repository and find the matching ID
+        var activeCategories = await _unitOfWork.Categories.GetAllActiveWithDetailsAsync();
+        var categoryEntity = activeCategories.FirstOrDefault(c =>
+            c.Name.Equals(dto.Category, StringComparison.OrdinalIgnoreCase));
+
         var complaint = new Complaint
         {
             Title = dto.Title,
             Description = dto.Description,
-            Category = dto.Category,
+            Category = categoryEnum,
+            CategoryId = categoryEntity?.Id,
             Status = ComplaintStatus.Open,
             StudentId = studentId,
             CreatedAt = DateTime.UtcNow,
@@ -67,7 +80,7 @@ public class ComplaintService : IComplaintService
     public async Task<ComplaintDto> UpdateStatusAsync(int id, ComplaintStatus newStatus)
     {
         var complaint = await _unitOfWork.Complaints.GetByIdAsync(id);
-        
+
         if (complaint == null)
         {
             throw new NotFoundException($"Complaint with ID {id} not found.");
@@ -83,7 +96,7 @@ public class ComplaintService : IComplaintService
         var oldStatus = complaint.Status;
         complaint.Status = newStatus;
         complaint.UpdatedAt = DateTime.UtcNow;
-        
+
         _unitOfWork.Complaints.Update(complaint);
         await _unitOfWork.SaveChangesAsync();
 

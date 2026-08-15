@@ -8,4 +8,6 @@ public interface ICategoryService
     Task<CategoryDto?> GetCategoryByIdAsync(int id);
     Task<CategoryDto> CreateCategoryAsync(CreateCategoryDto dto);
     Task<IEnumerable<CategoryDto>> GetCategoriesForStaffAsync(string staffUserId);
+
+    Task<IEnumerable<CategoryListItemDto>> GetActiveCategoriesForDropdownAsync();
 }

@@ -1,4 +1,6 @@
-﻿namespace StudentComplaintPortal.Data.Repositories;
+﻿using StudentComplaintPortal.Data;
+
+namespace StudentComplaintPortal.Data.Repositories;
 
 public interface IUnitOfWork : IDisposable
 {

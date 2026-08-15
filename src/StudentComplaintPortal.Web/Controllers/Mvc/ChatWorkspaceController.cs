@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using StudentComplaintPortal.Application.Services;
 using StudentComplaintPortal.Application.DTOs;
+using StudentComplaintPortal.Domain.Entities;
 using System.Security.Claims;
 
 namespace StudentComplaintPortal.Web.Controllers.Mvc;
@@ -12,15 +14,18 @@ public class ChatWorkspaceController : Controller
     private readonly IComplaintService _complaintService;
     private readonly IMessageService _messageService;
     private readonly IConversationService _conversationService;
+    private readonly UserManager<AppUser> _userManager;
 
     public ChatWorkspaceController(
         IComplaintService complaintService,
         IMessageService messageService,
-        IConversationService conversationService)
+        IConversationService conversationService,
+        UserManager<AppUser> userManager)
     {
         _complaintService = complaintService;
         _messageService = messageService;
         _conversationService = conversationService;
+        _userManager = userManager;
     }
 
    
@@ -96,11 +101,35 @@ public class ChatWorkspaceController : Controller
         var complaint = await _complaintService.GetByIdAsync(complaintId);
         if (complaint == null) return NotFound();
 
+        // FIX 4: Fetch comprehensive student details dynamically
+        var student = await _userManager.FindByIdAsync(complaint.StudentId);
+
+        // Build dynamic student info object
+        var studentInfo = new Dictionary<string, string>();
+        if (student != null)
+        {
+            studentInfo["Name"] = student.FullName ?? "N/A";
+            studentInfo["Email"] = student.Email ?? "N/A";
+
+            // Add phone number if available
+            if (!string.IsNullOrEmpty(student.PhoneNumber))
+            {
+                studentInfo["Phone"] = student.PhoneNumber;
+            }
+
+            // Add account created date
+            studentInfo["Member Since"] = student.CreatedAt.ToString("MMM dd, yyyy");
+        }
+
         return Json(new
         {
             title = complaint.Title,
             status = complaint.Status,
-            description = complaint.Description
+            description = complaint.Description,
+            category = complaint.Category,
+            createdAt = complaint.CreatedAt,
+            updatedAt = complaint.UpdatedAt,
+            studentInfo = studentInfo  // FIX 4: Dynamic student information
         });
     }
 }
