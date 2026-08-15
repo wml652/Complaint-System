@@ -14,7 +14,12 @@ public class Complaint
     public DateTime UpdatedAt { get; set; }
     public DateTime? LastMessageAt { get; set; }
 
+    // New dynamic category (Categories table) - separate from the legacy ComplaintCategory enum above.
+    // Named AssignedCategory to avoid clashing with the existing 'Category' enum property.
+    public int? CategoryId { get; set; }
+
     // Navigation properties
     public AppUser Student { get; set; } = null!;
     public ICollection<Message> Messages { get; set; } = new List<Message>();
+    public Category? AssignedCategory { get; set; }
 }

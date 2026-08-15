@@ -43,6 +43,12 @@ public class AppDbContext : IdentityDbContext<AppUser>
                 .HasForeignKey(e => e.StudentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            entity.HasOne(e => e.AssignedCategory)
+            .WithMany(c => c.Complaints)
+            .HasForeignKey(e => e.CategoryId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(e => e.CategoryId);
             entity.HasIndex(e => e.StudentId);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.CreatedAt);

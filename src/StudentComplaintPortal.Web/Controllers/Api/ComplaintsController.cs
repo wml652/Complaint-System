@@ -70,6 +70,21 @@ public class ComplaintsController : ControllerBase
         return Ok(complaint);
     }
 
+    [HttpGet("paged")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetAllComplaintsPaged(
+    [FromQuery] int? categoryId,
+    [FromQuery] ComplaintStatus? status,
+    [FromQuery] bool unreadOnly = false,
+    [FromQuery] string? cursor = null,
+    [FromQuery] int pageSize = 20,
+    [FromQuery] bool moveForward = true)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var result = await _complaintService.GetFilteredPagedAsync(categoryId, status, unreadOnly, userId, null, cursor, pageSize, moveForward);
+        return Ok(result);
+    }
+
     [HttpPatch("{id}/status")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusRequest request)

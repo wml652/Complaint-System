@@ -790,15 +790,18 @@ namespace StudentComplaintPortal.Data.Migrations
 
             modelBuilder.Entity("StudentComplaintPortal.Domain.Entities.Complaint", b =>
                 {
-                    b.HasOne("StudentComplaintPortal.Domain.Entities.Category", null)
+                    b.HasOne("StudentComplaintPortal.Domain.Entities.Category", "AssignedCategory")
                         .WithMany("Complaints")
-                        .HasForeignKey("CategoryId");
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("StudentComplaintPortal.Domain.Entities.AppUser", "Student")
                         .WithMany("Complaints")
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("AssignedCategory");
 
                     b.Navigation("Student");
                 });

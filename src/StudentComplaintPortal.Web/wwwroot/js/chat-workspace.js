@@ -8,6 +8,9 @@
     let isLoadingOlderMessages = false;
     let studentChatsCursor = null;
     let teamChatsCursor = null;
+    let activeCategoryId = null;
+    let activeStatus = null;
+    let activeUnreadOnly = false;
     let isLoadingMoreStudentChats = false;
     let isLoadingMoreTeamChats = false;
 
@@ -113,6 +116,9 @@
         const listStaff = document.getElementById('listStaff');
         if (listStaff) listStaff.style.display = isStudents ? 'none' : 'block';
 
+        const filterbar = document.querySelector('.filterbar');
+        if (filterbar) filterbar.style.display = isStudents ? 'block' : 'none';
+
         const newChatFab = document.getElementById('newChatFab');
         if (newChatFab) newChatFab.style.display = isStudents ? 'none' : 'flex';
 
@@ -123,9 +129,18 @@
         if (isStudents) { loadStudentChats(); } else { loadTeamChats(); }
     }
 
+    function buildFilterQueryString() {
+        const params = new URLSearchParams();
+        if (activeCategoryId !== null) params.set('categoryId', activeCategoryId);
+        if (activeStatus !== null) params.set('status', activeStatus);
+        if (activeUnreadOnly) params.set('unreadOnly', 'true');
+        return params.toString();
+    }
+
     function loadStudentChats() {
         studentChatsCursor = null;
-        fetch('/ChatWorkspace/GetStudentChats')
+        const filterQs = buildFilterQueryString();
+        fetch(`/ChatWorkspace/GetStudentChats${filterQs ? '?' + filterQs : ''}`)
             .then(res => res.json())
             .then(data => {
                 renderStudentList(data.items, true);
@@ -139,7 +154,9 @@
     function loadMoreStudentChats() {
         if (!studentChatsCursor || isLoadingMoreStudentChats) return;
         isLoadingMoreStudentChats = true;
-        fetch(`/ChatWorkspace/GetStudentChats?cursor=${encodeURIComponent(studentChatsCursor)}`)
+        const filterQs = buildFilterQueryString();
+        const cursorParam = `cursor=${encodeURIComponent(studentChatsCursor)}`;
+        fetch(`/ChatWorkspace/GetStudentChats?${filterQs ? filterQs + '&' + cursorParam : cursorParam}`)
             .then(res => res.json())
             .then(data => {
                 renderStudentList(data.items, false);
@@ -147,6 +164,89 @@
             })
             .catch(err => console.error("Failed to load more student chats:", err))
             .finally(() => { isLoadingMoreStudentChats = false; });
+    }
+
+    function statusDisplayLabel(status) {
+        if (status === 'InProgress') return 'In Progress';
+        return status;
+    }
+
+    function selectCategoryChip(el, categoryId) {
+        document.querySelectorAll('#categoryChipRow .chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        activeCategoryId = categoryId;
+        loadStudentChats();
+    }
+
+    function toggleFilterPopover() {
+        const popover = document.getElementById('filterPopover');
+        if (popover) popover.classList.toggle('open');
+    }
+
+    function selectStatusOption(el, status) {
+        document.querySelectorAll('#filterPopover .status-opt').forEach(o => o.classList.remove('sel'));
+        el.classList.add('sel');
+        activeStatus = status;
+        document.getElementById('filterPopover').classList.remove('open');
+        renderActivePills();
+        updateFilterGearDot();
+        loadStudentChats();
+    }
+
+    function toggleUnreadSwitch() {
+        activeUnreadOnly = !activeUnreadOnly;
+        document.getElementById('unreadSwitch').classList.toggle('on', activeUnreadOnly);
+        renderActivePills();
+        updateFilterGearDot();
+        loadStudentChats();
+    }
+
+    function clearStatusFilter() {
+        activeStatus = null;
+        document.querySelectorAll('#filterPopover .status-opt').forEach(o => o.classList.remove('sel'));
+        document.querySelector('#filterPopover .status-opt').classList.add('sel');
+        renderActivePills();
+        updateFilterGearDot();
+        loadStudentChats();
+    }
+
+    function clearUnreadFilter() {
+        activeUnreadOnly = false;
+        const sw = document.getElementById('unreadSwitch');
+        if (sw) sw.classList.remove('on');
+        renderActivePills();
+        updateFilterGearDot();
+        loadStudentChats();
+    }
+
+    function renderActivePills() {
+        const row = document.getElementById('categoryChipRow');
+        if (!row) return;
+        row.querySelectorAll('.active-filter-chip').forEach(el => el.remove());
+
+        let anchor = row.querySelector('.chip');
+
+        if (activeStatus) {
+            const pill = document.createElement('div');
+            pill.className = 'chip active-filter-chip';
+            pill.innerHTML = `${statusDisplayLabel(activeStatus)} <span class="chip-x">×</span>`;
+            pill.querySelector('.chip-x').onclick = (e) => { e.stopPropagation(); clearStatusFilter(); };
+            anchor.insertAdjacentElement('afterend', pill);
+            anchor = pill;
+        }
+
+        if (activeUnreadOnly) {
+            const pill = document.createElement('div');
+            pill.className = 'chip active-filter-chip';
+            pill.innerHTML = `Unread <span class="chip-x">×</span>`;
+            pill.querySelector('.chip-x').onclick = (e) => { e.stopPropagation(); clearUnreadFilter(); };
+            anchor.insertAdjacentElement('afterend', pill);
+        }
+    }
+
+    function updateFilterGearDot() {
+        const icon = document.getElementById('filterGearIcon');
+        if (icon) icon.classList.toggle('on', !!activeStatus || activeUnreadOnly);
     }
 
     function setupStudentListScrollListener() {
@@ -1113,5 +1213,5 @@ function updateStatus() {
 
     document.addEventListener('DOMContentLoaded', init);
 
-    return { showTab, sendMessage, toggleInfo, updateStatus, toggleAttachMenu, handleFileSelected, startRecording, cancelRecording, openNewChatPicker, closeNewChatPicker, editMessage, deleteMessage };
+    return { showTab, sendMessage, toggleInfo, updateStatus, toggleAttachMenu, handleFileSelected, startRecording, cancelRecording, openNewChatPicker, closeNewChatPicker, editMessage, deleteMessage, selectCategoryChip, toggleFilterPopover, selectStatusOption, toggleUnreadSwitch, clearStatusFilter, clearUnreadFilter };
 })();
