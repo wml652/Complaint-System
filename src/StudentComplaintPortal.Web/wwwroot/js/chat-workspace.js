@@ -1,4 +1,4 @@
-﻿const ChatWorkspace = (function () {
+const ChatWorkspace = (function () {
     let connection = null;
     let currentChatType = null;   // "complaint" or "internal"
     let currentChatId = null;
@@ -37,31 +37,45 @@
             lastSeenCache.set(userId, lastSeenAt);
             updatePresenceUi(userId, false, lastSeenAt);
         });
+
+        // FIX 3: Updated MessageEdited handler to maintain dropdown UI
         connection.on("MessageEdited", (updatedMessage) => {
             const msgEl = document.querySelector(`[data-message-id="${updatedMessage.id}"]`);
             if (msgEl) {
-                const textEl = msgEl.querySelector('.message-text') || msgEl.querySelector('p');
+                const textEl = msgEl.querySelector('.message-text');
                 if (textEl) {
-                    textEl.textContent = updatedMessage.content;
-                    if (!textEl.querySelector('.edited-badge')) {
-                        const badge = document.createElement('small');
-                        badge.className = 'text-muted ms-1 edited-badge';
-                        badge.style.fontSize = '0.7rem';
-                        badge.textContent = '(edited)';
-                        textEl.appendChild(badge);
+                    // Update content while preserving dropdown structure
+                    const contentSpan = textEl.querySelector('.message-content');
+                    if (contentSpan) {
+                        contentSpan.textContent = updatedMessage.content;
+                    } else {
+                        textEl.textContent = updatedMessage.content;
+                    }
+
+                    // Add or update edited badge
+                    let editedBadge = textEl.querySelector('.edited-badge');
+                    if (!editedBadge) {
+                        editedBadge = document.createElement('small');
+                        editedBadge.className = 'text-muted ms-1 edited-badge';
+                        editedBadge.style.fontSize = '0.7rem';
+                        editedBadge.textContent = '(edited)';
+                        textEl.appendChild(editedBadge);
                     }
                 }
             }
         });
+
+        // FIX 3: Updated MessageDeleted handler to properly remove dropdown menu
         connection.on("MessageDeleted", (messageId) => {
             const msgEl = document.querySelector(`[data-message-id="${messageId}"]`);
             if (msgEl) {
-                const textEl = msgEl.querySelector('.message-text') || msgEl.querySelector('p');
+                const textEl = msgEl.querySelector('.message-text');
                 if (textEl) {
                     textEl.innerHTML = '<span class="text-muted fst-italic">[Message deleted]</span>';
                 }
-                const actionsEl = msgEl.querySelector('.message-actions');
-                if (actionsEl) actionsEl.remove();
+                // Remove the entire message options dropdown container
+                const optionsMenu = msgEl.querySelector('.message-options-container');
+                if (optionsMenu) optionsMenu.remove();
             }
         });
 
@@ -75,6 +89,7 @@
             .catch(err => console.error("SignalR connection error:", err));
 
         setupMessageInputToggle();
+        setupDropdownClickOutside();
 
         const micBtn = document.getElementById('micButton');
         if (micBtn) {
@@ -82,6 +97,18 @@
         }
         showTab('students');
     }
+
+    // FIX 3: Close dropdown when clicking outside
+    function setupDropdownClickOutside() {
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.message-options-container')) {
+                document.querySelectorAll('.message-options-menu.show').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+            }
+        });
+    }
+
     function updatePresenceUi(userId, isOnline, lastSeenAt) {
         document.querySelectorAll(`.chat-list-item[data-user-id="${userId}"] .online-dot`)
             .forEach(dot => dot.style.display = isOnline ? 'block' : 'none');
@@ -101,6 +128,7 @@
             if (dot) dot.style.display = onlineUserIds.has(uid) ? 'block' : 'none';
         });
     }
+
     function showTab(tab) {
         const isStudents = tab === 'students';
         document.getElementById('listStudents').style.display = isStudents ? 'block' : 'none';
@@ -304,63 +332,98 @@
         document.getElementById('infoPanel').style.display = 'none';
     }
 
+    // FIX 3: Completely rewritten renderMessages with WhatsApp-style dropdown
     function renderMessages(messages, isInternal) {
-    const currentUserId = document.body.dataset.currentUserId;
-    const userRole = document.body.dataset.userRole;
-    const isAdmin = userRole === 'Admin';
-    const body = document.getElementById('chatBody');
-    body.innerHTML = '';
+        const currentUserId = document.body.dataset.currentUserId;
+        const userRole = document.body.dataset.userRole;
+        const isAdmin = userRole === 'Admin';
+        const body = document.getElementById('chatBody');
+        body.innerHTML = '';
 
-    messages.forEach((m, index) => {
-        const isOutgoing = m.senderId === currentUserId;
-        const canEditDelete = isOutgoing || isAdmin;
-        const bubble = document.createElement('div');
-        bubble.className = `chat-bubble ${isOutgoing ? 'outgoing' : 'incoming'}`;
-        bubble.dataset.messageId = m.id;
+        messages.forEach((m, index) => {
+            const isOutgoing = m.senderId === currentUserId;
+            const canEditDelete = isOutgoing || isAdmin;
+            const bubble = document.createElement('div');
+            bubble.className = `chat-bubble ${isOutgoing ? 'outgoing' : 'incoming'}`;
+            bubble.dataset.messageId = m.id;
 
-        let attachmentsHtml = '';
-        if (m.attachments && m.attachments.length > 0) {
-            attachmentsHtml = m.attachments.map(renderAttachment).join('');
-        }
+            let attachmentsHtml = '';
+            if (m.attachments && m.attachments.length > 0) {
+                attachmentsHtml = m.attachments.map(renderAttachment).join('');
+            }
 
-        let ticksHtml = '';
-        if (isOutgoing) {
-         const seen = !!m.readAt;
-         const isLastMessage = index === messages.length - 1;
-         const icon = seen ? 'bi-check2-all' : 'bi-check';
-         const label = isLastMessage ? `<span class="tick-label">${seen ? 'seen' : 'sent'}</span>` : '';
-         ticksHtml = `<div class="chat-bubble-ticks ${seen ? 'seen' : ''}"><i class="bi ${icon}"></i>${label}</div>`;
-    }
+            let ticksHtml = '';
+            if (isOutgoing) {
+                const seen = !!m.readAt;
+                const isLastMessage = index === messages.length - 1;
+                const icon = seen ? 'bi-check2-all' : 'bi-check';
+                const label = isLastMessage ? `<span class="tick-label">${seen ? 'seen' : 'sent'}</span>` : '';
+                ticksHtml = `<div class="chat-bubble-ticks ${seen ? 'seen' : ''}"><i class="bi ${icon}"></i>${label}</div>`;
+            }
 
-        let contentHtml = escapeHtml(m.content || '');
-        let editBadgeHtml = m.isEdited ? '<small class="text-muted ms-1 edited-badge" style="font-size: 0.7rem;">(edited)</small>' : '';
+            let contentHtml = escapeHtml(m.content || '');
+            let editBadgeHtml = m.isEdited ? '<small class="text-muted ms-1 edited-badge" style="font-size: 0.7rem;">(edited)</small>' : '';
 
-        let actionsHtml = '';
-        if (canEditDelete && !m.deletedAt) {
-            actionsHtml = `
-                <div class="message-actions" style="margin-top: 4px; display: flex; gap: 6px;">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" style="font-size: 0.75rem; padding: 2px 6px;" onclick="ChatWorkspace.editMessage(${m.id}, ${currentChatId}, '${escapeHtml(m.content || '').replace(/'/g, "\\'")}')">
-                        <i class="bi bi-pencil"></i> Edit
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-danger" style="font-size: 0.75rem; padding: 2px 6px;" onclick="ChatWorkspace.deleteMessage(${m.id}, ${currentChatId})">
-                        <i class="bi bi-trash"></i> Delete
-                    </button>
+            // FIX 3: WhatsApp-style dropdown menu instead of inline buttons
+            let optionsHtml = '';
+            if (canEditDelete && !m.deletedAt) {
+                const escapedContent = escapeHtml(m.content || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                optionsHtml = `
+                    <div class="message-options-container">
+                        <button type="button" class="message-options-btn" onclick="ChatWorkspace.toggleMessageOptions(event, ${m.id})">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <div class="message-options-menu" id="options-${m.id}">
+                            <div class="message-option-item" onclick="ChatWorkspace.editMessage(${m.id}, ${currentChatId}, '${escapedContent}')">
+                                <i class="bi bi-pencil"></i>
+                                <span>Edit</span>
+                            </div>
+                            <div class="message-option-item message-option-delete" onclick="ChatWorkspace.deleteMessage(${m.id}, ${currentChatId})">
+                                <i class="bi bi-trash"></i>
+                                <span>Delete</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            let messageContent = `
+                <div class="message-text-wrapper">
+                    <p class="message-text mb-0">
+                        <span class="message-content">${contentHtml}</span>${editBadgeHtml}
+                    </p>
+                    ${optionsHtml}
                 </div>
             `;
+
+            if (m.deletedAt) {
+                messageContent = `<p class="message-text mb-0"><span class="text-muted fst-italic">[Message deleted]</span></p>`;
+            }
+
+            bubble.innerHTML = `${attachmentsHtml}${messageContent}${ticksHtml}`;
+            body.appendChild(bubble);
+        });
+
+        body.scrollTop = body.scrollHeight;
+        if (window.voicePlayer) voicePlayer.setup();
+    }
+
+    // FIX 3: Toggle dropdown menu
+    function toggleMessageOptions(event, messageId) {
+        event.stopPropagation();
+        const menu = document.getElementById(`options-${messageId}`);
+        const wasShown = menu.classList.contains('show');
+
+        // Close all other open menus
+        document.querySelectorAll('.message-options-menu.show').forEach(m => {
+            m.classList.remove('show');
+        });
+
+        // Toggle this menu
+        if (!wasShown) {
+            menu.classList.add('show');
         }
-
-        let messageContent = `<p class="message-text mb-0">${contentHtml}${editBadgeHtml}</p>${actionsHtml}`;
-        if (m.deletedAt) {
-            messageContent = `<p class="message-text mb-0"><span class="text-muted fst-italic">[Message deleted]</span></p>`;
-        }
-
-        bubble.innerHTML = `${attachmentsHtml}${messageContent}${ticksHtml}`;
-        body.appendChild(bubble);
-    });
-
-    body.scrollTop = body.scrollHeight;
-    if (window.voicePlayer) voicePlayer.setup();
-}
+    }
 
     function renderAttachment(attachment) {
     if (attachment.fileType === 'Photo') {
@@ -564,23 +627,26 @@
     }
 
     function appendIncomingMessage(message) {
-    const currentUserId = document.body.dataset.currentUserId;
-    const isOutgoing = message.senderId === currentUserId;
+        const currentUserId = document.body.dataset.currentUserId;
+        const userRole = document.body.dataset.userRole;
+        const isAdmin = userRole === 'Admin';
+        const isOutgoing = message.senderId === currentUserId;
         const body = document.getElementById('chatBody');
 
+        // Remove "sent/seen" label from previous last message
         const allLabels = body.querySelectorAll('.chat-bubble.outgoing .tick-label');
         if (allLabels.length > 0) {
             allLabels[allLabels.length - 1].remove();
         }
 
-    const bubble = document.createElement('div');
-    bubble.className = `chat-bubble ${isOutgoing ? 'outgoing' : 'incoming'}`;
-    bubble.dataset.messageId = message.id;
+        const bubble = document.createElement('div');
+        bubble.className = `chat-bubble ${isOutgoing ? 'outgoing' : 'incoming'}`;
+        bubble.dataset.messageId = message.id;
 
-    let attachmentsHtml = '';
-    if (message.attachments && message.attachments.length > 0) {
-        attachmentsHtml = message.attachments.map(renderAttachment).join('');
-    }
+        let attachmentsHtml = '';
+        if (message.attachments && message.attachments.length > 0) {
+            attachmentsHtml = message.attachments.map(renderAttachment).join('');
+        }
 
         let ticksHtml = '';
         if (isOutgoing) {
@@ -589,11 +655,48 @@
             ticksHtml = `<div class="chat-bubble-ticks ${seen ? 'seen' : ''}"><i class="bi ${icon}"></i><span class="tick-label">${seen ? 'seen' : 'sent'}</span></div>`;
         }
 
-        bubble.innerHTML = `${attachmentsHtml}${escapeHtml(message.content || '')}${ticksHtml}`;
-    body.appendChild(bubble);
-    body.scrollTop = body.scrollHeight;
-    if (window.voicePlayer) voicePlayer.setup();
-}
+        // FIX 3: Add WhatsApp-style dropdown for newly appended messages
+        const canEditDelete = isOutgoing || isAdmin;
+        let optionsHtml = '';
+        if (canEditDelete && !message.deletedAt) {
+            const escapedContent = escapeHtml(message.content || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            optionsHtml = `
+                <div class="message-options-container">
+                    <button type="button" class="message-options-btn" onclick="ChatWorkspace.toggleMessageOptions(event, ${message.id})">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <div class="message-options-menu" id="options-${message.id}">
+                        <div class="message-option-item" onclick="ChatWorkspace.editMessage(${message.id}, ${currentChatId}, '${escapedContent}')">
+                            <i class="bi bi-pencil"></i>
+                            <span>Edit</span>
+                        </div>
+                        <div class="message-option-item message-option-delete" onclick="ChatWorkspace.deleteMessage(${message.id}, ${currentChatId})">
+                            <i class="bi bi-trash"></i>
+                            <span>Delete</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        let messageContent = `
+            <div class="message-text-wrapper">
+                <p class="message-text mb-0">
+                    <span class="message-content">${escapeHtml(message.content || '')}</span>
+                </p>
+                ${optionsHtml}
+            </div>
+        `;
+
+        if (message.deletedAt) {
+            messageContent = `<p class="message-text mb-0"><span class="text-muted fst-italic">[Message deleted]</span></p>`;
+        }
+
+        bubble.innerHTML = `${attachmentsHtml}${messageContent}${ticksHtml}`;
+        body.appendChild(bubble);
+        body.scrollTop = body.scrollHeight;
+        if (window.voicePlayer) voicePlayer.setup();
+    }
 
     function onComplaintMessagesRead(complaintId) {
         if (currentChatType === 'complaint' && complaintId === currentChatId) {
@@ -974,5 +1077,19 @@ function updateStatus() {
 
     document.addEventListener('DOMContentLoaded', init);
 
-    return { showTab, sendMessage, toggleInfo, updateStatus, toggleAttachMenu, handleFileSelected, startRecording, cancelRecording, openNewChatPicker, closeNewChatPicker, editMessage, deleteMessage };
+    return {
+        showTab,
+        sendMessage,
+        toggleInfo,
+        updateStatus,
+        toggleAttachMenu,
+        handleFileSelected,
+        startRecording,
+        cancelRecording,
+        openNewChatPicker,
+        closeNewChatPicker,
+        editMessage,
+        deleteMessage,
+        toggleMessageOptions  // FIX 3: Export new function
+    };
 })();
