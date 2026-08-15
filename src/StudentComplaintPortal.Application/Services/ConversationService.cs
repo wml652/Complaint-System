@@ -1,45 +1,46 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StudentComplaintPortal.Application.DTOs;
+using StudentComplaintPortal.Application.ServiceHelper;
+using StudentComplaintPortal.Application.Services.FileStorage;
 using StudentComplaintPortal.Data;
+using StudentComplaintPortal.Data.Repositories;
 using StudentComplaintPortal.Domain.Entities;
+using StudentComplaintPortal.Domain.Enums;
 
 namespace StudentComplaintPortal.Application.Services;
 
 public class ConversationService : IConversationService
 {
+    private readonly IUnitOfWork _unitOfWork;
     private readonly AppDbContext _dbContext;
+    private readonly IFileStorageService _fileStorageService;
 
     // Har user-pair ke liye ek lock, taake "+" button do dafa jaldi jaldi
     // dabne se 2 log ek sath duplicate conversation na bana sakein.
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, SemaphoreSlim> _directConversationLocks = new();
 
-    public ConversationService(AppDbContext dbContext)
-    {
-        _dbContext = dbContext;
-    }
+
+    public ConversationService(
+    IUnitOfWork unitOfWork, 
+    AppDbContext dbContext, 
+    IFileStorageService fileStorageService)
+{
+    _unitOfWork = unitOfWork;
+    _dbContext = dbContext;
+    _fileStorageService = fileStorageService;
+}
 
     public async Task<List<ConversationDto>> GetConversationsForUserAsync(string userId)
     {
-        var conversationIds = await _dbContext.ConversationParticipants
-            .Where(p => p.UserId == userId)
-            .Select(p => p.ConversationId)
-            .ToListAsync();
-
-        var conversations = await _dbContext.Conversations
-            .Include(c => c.Participants).ThenInclude(p => p.User)
-            .Where(c => conversationIds.Contains(c.Id))
-            .ToListAsync();
+        var conversationIds = await _unitOfWork.Conversations.GetConversationIdsForUserAsync(userId);
+        var conversations = await _unitOfWork.Conversations.GetConversationsWithParticipantsAsync(conversationIds);
 
         var result = new List<ConversationDto>();
 
         foreach (var conv in conversations)
         {
-            var lastMessage = await _dbContext.InternalMessages
-                .Where(m => m.ConversationId == conv.Id)
-                .OrderByDescending(m => m.SentAt)
-                .FirstOrDefaultAsync();
+            var lastMessage = await _unitOfWork.Conversations.GetLastMessageAsync(conv.Id);
 
-            // Direct (1-to-1) chat jisme abhi tak koi message nahi - list mein mat dikhao
             if (conv.Type == ConversationType.Direct && lastMessage == null)
             {
                 continue;
@@ -48,9 +49,7 @@ public class ConversationService : IConversationService
             var myParticipant = conv.Participants.FirstOrDefault(p => p.UserId == userId);
             var myLastReadAt = myParticipant?.LastReadAt;
 
-            var unreadCount = await _dbContext.InternalMessages
-                .CountAsync(m => m.ConversationId == conv.Id && m.SenderId != userId
-                    && (myLastReadAt == null || m.SentAt > myLastReadAt));
+            var unreadCount = await _unitOfWork.Conversations.GetUnreadCountAsync(conv.Id, userId, myLastReadAt);
 
             string? displayName = conv.Name;
             string? otherUserId = null;
@@ -74,7 +73,6 @@ public class ConversationService : IConversationService
             });
         }
 
-        // Pinned "Team" group hamesha sabse upar, baaki naye message ke hisaab se sorted
         return result
             .OrderByDescending(c => c.Type == "Group")
             .ThenByDescending(c => c.LastMessageAt)
@@ -83,7 +81,6 @@ public class ConversationService : IConversationService
 
     public async Task<int> GetOrCreateDirectConversationAsync(string userId1, string userId2)
     {
-        // Dono log chahe kisi bhi order mein call karein, key hamesha same banegi
         var pairKey = string.CompareOrdinal(userId1, userId2) < 0
             ? $"{userId1}:{userId2}"
             : $"{userId2}:{userId1}";
@@ -92,12 +89,7 @@ public class ConversationService : IConversationService
         await gate.WaitAsync();
         try
         {
-            // find existing direct conversation which has both participants 
-            var existing = await _dbContext.Conversations
-                .Where(c => c.Type == ConversationType.Direct)
-                .Where(c => c.Participants.Any(p => p.UserId == userId1))
-                .Where(c => c.Participants.Any(p => p.UserId == userId2))
-                .FirstOrDefaultAsync();
+            var existing = await _unitOfWork.Conversations.FindDirectConversationAsync(userId1, userId2);
 
             if (existing != null)
             {
@@ -109,14 +101,15 @@ public class ConversationService : IConversationService
                 Type = ConversationType.Direct,
                 CreatedAt = DateTime.UtcNow
             };
-            _dbContext.Conversations.Add(newConversation);
-            await _dbContext.SaveChangesAsync();
+            await _unitOfWork.Conversations.AddAsync(newConversation);
+            await _unitOfWork.SaveChangesAsync();
 
-            _dbContext.ConversationParticipants.AddRange(
+            await _unitOfWork.Conversations.AddParticipantsAsync(new[]
+            {
                 new ConversationParticipant { ConversationId = newConversation.Id, UserId = userId1 },
                 new ConversationParticipant { ConversationId = newConversation.Id, UserId = userId2 }
-            );
-            await _dbContext.SaveChangesAsync();
+            });
+            await _unitOfWork.SaveChangesAsync();
 
             return newConversation.Id;
         }
@@ -134,6 +127,7 @@ public class ConversationService : IConversationService
 
         var messages = await _dbContext.InternalMessages
             .Include(m => m.Sender)
+            .Include(m => m.Attachments)   // 👈 NAYA
             .Where(m => m.ConversationId == conversationId)
             .OrderBy(m => m.SentAt)
             .ToListAsync();
@@ -157,10 +151,61 @@ public class ConversationService : IConversationService
                 SenderName = m.Sender.FullName,
                 Content = m.Content,
                 SentAt = m.SentAt,
-                ReadAt = seenByAllAt
+                ReadAt = seenByAllAt,
+                Attachments = m.Attachments.Select(a => new InternalAttachmentDto   // 👈 NAYA
+                {
+                    Id = a.Id,
+                    FileUrl = a.FileUrl,
+                    FileType = a.FileType.ToString(),
+                    FileSizeBytes = a.FileSizeBytes
+                }).ToList()
             });
         }
 
+        return BuildMessageDtos(messages, participants);
+    }
+
+    public async Task<CursorResult<InternalMessageDto>> GetMessagesPagedAsync(int conversationId, string? cursor, int pageSize = 20, bool moveForward = true)
+    {
+        var participants = await _unitOfWork.Conversations.GetParticipantsAsync(conversationId);
+        var messages = await _unitOfWork.Conversations.GetMessagesWithSenderAsync(conversationId);
+
+        var messageDtos = BuildMessageDtos(messages, participants);
+
+        return PaginationHelper.PaginateByCursorId(messageDtos, dto => dto.Id, cursor, pageSize, moveForward);
+    }
+
+    private static List<InternalMessageDto> BuildMessageDtos(List<InternalMessage> messages, List<ConversationParticipant> participants)
+    {
+        var result = new List<InternalMessageDto>();
+        foreach (var m in messages)
+        {
+            var others = participants.Where(p => p.UserId != m.SenderId).ToList();
+
+            DateTime? seenByAllAt = null;
+            if (others.Count > 0 && others.All(p => p.LastReadAt.HasValue && p.LastReadAt.Value >= m.SentAt))
+            {
+                seenByAllAt = others.Max(p => p.LastReadAt!.Value);
+            }
+
+            result.Add(new InternalMessageDto
+            {
+                Id = m.Id,
+                ConversationId = m.ConversationId,
+                SenderId = m.SenderId,
+                SenderName = m.Sender.FullName,
+                Content = m.Content,
+                SentAt = m.SentAt,
+                ReadAt = seenByAllAt,
+                Attachments = m.Attachments.Select(a => new InternalAttachmentDto   // 👈 NAYA
+                {
+                    Id = a.Id,
+                    FileUrl = a.FileUrl,
+                    FileType = a.FileType.ToString(),
+                    FileSizeBytes = a.FileSizeBytes
+                }).ToList()
+            });
+        }
         return result;
     }
 
@@ -174,10 +219,17 @@ public class ConversationService : IConversationService
             SentAt = DateTime.UtcNow
         };
 
-        _dbContext.InternalMessages.Add(message);
-        await _dbContext.SaveChangesAsync();
+        var conversation = await _unitOfWork.Conversations.GetByIdAsync(conversationId);
+        if (conversation != null)
+        {
+            conversation.LastMessageAt = message.SentAt;
+            _unitOfWork.Conversations.Update(conversation);
+        }
 
-        var sender = await _dbContext.Users.FindAsync(senderId);
+        await _unitOfWork.Conversations.AddMessageAsync(message);
+        await _unitOfWork.SaveChangesAsync();
+
+        var sender = await _unitOfWork.Conversations.GetUserAsync(senderId);
 
         return new InternalMessageDto
         {
@@ -193,41 +245,155 @@ public class ConversationService : IConversationService
 
     public async Task MarkAllAsReadAsync(int conversationId, string readerUserId)
     {
-        var participant = await _dbContext.ConversationParticipants
-            .FirstOrDefaultAsync(p => p.ConversationId == conversationId && p.UserId == readerUserId);
+        var participant = await _unitOfWork.Conversations.GetParticipantAsync(conversationId, readerUserId);
 
         if (participant != null)
         {
             participant.LastReadAt = DateTime.UtcNow;
-            await _dbContext.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
     }
 
     public async Task<List<ParticipantDto>> GetParticipantsAsync(int conversationId)
     {
-        return await _dbContext.ConversationParticipants
-            .Include(p => p.User)
-            .Where(p => p.ConversationId == conversationId)
-            .Select(p => new ParticipantDto
-            {
-                UserId = p.UserId,
-                FullName = p.User.FullName,
-                LastReadAt = p.LastReadAt
-            })
-            .ToListAsync();
+        var participants = await _unitOfWork.Conversations.GetParticipantsAsync(conversationId);
+        return participants.Select(p => new ParticipantDto
+        {
+            UserId = p.UserId,
+            FullName = p.User.FullName,
+            LastReadAt = p.LastReadAt
+        }).ToList();
     }
+
     public async Task<List<ParticipantDto>> GetContactsAsync(string currentUserId)
     {
-        return await _dbContext.Users
-            .Where(u => (u.Role == Domain.Enums.UserRole.Admin || u.Role == Domain.Enums.UserRole.Staff)
-                        && u.Id != currentUserId)
-            .OrderBy(u => u.FullName)
-            .Select(u => new ParticipantDto
+        var users = await _unitOfWork.Conversations.GetStaffAndAdminContactsAsync(currentUserId);
+        return users.Select(u => new ParticipantDto
+        {
+            UserId = u.Id,
+            FullName = u.FullName,
+            LastReadAt = null
+        }).ToList();
+    }
+
+    public async Task<CursorResult<ConversationDto>> GetConversationsPagedForUserAsync(string userId, string? cursor, int pageSize = 20, bool moveForward = true)
+    {
+        if (pageSize < 1) pageSize = 10;
+
+        var dtos = new List<ConversationDto>();
+
+        // Sirf pehli page (cursor null) par pinned "Team" group hamesha top pe dikhao
+        if (string.IsNullOrEmpty(cursor))
+        {
+            var pinnedGroup = await _unitOfWork.Conversations.GetPinnedGroupForUserAsync(userId);
+            if (pinnedGroup != null)
             {
-                UserId = u.Id,
-                FullName = u.FullName,
-                LastReadAt = null
-            })
-            .ToListAsync();
+                dtos.Add(await BuildConversationDtoAsync(pinnedGroup, userId));
+            }
+        }
+
+        var cursorTimestamp = PaginationHelper.DecodeTimestampCursor(cursor);
+        var conversations = await _unitOfWork.Conversations.GetConversationsPagedForUserAsync(userId, cursorTimestamp, pageSize, moveForward);
+
+        var hasMore = conversations.Count > pageSize;
+        if (hasMore) conversations = conversations.Take(pageSize).ToList();
+
+        foreach (var conv in conversations)
+        {
+            dtos.Add(await BuildConversationDtoAsync(conv, userId));
+        }
+
+        string? nextCursor = hasMore ? PaginationHelper.EncodeTimestampCursor(conversations.Last().LastMessageAt ?? conversations.Last().CreatedAt) : null;
+        string? previousCursor = conversations.Count > 0 ? PaginationHelper.EncodeTimestampCursor(conversations.First().LastMessageAt ?? conversations.First().CreatedAt) : null;
+
+        return new CursorResult<ConversationDto>
+        {
+            Items = dtos,
+            NextCursor = nextCursor,
+            PreviousCursor = previousCursor,
+            HasMore = hasMore,
+            PageSize = pageSize
+        };
+    }
+
+    private async Task<ConversationDto> BuildConversationDtoAsync(Conversation conv, string userId)
+    {
+        var lastMessage = await _unitOfWork.Conversations.GetLastMessageAsync(conv.Id);
+
+        var myParticipant = conv.Participants.FirstOrDefault(p => p.UserId == userId);
+        var myLastReadAt = myParticipant?.LastReadAt;
+
+        var unreadCount = await _unitOfWork.Conversations.GetUnreadCountAsync(conv.Id, userId, myLastReadAt);
+
+        string? displayName = conv.Name;
+        string? otherUserId = null;
+
+        if (conv.Type == ConversationType.Direct)
+        {
+            var otherParticipant = conv.Participants.FirstOrDefault(p => p.UserId != userId);
+            displayName = otherParticipant?.User.FullName;
+            otherUserId = otherParticipant?.UserId;
+        }
+
+        return new ConversationDto
+        {
+            Id = conv.Id,
+            Type = conv.Type.ToString(),
+            Name = displayName,
+            OtherUserId = otherUserId,
+            UnreadCount = unreadCount,
+            LastMessagePreview = lastMessage?.Content,
+            LastMessageAt = lastMessage?.SentAt
+        };
+    }
+    public async Task<InternalMessageDto> CreateMessageWithAttachmentAsync(
+    int conversationId, string senderId, Stream fileStream, string fileName, string contentType,
+    FileType fileType, string? content = null)
+    {
+        var fileUrl = await _fileStorageService.UploadAsync(fileStream, fileName, contentType, fileType, conversationId);
+
+        var message = new InternalMessage
+        {
+            ConversationId = conversationId,
+            SenderId = senderId,
+            Content = content,
+            SentAt = DateTime.UtcNow
+        };
+        _dbContext.InternalMessages.Add(message);
+        await _dbContext.SaveChangesAsync();
+
+        var attachment = new StudentComplaintPortal.Domain.Entities.InternalAttachment
+        {
+            InternalMessageId = message.Id,
+            FileUrl = fileUrl,
+            FileType = fileType,
+            FileSizeBytes = fileStream.Length,
+            UploadedAt = DateTime.UtcNow
+        };
+        _dbContext.InternalAttachments.Add(attachment);
+        await _dbContext.SaveChangesAsync();
+
+        var sender = await _dbContext.Users.FindAsync(senderId);
+
+        return new InternalMessageDto
+        {
+            Id = message.Id,
+            ConversationId = message.ConversationId,
+            SenderId = message.SenderId,
+            SenderName = sender?.FullName ?? string.Empty,
+            Content = message.Content,
+            SentAt = message.SentAt,
+            ReadAt = message.ReadAt,
+            Attachments = new List<InternalAttachmentDto>
+        {
+            new InternalAttachmentDto
+            {
+                Id = attachment.Id,
+                FileUrl = attachment.FileUrl,
+                FileType = attachment.FileType.ToString(),
+                FileSizeBytes = attachment.FileSizeBytes
+            }
+        }
+        };
     }
 }

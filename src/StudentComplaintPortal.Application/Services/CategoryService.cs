@@ -1,38 +1,27 @@
-using Microsoft.EntityFrameworkCore;
 using StudentComplaintPortal.Application.DTOs;
-using StudentComplaintPortal.Data;
+using StudentComplaintPortal.Data.Repositories;
 using StudentComplaintPortal.Domain.Entities;
-using StudentComplaintPortal.Domain.Enums;
 
 namespace StudentComplaintPortal.Application.Services;
 
 public class CategoryService : ICategoryService
 {
-    private readonly AppDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CategoryService(AppDbContext context)
+    public CategoryService(IUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<IEnumerable<CategoryDto>> GetAllActiveCategoriesAsync()
     {
-        var categories = await _context.Categories
-            .Where(c => c.IsActive)
-            .Include(c => c.AttachmentRules)
-            .Include(c => c.Assignees)
-            .ToListAsync();
-
+        var categories = await _unitOfWork.Categories.GetAllActiveWithDetailsAsync();
         return categories.Select(MapToDto);
     }
 
     public async Task<CategoryDto?> GetCategoryByIdAsync(int id)
     {
-        var category = await _context.Categories
-            .Include(c => c.AttachmentRules)
-            .Include(c => c.Assignees)
-            .FirstOrDefaultAsync(c => c.Id == id);
-
+        var category = await _unitOfWork.Categories.GetByIdWithDetailsAsync(id);
         return category == null ? null : MapToDto(category);
     }
 
@@ -47,7 +36,6 @@ public class CategoryService : ICategoryService
             IsActive = true
         };
 
-        // Add attachment rules
         foreach (var ruleDto in dto.AttachmentRules)
         {
             var rule = new CategoryAttachmentRule
@@ -61,7 +49,6 @@ public class CategoryService : ICategoryService
             category.AttachmentRules.Add(rule);
         }
 
-        // Add assignees
         foreach (var assigneeId in dto.AssigneeIds)
         {
             var assignee = new CategoryAssignee
@@ -72,10 +59,34 @@ public class CategoryService : ICategoryService
             category.Assignees.Add(assignee);
         }
 
-        _context.Categories.Add(category);
-        await _context.SaveChangesAsync();
+        await _unitOfWork.Categories.AddAsync(category);
+        await _unitOfWork.SaveChangesAsync();
 
         return MapToDto(category);
+    }
+
+    public async Task<IEnumerable<CategoryDto>> GetCategoriesForStaffAsync(string staffUserId)
+    {
+        var categories = await _unitOfWork.Categories.GetAssignedToStaffAsync(staffUserId);
+        return categories.Select(MapToDto);
+    }
+
+    // FIX 1: Fetch dynamic categories for the dropdown
+    public async Task<IEnumerable<CategoryListItemDto>> GetActiveCategoriesForDropdownAsync()
+    {
+        // Use the Repository instead of the DbContext directly
+        var categories = await _unitOfWork.Categories.GetAllActiveWithDetailsAsync();
+
+        return categories
+            .OrderBy(c => c.Name)
+            .Select(c => new CategoryListItemDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Icon = c.Icon ?? "📋",
+                Color = c.Color ?? "#0d6efd"
+            })
+            .ToList();
     }
 
     private CategoryDto MapToDto(Category category)
@@ -99,33 +110,4 @@ public class CategoryService : ICategoryService
             AssigneeIds = category.Assignees.Select(a => a.AppUserId).ToList()
         };
     }
-
-    public async Task<IEnumerable<CategoryDto>> GetCategoriesForStaffAsync(string staffUserId)
-    {
-        var categories = await _context.Categories
-            .Where(c => c.Assignees.Any(a => a.AppUserId == staffUserId))
-            .Include(c => c.AttachmentRules)
-            .Include(c => c.Assignees)
-            .ToListAsync();
-
-        return categories.Select(MapToDto);
-    }
-
-    public async Task<IEnumerable<CategoryListItemDto>> GetActiveCategoriesForDropdownAsync()
-    {
-        var categories = await _context.Categories
-            .Where(c => c.IsActive)
-            .OrderBy(c => c.Name)
-            .Select(c => new CategoryListItemDto
-            {
-                Id = c.Id,
-                Name = c.Name,
-                Icon = c.Icon ?? "📋",
-                Color = c.Color ?? "#0d6efd"
-            })
-            .ToListAsync();
-
-        return categories;
-    }
-
 }

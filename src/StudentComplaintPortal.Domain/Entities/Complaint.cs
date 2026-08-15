@@ -12,6 +12,7 @@ public class Complaint
     public required string StudentId { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public DateTime? LastMessageAt { get; set; }
 
     // NEW: Link to Category table for staff assignment
     public int? CategoryId { get; set; }  // Nullable for backward compatibility

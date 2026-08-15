@@ -45,6 +45,26 @@ public class MessagesController : ControllerBase
         return Ok(messages);
     }
 
+    [HttpGet("{id}/messages/paged")]
+    public async Task<IActionResult> GetMessagesPaged(int id, string? cursor = null, int pageSize = 20, bool forward = true)
+    {
+        var complaint = await _complaintService.GetByIdAsync(id);
+
+        if (complaint == null)
+            return NotFound(new { message = $"Complaint with ID {id} not found" });
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var userRole = User.FindFirstValue(ClaimTypes.Role)!;
+
+        if (userRole == "Student" && complaint.StudentId != userId)
+        {
+            return Forbid();
+        }
+
+        var messages = await _messageService.GetConversationPagedAsync(id, cursor, pageSize, forward);
+        return Ok(messages);
+    }
+
     [HttpPost("{id}/messages")]
     public async Task<IActionResult> SendMessage(int id, [FromBody] SendMessageRequest request)
     {

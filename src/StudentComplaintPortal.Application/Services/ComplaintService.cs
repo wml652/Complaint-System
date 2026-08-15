@@ -1,9 +1,9 @@
 ﻿using StudentComplaintPortal.Application.DTOs;
 using StudentComplaintPortal.Application.Exceptions;
+using StudentComplaintPortal.Application.ServiceHelper;
 using StudentComplaintPortal.Data.Repositories;
 using StudentComplaintPortal.Domain.Entities;
 using StudentComplaintPortal.Domain.Enums;
-using Microsoft.EntityFrameworkCore;
 
 namespace StudentComplaintPortal.Application.Services;
 
@@ -27,16 +27,17 @@ public class ComplaintService : IComplaintService
             categoryEnum = ComplaintCategory.Other;
         }
 
-        // NEW: Find the Category entity by name to get CategoryId
-        var categoryEntity = await _unitOfWork.Context.Categories
-            .FirstOrDefaultAsync(c => c.Name.ToLower() == dto.Category.ToLower() && c.IsActive);
+        // NEW: Fetch active categories via repository and find the matching ID
+        var activeCategories = await _unitOfWork.Categories.GetAllActiveWithDetailsAsync();
+        var categoryEntity = activeCategories.FirstOrDefault(c =>
+            c.Name.Equals(dto.Category, StringComparison.OrdinalIgnoreCase));
 
         var complaint = new Complaint
         {
             Title = dto.Title,
             Description = dto.Description,
-            Category = categoryEnum,  // Keep enum for backward compatibility
-            CategoryId = categoryEntity?.Id,  // NEW: Set CategoryId if found
+            Category = categoryEnum,
+            CategoryId = categoryEntity?.Id,
             Status = ComplaintStatus.Open,
             StudentId = studentId,
             CreatedAt = DateTime.UtcNow,
@@ -50,6 +51,7 @@ public class ComplaintService : IComplaintService
         var created = await _unitOfWork.Complaints.GetByIdAsync(complaint.Id);
         return MapToDto(created!);
     }
+
     public async Task<ComplaintDto?> GetByIdAsync(int id)
     {
         var complaint = await _unitOfWork.Complaints.GetByIdAsync(id);
@@ -78,7 +80,7 @@ public class ComplaintService : IComplaintService
     public async Task<ComplaintDto> UpdateStatusAsync(int id, ComplaintStatus newStatus)
     {
         var complaint = await _unitOfWork.Complaints.GetByIdAsync(id);
-        
+
         if (complaint == null)
         {
             throw new NotFoundException($"Complaint with ID {id} not found.");
@@ -94,7 +96,7 @@ public class ComplaintService : IComplaintService
         var oldStatus = complaint.Status;
         complaint.Status = newStatus;
         complaint.UpdatedAt = DateTime.UtcNow;
-        
+
         _unitOfWork.Complaints.Update(complaint);
         await _unitOfWork.SaveChangesAsync();
 
@@ -113,6 +115,42 @@ public class ComplaintService : IComplaintService
         // Team decision (update): a Closed complaint CAN be moved to any other
         // status again - status changes are no longer one-way.
         return true;
+    }
+
+    public async Task<CursorResult<ComplaintDto>> GetByStudentPagedAsync(string studentId, string? cursor, int pageSize = 20, bool moveForward = true)
+        => await BuildChatListPageAsync((ct, ps, mf) => _unitOfWork.Complaints.GetByStudentIdPagedAsync(studentId, ct, ps, mf), cursor, pageSize, moveForward);
+
+    public async Task<CursorResult<ComplaintDto>> GetAllPagedAsync(string? cursor, int pageSize = 20, bool moveForward = true)
+        => await BuildChatListPageAsync((ct, ps, mf) => _unitOfWork.Complaints.GetAllPagedAsync(ct, ps, mf), cursor, pageSize, moveForward);
+
+    public async Task<CursorResult<ComplaintDto>> GetAssignedComplaintsPagedAsync(string staffUserId, string? cursor, int pageSize = 20, bool moveForward = true)
+        => await BuildChatListPageAsync((ct, ps, mf) => _unitOfWork.Complaints.GetAssignedToStaffPagedAsync(staffUserId, ct, ps, mf), cursor, pageSize, moveForward);
+
+    private async Task<CursorResult<ComplaintDto>> BuildChatListPageAsync(
+        Func<DateTime?, int, bool, Task<List<Complaint>>> fetchPage,
+        string? cursor, int pageSize, bool moveForward)
+    {
+        if (pageSize < 1) pageSize = 10;
+        var cursorTimestamp = PaginationHelper.DecodeTimestampCursor(cursor);
+
+        var complaints = await fetchPage(cursorTimestamp, pageSize, moveForward);
+
+        var hasMore = complaints.Count > pageSize;
+        if (hasMore) complaints = complaints.Take(pageSize).ToList();
+
+        var dtos = complaints.Select(MapToDto).ToList();
+
+        string? nextCursor = hasMore ? PaginationHelper.EncodeTimestampCursor(complaints.Last().LastMessageAt ?? complaints.Last().CreatedAt) : null;
+        string? previousCursor = complaints.Count > 0 ? PaginationHelper.EncodeTimestampCursor(complaints.First().LastMessageAt ?? complaints.First().CreatedAt) : null;
+
+        return new CursorResult<ComplaintDto>
+        {
+            Items = dtos,
+            NextCursor = nextCursor,
+            PreviousCursor = previousCursor,
+            HasMore = hasMore,
+            PageSize = pageSize
+        };
     }
 
     private ComplaintDto MapToDto(Complaint complaint)

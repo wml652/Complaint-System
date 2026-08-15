@@ -11,8 +11,8 @@ public class DashboardStatsDto
     public List<ComplaintsByStatusDto> ComplaintsByStatus { get; set; } = new();
     public List<ComplaintsByCategoryDto> ComplaintsByCategory { get; set; } = new();
     public List<ComplaintsOverTimeDto> ComplaintsOverTime { get; set; } = new();
-    public List<ActivityLogDto> RecentActivity { get; set; } = new();
-    public List<PendingActionDto> PendingActions { get; set; } = new();
+    public CursorResult<ActivityLogDto> RecentActivity { get; set; } = new();
+    public PagedResult<PendingActionDto> PendingActions { get; set; } = new();
 }
 
 public class ComplaintsByStatusDto
