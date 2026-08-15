@@ -66,6 +66,7 @@ public class ConversationRepository : GenericRepository<Conversation>, IConversa
     {
         return await _context.InternalMessages
             .Include(m => m.Sender)
+            .Include(m => m.Attachments)
             .Where(m => m.ConversationId == conversationId)
             .OrderBy(m => m.SentAt)
             .ToListAsync();
@@ -82,6 +83,12 @@ public class ConversationRepository : GenericRepository<Conversation>, IConversa
     {
         await _context.InternalMessages.AddAsync(message);
         return message;
+    }
+
+    public async Task<InternalAttachment> AddAttachmentAsync(InternalAttachment attachment)
+    {
+        await _context.InternalAttachments.AddAsync(attachment);
+        return attachment;
     }
 
     public async Task<List<AppUser>> GetStaffAndAdminContactsAsync(string excludeUserId)

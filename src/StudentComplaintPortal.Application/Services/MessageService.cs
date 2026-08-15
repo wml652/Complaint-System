@@ -113,7 +113,7 @@ public class MessageService : IMessageService
 
         var messageDtos = messages.Select(MapToDto).ToList();
 
-        string? nextCursor = messageDtos.Count > 0 ? PaginationHelper.EncodeIdCursor(messageDtos.Last().Id) : null;
+        string? nextCursor = hasMore ? PaginationHelper.EncodeIdCursor(messageDtos.Last().Id) : null;
         string? previousCursor = messageDtos.Count > 0 ? PaginationHelper.EncodeIdCursor(messageDtos.First().Id) : null;
 
         return new CursorResult<MessageDto>

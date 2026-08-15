@@ -16,7 +16,7 @@ public interface IConversationRepository : IGenericRepository<Conversation>
     Task<List<InternalMessage>> GetMessagesWithSenderAsync(int conversationId);
     Task<int> GetUnreadCountAsync(int conversationId, string userId, DateTime? since);
     Task<InternalMessage> AddMessageAsync(InternalMessage message);
-
+    Task<InternalAttachment> AddAttachmentAsync(InternalAttachment attachment);
     Task<List<AppUser>> GetStaffAndAdminContactsAsync(string excludeUserId);
     Task<AppUser?> GetUserAsync(string userId);
     Task<Conversation?> GetPinnedGroupForUserAsync(string userId);
