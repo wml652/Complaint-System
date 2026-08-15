@@ -5,5 +5,6 @@ public enum ComplaintStatus
     Open,
     InProgress,
     Resolved,
+    FollowUp,
     Closed
 }

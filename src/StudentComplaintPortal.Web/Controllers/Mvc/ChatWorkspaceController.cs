@@ -56,7 +56,7 @@ public class ChatWorkspaceController : Controller
 
     // Students tab ke liye — complaint-based chats
     [HttpGet]
-    public async Task<IActionResult> GetStudentChats(string? cursor = null, int pageSize = 20, bool moveForward = true, int? categoryId = null, ComplaintStatus? status = null, bool unreadOnly = false)
+    public async Task<IActionResult> GetStudentChats(string? cursor = null, int pageSize = 20, bool moveForward = true, int? categoryId = null, ComplaintStatus? status = null, bool unreadOnly = false, DateTime? startDate = null, DateTime? endDate = null)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId)) return Forbid();
@@ -69,11 +69,11 @@ public class ChatWorkspaceController : Controller
         }
         else if (User.IsInRole("Admin") || User.HasClaim("Permission", "Complaints.ViewAll"))
         {
-            pagedComplaints = await _complaintService.GetFilteredPagedAsync(categoryId, status, unreadOnly, userId, null, cursor, pageSize, moveForward);
+            pagedComplaints = await _complaintService.GetFilteredPagedAsync(categoryId, status, unreadOnly, userId, null, startDate, endDate, cursor, pageSize, moveForward);
         }
         else
         {
-            pagedComplaints = await _complaintService.GetFilteredPagedAsync(categoryId, status, unreadOnly, userId, userId, cursor, pageSize, moveForward);
+            pagedComplaints = await _complaintService.GetFilteredPagedAsync(categoryId, status, unreadOnly, userId, userId, startDate, endDate, cursor, pageSize, moveForward);
         }
 
         var result = new List<object>();

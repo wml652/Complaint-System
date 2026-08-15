@@ -120,8 +120,8 @@ public class ComplaintService : IComplaintService
     public async Task<CursorResult<ComplaintDto>> GetByStudentPagedAsync(string studentId, string? cursor, int pageSize = 20, bool moveForward = true)
         => await BuildChatListPageAsync((ct, ps, mf) => _unitOfWork.Complaints.GetByStudentIdPagedAsync(studentId, ct, ps, mf), cursor, pageSize, moveForward);
 
-    public async Task<CursorResult<ComplaintDto>> GetFilteredPagedAsync(int? categoryId, ComplaintStatus? status, bool unreadOnly, string? currentUserId, string? staffScopeUserId, string? cursor, int pageSize = 20, bool moveForward = true)
-    => await BuildChatListPageAsync((ct, ps, mf) => _unitOfWork.Complaints.GetFilteredPagedAsync(categoryId, status, unreadOnly, currentUserId, staffScopeUserId, ct, ps, mf), cursor, pageSize, moveForward);
+    public async Task<CursorResult<ComplaintDto>> GetFilteredPagedAsync(int? categoryId, ComplaintStatus? status, bool unreadOnly, string? currentUserId, string? staffScopeUserId, DateTime? startDate, DateTime? endDate, string? cursor, int pageSize = 20, bool moveForward = true)
+    => await BuildChatListPageAsync((ct, ps, mf) => _unitOfWork.Complaints.GetFilteredPagedAsync(categoryId, status, unreadOnly, currentUserId, staffScopeUserId, startDate, endDate, ct, ps, mf), cursor, pageSize, moveForward);
 
     public async Task<CursorResult<ComplaintDto>> GetAllPagedAsync(string? cursor, int pageSize = 20, bool moveForward = true)
         => await BuildChatListPageAsync((ct, ps, mf) => _unitOfWork.Complaints.GetAllPagedAsync(ct, ps, mf), cursor, pageSize, moveForward);
@@ -170,5 +170,60 @@ public class ComplaintService : IComplaintService
             CreatedAt = complaint.CreatedAt,
             UpdatedAt = complaint.UpdatedAt
         };
+    }
+
+    public async Task<List<CampaignSummaryDto>> GetCampaignSummariesAsync(string? staffScopeUserId)
+    {
+        var complaints = string.IsNullOrEmpty(staffScopeUserId)
+            ? await _unitOfWork.Complaints.GetAllAsync()
+            : await _unitOfWork.Complaints.GetAssignedToStaffAsync(staffScopeUserId);
+
+        var grouped = complaints
+            .Select(c => new { Complaint = c, Key = GetCampaignKey(c.CreatedAt) })
+            .GroupBy(x => x.Key)
+            .Select(g => new CampaignSummaryDto
+            {
+                Semester = g.Key.Semester,
+                Year = g.Key.Year,
+                StartDate = g.Key.StartDate,
+                EndDate = g.Key.EndDate,
+                Total = g.Count(),
+                Open = g.Count(x => x.Complaint.Status == ComplaintStatus.Open),
+                InProgress = g.Count(x => x.Complaint.Status == ComplaintStatus.InProgress),
+                Resolved = g.Count(x => x.Complaint.Status == ComplaintStatus.Resolved),
+                Closed = g.Count(x => x.Complaint.Status == ComplaintStatus.Closed)
+            })
+            .OrderByDescending(c => c.StartDate)
+            .ToList();
+
+        return grouped;
+    }
+
+    // Semester boundaries:
+    //   Spring: Feb 1 - Jun 30
+    //   Summer: Jul 1 - Aug 31
+    //   Fall:   Sep 1 - Jan 31 (crosses calendar year - Jan belongs to PREVIOUS year's Fall)
+    // "Year" yahan hamesha semester ke SHURU hone wale saal ko refer karta hai,
+    // isliye Fall 2026 = Sep 2026 - Jan 2027, chahe January ka CreatedAt.Year 2027 ho.
+    private static (string Semester, int Year, DateTime StartDate, DateTime EndDate) GetCampaignKey(DateTime createdAt)
+    {
+        var month = createdAt.Month;
+        var year = createdAt.Year;
+
+        if (month == 1) // January -> previous year's Fall
+        {
+            var fallYear = year - 1;
+            return ("Fall", fallYear, new DateTime(fallYear, 9, 1), new DateTime(fallYear + 1, 1, 31));
+        }
+        if (month is >= 2 and <= 6) // Feb-Jun -> Spring
+        {
+            return ("Spring", year, new DateTime(year, 2, 1), new DateTime(year, 6, 30));
+        }
+        if (month is 7 or 8) // Jul-Aug -> Summer
+        {
+            return ("Summer", year, new DateTime(year, 7, 1), new DateTime(year, 8, 31));
+        }
+        // Sep-Dec -> Fall (same year it started)
+        return ("Fall", year, new DateTime(year, 9, 1), new DateTime(year + 1, 1, 31));
     }
 }

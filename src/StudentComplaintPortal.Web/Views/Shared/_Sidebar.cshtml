@@ -12,6 +12,14 @@
             <i class="bi bi-chat-dots"></i>
         </a>
 
+        @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+        {
+            <a class="sidebar-icon-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Campaign" ? "active" : "")"
+               asp-controller="Campaign" asp-action="Index" title="Campaigns">
+                <i class="bi bi-calendar3"></i>
+            </a>
+        }
+
         @if (User.IsInRole("Student"))
         {
             <a class="sidebar-icon-item @(ViewContext.RouteData.Values["action"]?.ToString() == "NewComplaint" ? "active" : "")"

@@ -76,12 +76,14 @@ public class ComplaintsController : ControllerBase
     [FromQuery] int? categoryId,
     [FromQuery] ComplaintStatus? status,
     [FromQuery] bool unreadOnly = false,
+    [FromQuery] DateTime? startDate = null,
+    [FromQuery] DateTime? endDate = null,
     [FromQuery] string? cursor = null,
     [FromQuery] int pageSize = 20,
     [FromQuery] bool moveForward = true)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var result = await _complaintService.GetFilteredPagedAsync(categoryId, status, unreadOnly, userId, null, cursor, pageSize, moveForward);
+        var result = await _complaintService.GetFilteredPagedAsync(categoryId, status, unreadOnly, userId, null, startDate, endDate, cursor, pageSize, moveForward);
         return Ok(result);
     }
 

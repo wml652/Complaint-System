@@ -34,7 +34,7 @@ public class ComplaintServiceTests
         {
             Title = "Test Complaint",
             Description = "Test Description",
-            Category = ComplaintCategory.Academic
+            Category = "Academic"
         };
 
         var savedComplaint = new Complaint
@@ -42,7 +42,7 @@ public class ComplaintServiceTests
             Id = 1,
             Title = dto.Title,
             Description = dto.Description,
-            Category = dto.Category,
+            Category = ComplaintCategory.Academic,
             Status = ComplaintStatus.Open,
             StudentId = studentId,
             CreatedAt = DateTime.UtcNow,

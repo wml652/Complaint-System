@@ -11,6 +11,8 @@ const ChatWorkspace = (function () {
     let activeCategoryId = null;
     let activeStatus = null;
     let activeUnreadOnly = false;
+    let activeStartDate = null; // yyyy-MM-dd, URL se aata hai Campaign link click hone par
+    let activeEndDate = null;
     let isLoadingMoreStudentChats = false;
     let isLoadingMoreTeamChats = false;
 
@@ -25,6 +27,10 @@ const ChatWorkspace = (function () {
 
     function init() {
         connection = AppHub.connection;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        activeStartDate = urlParams.get('startDate');
+        activeEndDate = urlParams.get('endDate');
 
         connection.on("ReceiveMessage", onComplaintMessageReceived);
         connection.on("ReceiveInternalMessage", onInternalMessageReceived);
@@ -158,6 +164,8 @@ const ChatWorkspace = (function () {
         if (activeCategoryId !== null) params.set('categoryId', activeCategoryId);
         if (activeStatus !== null) params.set('status', activeStatus);
         if (activeUnreadOnly) params.set('unreadOnly', 'true');
+        if (activeStartDate) params.set('startDate', activeStartDate);
+        if (activeEndDate) params.set('endDate', activeEndDate);
         return params.toString();
     }
 

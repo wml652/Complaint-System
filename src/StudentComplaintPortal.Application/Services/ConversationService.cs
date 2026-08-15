@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StudentComplaintPortal.Application.DTOs;
-﻿using StudentComplaintPortal.Application.DTOs;
 using StudentComplaintPortal.Application.ServiceHelper;
 using StudentComplaintPortal.Application.Services.FileStorage;
 using StudentComplaintPortal.Data;
@@ -17,16 +16,6 @@ public class ConversationService : IConversationService
 
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, SemaphoreSlim> _directConversationLocks = new();
 
-
-    public ConversationService(
-    IUnitOfWork unitOfWork, 
-    AppDbContext dbContext, 
-    IFileStorageService fileStorageService)
-{
-    _unitOfWork = unitOfWork;
-    _dbContext = dbContext;
-    _fileStorageService = fileStorageService;
-}
     public ConversationService(IUnitOfWork unitOfWork, IFileStorageService fileStorageService)
     {
         _unitOfWork = unitOfWork;
