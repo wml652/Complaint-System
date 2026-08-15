@@ -495,7 +495,11 @@ const ChatWorkspace = (function () {
         const input = document.getElementById('messageInput');
         if (!input) return;
 
-        input.addEventListener('input', () => {
+        const sendBtn = document.getElementById('sendButton');
+        const micBtn = document.getElementById('micButton');
+
+        // Helper function to reliably check text and swap buttons
+        function syncInputButtons() {
             const hasText = input.value.trim().length > 0;
 
             // Check if user role allows voice recording
@@ -503,19 +507,33 @@ const ChatWorkspace = (function () {
             const canRecord = userRole === 'Admin' || userRole === 'Staff';
 
             // Show mic button only if user can record AND no text input
-            const micBtn = document.getElementById('micButton');
             if (micBtn && canRecord) {
                 micBtn.style.display = hasText ? 'none' : 'flex';
             } else if (micBtn) {
                 micBtn.style.display = 'none';
             }
 
-            document.getElementById('sendButton').style.display = hasText ? 'flex' : 'none';
+            if (sendBtn) {
+                sendBtn.style.display = hasText ? 'flex' : 'none';
+            }
+        }
 
+        // 1. Setup initial state
+        syncInputButtons();
+
+        // 2. Your original input listener (kept intact with notifyTyping)
+        input.addEventListener('input', () => {
+            syncInputButtons();
             // Notify typing
             notifyTyping();
         });
 
+        // 3. Extra listeners to catch backspacing and cutting text that 'input' sometimes misses
+        input.addEventListener('keyup', syncInputButtons);
+        input.addEventListener('paste', () => setTimeout(syncInputButtons, 10));
+        input.addEventListener('cut', () => setTimeout(syncInputButtons, 10));
+
+        // 4. Your exact original enter key logic (100% untouched)
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
