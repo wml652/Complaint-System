@@ -120,6 +120,9 @@ public class ComplaintService : IComplaintService
     public async Task<CursorResult<ComplaintDto>> GetByStudentPagedAsync(string studentId, string? cursor, int pageSize = 20, bool moveForward = true)
         => await BuildChatListPageAsync((ct, ps, mf) => _unitOfWork.Complaints.GetByStudentIdPagedAsync(studentId, ct, ps, mf), cursor, pageSize, moveForward);
 
+    public async Task<CursorResult<ComplaintDto>> GetFilteredPagedAsync(int? categoryId, ComplaintStatus? status, bool unreadOnly, string? currentUserId, string? staffScopeUserId, string? cursor, int pageSize = 20, bool moveForward = true)
+    => await BuildChatListPageAsync((ct, ps, mf) => _unitOfWork.Complaints.GetFilteredPagedAsync(categoryId, status, unreadOnly, currentUserId, staffScopeUserId, ct, ps, mf), cursor, pageSize, moveForward);
+
     public async Task<CursorResult<ComplaintDto>> GetAllPagedAsync(string? cursor, int pageSize = 20, bool moveForward = true)
         => await BuildChatListPageAsync((ct, ps, mf) => _unitOfWork.Complaints.GetAllPagedAsync(ct, ps, mf), cursor, pageSize, moveForward);
 

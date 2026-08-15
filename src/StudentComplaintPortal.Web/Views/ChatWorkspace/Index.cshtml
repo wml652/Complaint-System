@@ -4,6 +4,7 @@
     var userRole = User.FindFirstValue(System.Security.Claims.ClaimTypes.Role) ?? "Student";
 }
 @using System.Security.Claims
+@using StudentComplaintPortal.Domain.Enums
 @Html.AntiForgeryToken()
 
 <div class="chat-workspace" data-preselect-complaint-id="@ViewBag.PreselectedComplaintId" data-user-role="@userRole">
@@ -17,6 +18,34 @@
                 </div>
                 <div class="chat-tab" id="tabStaff" onclick="ChatWorkspace.showTab('staff')" title="Team">
                     <i class="bi bi-people-fill"></i>
+                </div>
+            </div>
+
+            <div class="filterbar">
+                <div class="filter-row">
+                    <div class="chip-row" id="categoryChipRow">
+                        <div class="chip active" data-category-id="" onclick="ChatWorkspace.selectCategoryChip(this, null)">All</div>
+                        @foreach (var cat in (IEnumerable<StudentComplaintPortal.Application.DTOs.CategoryDto>)ViewBag.FilterCategories)
+                        {
+                            <div class="chip" data-category-id="@cat.Id" onclick="ChatWorkspace.selectCategoryChip(this, @cat.Id)">@cat.Name</div>
+                        }
+                    </div>
+                    <div class="filter-icon-wrap">
+                        <div class="filter-icon" id="filterGearIcon" onclick="ChatWorkspace.toggleFilterPopover()">
+                            <i class="bi bi-sliders"></i>
+                        </div>
+                        <div class="popover" id="filterPopover">
+                            <div class="popover-label">Status</div>
+                            <div class="status-opt sel" data-status="" onclick="ChatWorkspace.selectStatusOption(this, null)">All</div>
+                            @foreach (var s in Enum.GetValues<ComplaintStatus>())
+                            {
+                                var label = System.Text.RegularExpressions.Regex.Replace(s.ToString(), "([a-z])([A-Z])", "$1 $2");
+                                <div class="status-opt" data-status="@s" onclick="ChatWorkspace.selectStatusOption(this, '@s')">@label</div>
+                            }
+                            <div class="popover-label">Messages</div>
+                            <div class="popover-toggle">Unread only <div class="switch" id="unreadSwitch" onclick="ChatWorkspace.toggleUnreadSwitch()"></div></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         }

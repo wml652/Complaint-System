@@ -74,6 +74,44 @@ public class ComplaintRepository : GenericRepository<Complaint>, IComplaintRepos
         return await query.OrderByDescending(c => c.LastMessageAt ?? c.CreatedAt).Take(pageSize + 1).ToListAsync();
     }
 
+    public async Task<List<Complaint>> GetFilteredPagedAsync(int? categoryId, ComplaintStatus? status, bool unreadOnly, string? currentUserId, string? staffScopeUserId, DateTime? cursorTimestamp, int pageSize, bool moveForward = true)
+    {
+        var query = _dbSet.Include(c => c.Student).AsQueryable();
+
+        if (!string.IsNullOrEmpty(staffScopeUserId))
+        {
+            var assignedCategoryIds = _context.Set<CategoryAssignee>()
+                .Where(ca => ca.AppUserId == staffScopeUserId)
+                .Select(ca => ca.CategoryId);
+
+            query = query.Where(c => c.CategoryId.HasValue && assignedCategoryIds.Contains(c.CategoryId.Value));
+        }
+
+        if (categoryId.HasValue)
+        {
+            query = query.Where(c => c.CategoryId == categoryId.Value);
+        }
+
+        if (status.HasValue)
+        {
+            query = query.Where(c => c.Status == status.Value);
+        }
+
+        if (unreadOnly)
+        {
+            query = query.Where(c => c.Messages.Any(m => !m.IsRead && m.SenderId != currentUserId));
+        }
+
+        if (cursorTimestamp.HasValue)
+        {
+            query = moveForward
+                ? query.Where(c => (c.LastMessageAt ?? c.CreatedAt) < cursorTimestamp.Value)
+                : query.Where(c => (c.LastMessageAt ?? c.CreatedAt) > cursorTimestamp.Value);
+        }
+
+        return await query.OrderByDescending(c => c.LastMessageAt ?? c.CreatedAt).Take(pageSize + 1).ToListAsync();
+    }
+
     public override async Task<Complaint?> GetByIdAsync(int id)
     {
         return await _dbSet

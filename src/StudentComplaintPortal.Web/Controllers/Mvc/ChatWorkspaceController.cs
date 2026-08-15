@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using StudentComplaintPortal.Application.Services;
 using StudentComplaintPortal.Application.DTOs;
+using StudentComplaintPortal.Domain.Enums;
 using StudentComplaintPortal.Domain.Entities;
 using System.Security.Claims;
 
@@ -14,31 +15,48 @@ public class ChatWorkspaceController : Controller
     private readonly IComplaintService _complaintService;
     private readonly IMessageService _messageService;
     private readonly IConversationService _conversationService;
+    private readonly ICategoryService _categoryService;
     private readonly UserManager<AppUser> _userManager;
 
     public ChatWorkspaceController(
         IComplaintService complaintService,
         IMessageService messageService,
         IConversationService conversationService,
+        ICategoryService categoryService,
         UserManager<AppUser> userManager)
     {
         _complaintService = complaintService;
         _messageService = messageService;
         _conversationService = conversationService;
+        _categoryService = categoryService;
         _userManager = userManager;
     }
 
-   
     [HttpGet]
-    public IActionResult Index(int? complaintId = null)
+    public async Task<IActionResult> Index(int? complaintId = null)
     {
         ViewBag.PreselectedComplaintId = complaintId;
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (User.IsInRole("Admin") || User.HasClaim("Permission", "Complaints.ViewAll"))
+        {
+            ViewBag.FilterCategories = await _categoryService.GetAllActiveCategoriesAsync();
+        }
+        else if (!User.IsInRole("Student") && !string.IsNullOrEmpty(userId))
+        {
+            ViewBag.FilterCategories = await _categoryService.GetCategoriesForStaffAsync(userId);
+        }
+        else
+        {
+            ViewBag.FilterCategories = Enumerable.Empty<CategoryDto>();
+        }
+
         return View();
     }
 
     // Students tab ke liye — complaint-based chats
     [HttpGet]
-    public async Task<IActionResult> GetStudentChats(string? cursor = null, int pageSize = 20, bool moveForward = true)
+    public async Task<IActionResult> GetStudentChats(string? cursor = null, int pageSize = 20, bool moveForward = true, int? categoryId = null, ComplaintStatus? status = null, bool unreadOnly = false)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId)) return Forbid();
@@ -51,11 +69,11 @@ public class ChatWorkspaceController : Controller
         }
         else if (User.IsInRole("Admin") || User.HasClaim("Permission", "Complaints.ViewAll"))
         {
-            pagedComplaints = await _complaintService.GetAllPagedAsync(cursor, pageSize, moveForward);
+            pagedComplaints = await _complaintService.GetFilteredPagedAsync(categoryId, status, unreadOnly, userId, null, cursor, pageSize, moveForward);
         }
         else
         {
-            pagedComplaints = await _complaintService.GetAssignedComplaintsPagedAsync(userId, cursor, pageSize, moveForward);
+            pagedComplaints = await _complaintService.GetFilteredPagedAsync(categoryId, status, unreadOnly, userId, userId, cursor, pageSize, moveForward);
         }
 
         var result = new List<object>();

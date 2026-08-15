@@ -47,7 +47,7 @@ public class AppDbContext : IdentityDbContext<AppUser>
             entity.HasOne(e => e.CategoryEntity)
                 .WithMany(c => c.Complaints)
                 .HasForeignKey(e => e.CategoryId)
-                .OnDelete(DeleteBehavior.SetNull);  // Donwhen category is deleted
+                .OnDelete(DeleteBehavior.SetNull);  // Don when category is deleted
 
             entity.HasIndex(e => e.StudentId);
             entity.HasIndex(e => e.Status);
@@ -87,7 +87,7 @@ public class AppDbContext : IdentityDbContext<AppUser>
             entity.HasKey(e => e.Id);
             entity.Property(e => e.FileUrl).IsRequired().HasMaxLength(500);
             entity.Property(e => e.FileType).HasConversion<string>();
-            
+
             entity.HasOne(e => e.Message)
                 .WithMany(m => m.Attachments)
                 .HasForeignKey(e => e.MessageId)
@@ -101,7 +101,7 @@ public class AppDbContext : IdentityDbContext<AppUser>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Message).IsRequired().HasMaxLength(500);
-            
+
             entity.HasOne(e => e.User)
                 .WithMany(u => u.Notifications)
                 .HasForeignKey(e => e.UserId)
