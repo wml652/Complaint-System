@@ -620,3 +620,10 @@
     color: #6c757d;
     font-style: italic;
 }
+
+/* FIX 4: Info panel divider for student information section */
+.chat-info-panel-divider {
+    height: 1px;
+    background: #e9ecef;
+    margin: 16px 0;
+}

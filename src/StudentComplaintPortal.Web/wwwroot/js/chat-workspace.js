@@ -860,22 +860,49 @@ function setInfoPanelLoading() {
 </select>`
             : `<span class="status-pill status-${details.status}">${escapeHtml(details.status)}</span>`;
 
+        // FIX 4: Build complaint details fields dynamically
+        let complaintFieldsHtml = `
+            <div class="chat-info-panel-field">
+                <div class="chat-info-panel-label">Title</div>
+                <div class="chat-info-panel-value">${escapeHtml(details.title)}</div>
+            </div>
+            <div class="chat-info-panel-field">
+                <div class="chat-info-panel-label">Description</div>
+                <div class="chat-info-panel-value" style="color:#6c757d;">${escapeHtml(details.description || 'No description provided')}</div>
+            </div>
+            <div class="chat-info-panel-field">
+                <div class="chat-info-panel-label">Category</div>
+                <div class="chat-info-panel-value">${escapeHtml(details.category || 'N/A')}</div>
+            </div>
+            <div class="chat-info-panel-field">
+                <div class="chat-info-panel-label">Status</div>
+                ${statusFieldHtml}
+            </div>
+        `;
+
+        // FIX 4: Dynamically render student info fields - loops through all keys
+        let studentInfoHtml = '';
+        if (details.studentInfo && Object.keys(details.studentInfo).length > 0) {
+            studentInfoHtml = '<div class="chat-info-panel-divider"></div>';
+            studentInfoHtml += '<div class="chat-info-panel-title" style="font-size: 14px; margin-top: 16px; margin-bottom: 12px;">Student Information</div>';
+
+            // Loop through all student info fields dynamically
+            for (const [key, value] of Object.entries(details.studentInfo)) {
+                studentInfoHtml += `
+                    <div class="chat-info-panel-field">
+                        <div class="chat-info-panel-label">${escapeHtml(key)}</div>
+                        <div class="chat-info-panel-value">${escapeHtml(value)}</div>
+                    </div>
+                `;
+            }
+        }
+
         document.getElementById('infoPanel').innerHTML = `
-        <div class="chat-info-panel-title">Complaint details</div>
-        <div class="chat-info-panel-field">
-            <div class="chat-info-panel-label">Title</div>
-            <div class="chat-info-panel-value">${escapeHtml(details.title)}</div>
-        </div>
-        <div class="chat-info-panel-field">
-            <div class="chat-info-panel-label">Description</div>
-            <div class="chat-info-panel-value" style="color:#6c757d;">${escapeHtml(details.description || 'No description provided')}</div>
-        </div>
-        <div class="chat-info-panel-field">
-            <div class="chat-info-panel-label">Status</div>
-            ${statusFieldHtml}
-        </div>
-        ${canChangeStatus ? '<button class="btn btn-sm btn-primary" onclick="ChatWorkspace.updateStatus()">Update Status</button>' : ''}
-    `;
+            <div class="chat-info-panel-title">Complaint Details</div>
+            ${complaintFieldsHtml}
+            ${canChangeStatus ? '<button class="btn btn-sm btn-primary" onclick="ChatWorkspace.updateStatus()">Update Status</button>' : ''}
+            ${studentInfoHtml}
+        `;
         updateChatInputForStatus(details.status);
     }
 
@@ -980,16 +1007,43 @@ function setInfoPanelLoading() {
     }
 
     function resetRecordingUi() {
-        document.getElementById('messageInput').style.display = 'block';
-        document.getElementById('attachButton').style.display = 'flex';
-        document.getElementById('recordingBar').style.display = 'none';
-
+        // Show input and attach button again
+        const messageInput = document.getElementById('messageInput');
+        const attachButton = document.getElementById('attachButton');
+        const recordingBar = document.getElementById('recordingBar');
         const micBtn = document.getElementById('micButton');
-        micBtn.style.display = 'flex';
+        const sendBtn = document.getElementById('sendButton');
+
+        messageInput.style.display = 'block';
+        attachButton.style.display = 'flex';
+        recordingBar.style.display = 'none';
+
+        // Reset mic button properties
         micBtn.onclick = () => startRecording();
         micBtn.innerHTML = '<i class="bi bi-mic"></i>';
         micBtn.title = 'Record voice message';
         micBtn.disabled = false;
+
+        // FIX 5: Check actual input state to determine which button to show
+        const userRole = document.body.dataset.userRole;
+        const canRecord = userRole === 'Admin' || userRole === 'Staff';
+        const hasText = messageInput.value.trim().length > 0;
+
+        if (hasText) {
+            // Input has text - show send button, hide mic
+            sendBtn.style.display = 'flex';
+            if (canRecord) {
+                micBtn.style.display = 'none';
+            }
+        } else {
+            // Input is empty - show mic button (if allowed), hide send
+            sendBtn.style.display = 'none';
+            if (canRecord) {
+                micBtn.style.display = 'flex';
+            } else {
+                micBtn.style.display = 'none';
+            }
+        }
     }
 
 function updateStatus() {
