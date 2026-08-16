@@ -1,6 +1,6 @@
 ﻿namespace StudentComplaintPortal.Domain.Entities;
 
-public enum ConversationType { Direct, Group }
+public enum ConversationType { Direct, Group, Query}
 
 public class Conversation
 {

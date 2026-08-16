@@ -7,14 +7,16 @@
 @using StudentComplaintPortal.Domain.Enums
 @Html.AntiForgeryToken()
 
-<div class="chat-workspace" data-preselect-complaint-id="@ViewBag.PreselectedComplaintId" data-user-role="@userRole">
-
+<div class="chat-workspace" data-preselect-complaint-id="@ViewBag.PreselectedComplaintId" data-user-role="@userRole" data-open-query="@ViewBag.OpenQuery">
     <div class="chat-list-column" id="chatListColumn">
         @if (isStaffOrAdmin)
         {
             <div class="chat-tabs">
-                <div class="chat-tab active" id="tabStudents" onclick="ChatWorkspace.showTab('students')" title="Students">
+                <div class="chat-tab active" id="tabStudents" onclick="ChatWorkspace.showTab('students')" title="Complaints">
                     <i class="bi bi-mortarboard"></i>
+                </div>
+                <div class="chat-tab" id="tabQuery" onclick="ChatWorkspace.showTab('query')" title="Queries">
+                    <i class="bi bi-headset"></i>
                 </div>
                 <div class="chat-tab" id="tabStaff" onclick="ChatWorkspace.showTab('staff')" title="Team">
                     <i class="bi bi-people-fill"></i>
@@ -54,6 +56,7 @@
 
         @if (isStaffOrAdmin)
         {
+            <div class="chat-list" id="listQuery" style="display:none;"></div>
             <div class="chat-list" id="listStaff" style="display:none;"></div>
             <button class="new-chat-fab" id="newChatFab" style="display:none;" onclick="ChatWorkspace.openNewChatPicker()" title="New chat">
                 <i class="bi bi-plus-lg"></i>

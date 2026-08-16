@@ -14,12 +14,16 @@ public class ConversationService : IConversationService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IFileStorageService _fileStorageService;
 
+
+
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, SemaphoreSlim> _directConversationLocks = new();
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, SemaphoreSlim> _queryConversationLocks = new();
 
     public ConversationService(IUnitOfWork unitOfWork, IFileStorageService fileStorageService)
     {
         _unitOfWork = unitOfWork;
         _fileStorageService = fileStorageService;
+        
     }
 
     public async Task<List<ConversationDto>> GetConversationsForUserAsync(string userId)
@@ -349,5 +353,146 @@ public class ConversationService : IConversationService
                 }
             }
         };
+    }
+    public async Task<string> GetOrAssignQueryAliasAsync(string staffUserId)
+    {
+        var user = await _unitOfWork.Conversations.GetUserAsync(staffUserId);
+        if (user == null) return "Unknown";
+
+        if (!string.IsNullOrEmpty(user.QueryAlias))
+        {
+            return user.QueryAlias;
+        }
+
+        var allUsers = await _unitOfWork.Conversations.GetStaffAndAdminContactsAsync("");
+        var existingAliases = allUsers
+            .Where(u => !string.IsNullOrEmpty(u.QueryAlias))
+            .Select(u => u.QueryAlias)
+            .ToList();
+
+        int nextNumber = 1;
+        if (existingAliases.Any())
+        {
+            var numbers = existingAliases
+                .Select(a => int.TryParse(a!.Replace("A", ""), out var n) ? n : 0)
+                .ToList();
+            nextNumber = numbers.Max() + 1;
+        }
+
+        var newAlias = $"A{nextNumber}";
+        await _unitOfWork.Conversations.UpdateUserQueryAliasAsync(staffUserId, newAlias);
+        await _unitOfWork.SaveChangesAsync();
+
+        return newAlias;
+    }
+    public async Task<int> GetOrCreateQueryConversationAsync(string studentId)
+    {
+        var gate = _queryConversationLocks.GetOrAdd(studentId, _ => new SemaphoreSlim(1, 1));
+
+        await gate.WaitAsync();
+        try
+        {
+            var existing = await _unitOfWork.Conversations.FindQueryConversationForStudentAsync(studentId);
+            if (existing != null)
+            {
+                return existing.Id;
+            }
+
+            var newConversation = new Conversation
+            {
+                Type = ConversationType.Query,
+                Name = "Support",
+                CreatedAt = DateTime.UtcNow
+            };
+            await _unitOfWork.Conversations.AddAsync(newConversation);
+            await _unitOfWork.SaveChangesAsync();
+
+            await _unitOfWork.Conversations.AddParticipantsAsync(new[]
+            {
+            new ConversationParticipant { ConversationId = newConversation.Id, UserId = studentId }
+        });
+            await _unitOfWork.SaveChangesAsync();
+
+            return newConversation.Id;
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
+    public async Task<CursorResult<ConversationDto>> GetQueryConversationsPagedAsync(string? cursor, int pageSize = 20, bool moveForward = true)
+    {
+        if (pageSize < 1) pageSize = 10;
+
+        var cursorTimestamp = PaginationHelper.DecodeTimestampCursor(cursor);
+        var conversations = await _unitOfWork.Conversations.GetQueryConversationsPagedAsync(cursorTimestamp, pageSize, moveForward);
+
+        var hasMore = conversations.Count > pageSize;
+        if (hasMore) conversations = conversations.Take(pageSize).ToList();
+
+        var dtos = new List<ConversationDto>();
+        foreach (var conv in conversations)
+        {
+            var lastMessage = await _unitOfWork.Conversations.GetLastMessageAsync(conv.Id);
+            var studentParticipant = conv.Participants.FirstOrDefault();
+
+            dtos.Add(new ConversationDto
+            {
+                Id = conv.Id,
+                Type = conv.Type.ToString(),
+                Name = studentParticipant?.User.FullName ?? "Unknown Student",
+                OtherUserId = studentParticipant?.UserId,
+                UnreadCount = 0,
+                LastMessagePreview = lastMessage?.Content,
+                LastMessageAt = lastMessage?.SentAt
+            });
+        }
+
+        string? nextCursor = hasMore ? PaginationHelper.EncodeTimestampCursor(conversations.Last().LastMessageAt ?? conversations.Last().CreatedAt) : null;
+        string? previousCursor = conversations.Count > 0 ? PaginationHelper.EncodeTimestampCursor(conversations.First().LastMessageAt ?? conversations.First().CreatedAt) : null;
+
+        return new CursorResult<ConversationDto>
+        {
+            Items = dtos,
+            NextCursor = nextCursor,
+            PreviousCursor = previousCursor,
+            HasMore = hasMore,
+            PageSize = pageSize
+        };
+    }
+    public async Task EnsureParticipantAsync(int conversationId, string userId)
+    {
+        var existing = await _unitOfWork.Conversations.GetParticipantAsync(conversationId, userId);
+        if (existing == null)
+        {
+            await _unitOfWork.Conversations.AddParticipantsAsync(new[]
+            {
+            new ConversationParticipant { ConversationId = conversationId, UserId = userId }
+        });
+            await _unitOfWork.SaveChangesAsync();
+        }
+    }
+    public async Task<CursorResult<InternalMessageDto>> GetQueryMessagesPagedAsync(int conversationId, bool viewerCanSeeRealNames, string? cursor, int pageSize = 20, bool moveForward = true)
+    {
+        var participants = await _unitOfWork.Conversations.GetParticipantsAsync(conversationId);
+        var messages = await _unitOfWork.Conversations.GetMessagesWithSenderAsync(conversationId);
+
+        var dtos = BuildMessageDtos(messages, participants);
+
+        foreach (var dto in dtos)
+        {
+            var sender = await _unitOfWork.Conversations.GetUserAsync(dto.SenderId);
+
+            if (sender != null && (sender.Role == UserRole.Staff || sender.Role == UserRole.Admin))
+            {
+                if (!viewerCanSeeRealNames)
+                {
+                    dto.SenderName = await GetOrAssignQueryAliasAsync(dto.SenderId);
+                }
+            }
+        }
+
+        return PaginationHelper.PaginateByCursorId(dtos, dto => dto.Id, cursor, pageSize, moveForward);
     }
 }

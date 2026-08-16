@@ -15,6 +15,8 @@ const ChatWorkspace = (function () {
     let activeEndDate = null;
     let isLoadingMoreStudentChats = false;
     let isLoadingMoreTeamChats = false;
+    let queryChatsCursor = null;
+    let isLoadingMoreQueryChats = false;
 
     // Client-side cache
     const onlineUserIds = new Set();
@@ -34,6 +36,7 @@ const ChatWorkspace = (function () {
 
         connection.on("ReceiveMessage", onComplaintMessageReceived);
         connection.on("ReceiveInternalMessage", onInternalMessageReceived);
+        connection.on("ReceiveQueryMessage", onQueryMessageReceived);
         connection.on("MessagesRead", onComplaintMessagesRead);
         connection.on("InternalMessagesRead", onInternalMessagesRead);
         connection.on("UserTyping", (userName, isTyping) => {
@@ -97,6 +100,17 @@ const ChatWorkspace = (function () {
                 onlineIds.forEach(id => onlineUserIds.add(id));
                 applyPresenceToList();
                 loadStudentChats();
+
+                const workspaceEl = document.querySelector('.chat-workspace');
+                const shouldOpenQuery = workspaceEl && workspaceEl.dataset.openQuery === 'True';
+                if (shouldOpenQuery) {
+                    fetch('/ChatWorkspace/GetOrCreateMyQueryConversation')
+                        .then(res => res.json())
+                        .then(result => {
+                            openQueryChat(result.conversationId, 'Support', null);
+                        })
+                        .catch(err => console.error("Failed to open query chat:", err));
+                }
             })
             .catch(err => console.error("SignalR connection error:", err));
 
@@ -142,21 +156,32 @@ const ChatWorkspace = (function () {
 
     function showTab(tab) {
         const isStudents = tab === 'students';
+        const isQuery = tab === 'query';
+        const isStaff = tab === 'staff';
+
         document.getElementById('listStudents').style.display = isStudents ? 'block' : 'none';
+
+        const listQuery = document.getElementById('listQuery');
+        if (listQuery) listQuery.style.display = isQuery ? 'block' : 'none';
+
         const listStaff = document.getElementById('listStaff');
-        if (listStaff) listStaff.style.display = isStudents ? 'none' : 'block';
+        if (listStaff) listStaff.style.display = isStaff ? 'block' : 'none';
 
         const filterbar = document.querySelector('.filterbar');
         if (filterbar) filterbar.style.display = isStudents ? 'block' : 'none';
 
         const newChatFab = document.getElementById('newChatFab');
-        if (newChatFab) newChatFab.style.display = isStudents ? 'none' : 'flex';
+        if (newChatFab) newChatFab.style.display = isStaff ? 'flex' : 'none';
 
         document.getElementById('tabStudents').classList.toggle('active', isStudents);
+        const tabQuery = document.getElementById('tabQuery');
+        if (tabQuery) tabQuery.classList.toggle('active', isQuery);
         const tabStaff = document.getElementById('tabStaff');
-        if (tabStaff) tabStaff.classList.toggle('active', !isStudents);
+        if (tabStaff) tabStaff.classList.toggle('active', isStaff);
 
-        if (isStudents) { loadStudentChats(); } else { loadTeamChats(); }
+        if (isStudents) { loadStudentChats(); }
+        else if (isQuery) { loadQueryChats(); }
+        else { loadTeamChats(); }
     }
 
     function buildFilterQueryString() {
@@ -340,6 +365,47 @@ const ChatWorkspace = (function () {
             }
         };
     }
+    
+
+    function loadQueryChats() {
+        queryChatsCursor = null;
+        fetch('/ChatWorkspace/GetQueryChats')
+            .then(res => res.json())
+            .then(result => {
+                renderQueryList(result.items, true);
+                queryChatsCursor = result.nextCursor;
+            })
+            .catch(err => console.error("Failed to load query chats:", err));
+    }
+
+    function renderQueryList(chats, replace = true) {
+        const container = document.getElementById('listQuery');
+        if (!container) return;
+        if (replace) container.innerHTML = '';
+
+        chats.forEach(chat => {
+            const item = document.createElement('div');
+            item.className = 'chat-list-item';
+            if (chat.otherUserId) item.dataset.userId = chat.otherUserId;
+            item.onclick = () => openQueryChat(chat.id, chat.name, chat.otherUserId);
+
+            item.innerHTML = `
+                <div class="chat-avatar-small">
+                    <span class="online-dot"></span>
+                </div>
+                <div style="flex:1; min-width:0;">
+                    <div class="chat-list-row-top">
+                        <span class="chat-list-name">${escapeHtml(chat.name)}</span>
+                        <span class="chat-list-time">${formatTime(chat.lastMessageAt)}</span>
+                    </div>
+                    <div class="chat-list-preview">${escapeHtml(chat.lastMessagePreview || '')}</div>
+                </div>
+                ${chat.unreadCount > 0 ? `<div class="unread-badge">${chat.unreadCount}</div>` : ''}
+            `;
+            container.appendChild(item);
+        });
+        applyPresenceToList();
+    }
 
     function renderStudentList(chats, replace = true) {
         const container = document.getElementById('listStudents');
@@ -348,25 +414,46 @@ const ChatWorkspace = (function () {
         chats.forEach(chat => {
             const item = document.createElement('div');
             item.className = 'chat-list-item';
-            item.dataset.userId = chat.studentId;
-            item.onclick = () => openComplaintChat(chat.complaintId, chat.studentName, chat.studentId, chat.title);
 
-            item.innerHTML = `
-            <div class="chat-avatar-small">
-                ${chat.isSupportTeamView ? '' : '<span class="online-dot"></span>'}
-            </div>
-            <div style="flex:1; min-width:0;">
-                <div class="chat-list-row-top">
-                    <span class="chat-list-name">${escapeHtml(chat.title)}</span>
-                    <span class="chat-list-time">${formatTime(chat.lastMessageAt)}</span>
+            if (chat.isQueryRow) {
+                item.onclick = () => openQueryChat(chat.queryConversationId, 'Support', null);
+
+                item.innerHTML = `
+                <div class="chat-avatar-small" style="display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-headset"></i>
                 </div>
-                <div class="chat-list-preview">
-                    <span class="status-pill status-${chat.status}">${escapeHtml(chat.status)}</span>
-                    ${escapeHtml(chat.lastMessagePreview || chat.studentName)}
+                <div style="flex:1; min-width:0;">
+                    <div class="chat-list-row-top">
+                        <span class="chat-list-name">Support</span>
+                        <span class="chat-list-time">${formatTime(chat.lastMessageAt)}</span>
+                    </div>
+                    <div class="chat-list-preview">
+                        ${escapeHtml(chat.lastMessagePreview || 'Ask us anything')}
+                    </div>
                 </div>
-            </div>
-            ${chat.unreadCount > 0 ? `<div class="unread-badge">${chat.unreadCount}</div>` : ''}
-            `;
+                ${chat.unreadCount > 0 ? `<div class="unread-badge">${chat.unreadCount}</div>` : ''}
+                `;
+            } else {
+                item.dataset.userId = chat.studentId;
+                item.onclick = () => openComplaintChat(chat.complaintId, chat.studentName, chat.studentId, chat.title);
+
+                item.innerHTML = `
+                <div class="chat-avatar-small">
+                    ${chat.isSupportTeamView ? '' : '<span class="online-dot"></span>'}
+                </div>
+                <div style="flex:1; min-width:0;">
+                    <div class="chat-list-row-top">
+                        <span class="chat-list-name">${escapeHtml(chat.title)}</span>
+                        <span class="chat-list-time">${formatTime(chat.lastMessageAt)}</span>
+                    </div>
+                    <div class="chat-list-preview">
+                        <span class="status-pill status-${chat.status}">${escapeHtml(chat.status)}</span>
+                        ${escapeHtml(chat.lastMessagePreview || chat.studentName)}
+                    </div>
+                </div>
+                ${chat.unreadCount > 0 ? `<div class="unread-badge">${chat.unreadCount}</div>` : ''}
+                `;
+            }
             container.appendChild(item);
         });
         applyPresenceToList();
@@ -464,6 +551,31 @@ const ChatWorkspace = (function () {
                     .catch(err => console.error(err));
             });
     }
+    function openQueryChat(conversationId, displayName, otherUserId) {
+        currentChatType = 'query';
+        currentChatId = conversationId;
+        currentOtherUserId = otherUserId || null;
+
+        setHeader(displayName, otherUserId, false);
+        showChatUi();
+        updateChatInputForStatus(null);
+        setInfoPanelLoading();
+
+        connection.invoke("JoinQueryGroup", conversationId).catch(err => console.error(err));
+
+        messageCursor = null;
+
+        fetch(`/ChatWorkspace/GetQueryMessagesPaged?conversationId=${conversationId}`)
+            .then(res => res.json())
+            .then(result => {
+                const messages = result.items.slice().reverse();
+                renderMessages(messages, true);
+                messageCursor = result.nextCursor;
+                setupScrollListener();
+                connection.invoke("MarkInternalMessagesAsRead", conversationId)
+                    .catch(err => console.error(err));
+            });
+    }
 
     function setHeader(name, userId, isGroup) {
         document.getElementById('chatHeader').style.display = 'flex';
@@ -553,8 +665,14 @@ const ChatWorkspace = (function () {
             `;
         }
 
+        let senderLabelHtml = '';
+        if (currentChatType === 'query' && !isOutgoing) {
+            senderLabelHtml = `<div class="query-sender-label">${escapeHtml(m.senderName || '')}</div>`;
+        }
+
         let messageContent = `
             <div class="message-text-wrapper">
+                ${senderLabelHtml}
                 <p class="message-text mb-0">
                     <span class="message-content">${contentHtml}</span>${editBadgeHtml}
                 </p>
@@ -697,6 +815,8 @@ const ChatWorkspace = (function () {
 
         if (currentChatType === 'complaint') {
             connection.invoke("SendMessage", currentChatId, content).catch(err => console.error(err));
+        } else if (currentChatType === 'query') {
+            connection.invoke("SendQueryMessage", currentChatId, content).catch(err => console.error(err));
         } else {
             connection.invoke("SendInternalMessage", currentChatId, content).catch(err => console.error(err));
         }
@@ -855,6 +975,23 @@ const ChatWorkspace = (function () {
         }
         loadTeamChats();
     }
+    function onQueryMessageReceived(message) {
+        if (currentChatType === 'query' && message.conversationId === currentChatId) {
+            appendIncomingMessage(message);
+
+            const currentUserId = document.body.dataset.currentUserId;
+            if (message.senderId !== currentUserId) {
+                connection.invoke("MarkInternalMessagesAsRead", currentChatId).catch(err => console.error(err));
+            }
+        }
+
+        const userRole = document.body.dataset.userRole;
+        if (userRole === 'Admin' || userRole === 'Staff') {
+            loadQueryChats();
+        } else {
+            loadStudentChats();
+        }
+    }
 
     function appendIncomingMessage(message) {
         const currentUserId = document.body.dataset.currentUserId;
@@ -907,8 +1044,14 @@ const ChatWorkspace = (function () {
             `;
         }
 
+        let senderLabelHtml = '';
+        if (currentChatType === 'query' && !isOutgoing) {
+            senderLabelHtml = `<div class="query-sender-label">${escapeHtml(message.senderName || '')}</div>`;
+        }
+
         let messageContent = `
             <div class="message-text-wrapper">
+                ${senderLabelHtml}
                 <p class="message-text mb-0">
                     <span class="message-content">${escapeHtml(message.content || '')}</span>
                 </p>

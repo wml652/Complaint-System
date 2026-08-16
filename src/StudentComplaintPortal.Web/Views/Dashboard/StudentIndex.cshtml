@@ -5,7 +5,12 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>My Complaints</h2>
-    <a asp-action="NewComplaint" class="btn btn-primary">+ New Complaint</a>
+    <div class="d-flex gap-2">
+        <a asp-action="NewComplaint" class="btn btn-primary">+ New Complaint</a>
+        <a asp-controller="ChatWorkspace" asp-action="Index" asp-route-openQuery="true" class="btn btn-outline-primary">
+            <i class="bi bi-headset"></i> Chat
+        </a>
+    </div>
 </div>
 
 @if (!Model.Any())

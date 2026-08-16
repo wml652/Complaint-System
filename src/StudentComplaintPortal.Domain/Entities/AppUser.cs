@@ -9,6 +9,7 @@ public class AppUser : IdentityUser
     public UserRole Role { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? LastSeenAt { get; set; }
+    public string? QueryAlias { get; set; }
 
     // Navigation properties
     public ICollection<Complaint> Complaints { get; set; } = new List<Complaint>();

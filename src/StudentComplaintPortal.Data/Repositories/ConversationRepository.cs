@@ -132,4 +132,36 @@ public class ConversationRepository : GenericRepository<Conversation>, IConversa
 
         return await query.OrderByDescending(c => c.LastMessageAt ?? c.CreatedAt).Take(pageSize + 1).ToListAsync();
     }
+    public async Task UpdateUserQueryAliasAsync(string userId, string alias)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user != null)
+        {
+            user.QueryAlias = alias;
+        }
+    }
+    public async Task<Conversation?> FindQueryConversationForStudentAsync(string studentId)
+    {
+        return await _dbSet
+            .Where(c => c.Type == ConversationType.Query)
+            .Where(c => c.Participants.Any(p => p.UserId == studentId))
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<List<Conversation>> GetQueryConversationsPagedAsync(DateTime? cursorTimestamp, int pageSize, bool moveForward = true)
+    {
+        var query = _dbSet
+            .Include(c => c.Participants).ThenInclude(p => p.User)
+            .Where(c => c.Type == ConversationType.Query)
+            .AsQueryable();
+
+        if (cursorTimestamp.HasValue)
+        {
+            query = moveForward
+                ? query.Where(c => (c.LastMessageAt ?? c.CreatedAt) < cursorTimestamp.Value)
+                : query.Where(c => (c.LastMessageAt ?? c.CreatedAt) > cursorTimestamp.Value);
+        }
+
+        return await query.OrderByDescending(c => c.LastMessageAt ?? c.CreatedAt).Take(pageSize + 1).ToListAsync();
+    }
 }

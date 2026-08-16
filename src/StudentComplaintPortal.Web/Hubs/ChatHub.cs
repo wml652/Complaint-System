@@ -57,6 +57,54 @@ public class ChatHub : Hub
 
         await Clients.Group($"conversation-{conversationId}").SendAsync("ReceiveInternalMessage", messageDto);
     }
+    public async Task JoinQueryGroup(int conversationId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"conversation-{conversationId}");
+    }
+
+    public async Task SendQueryMessage(int conversationId, string content)
+    {
+        var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userRole = Context.User?.FindFirst(ClaimTypes.Role)?.Value;
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            throw new HubException("Unauthorized: User not authenticated.");
+        }
+
+        var messageDto = await _conversationService.SendMessageAsync(conversationId, userId, content);
+
+        // Agar Staff/Admin reply-kar-raha-hai, use is-conversation-ka-participant-bana-do (agar pehle-se-nahi-hai)
+        if (userRole == "Staff" || userRole == "Admin")
+        {
+            await _conversationService.EnsureParticipantAsync(conversationId, userId);
+            var alias = await _conversationService.GetOrAssignQueryAliasAsync(userId);
+
+            // Har-viewer-ke-liye alag-alag-naam-bhejna-hoga (kuch-ko-alias, kuch-ko-real-naam)
+            // isliye pehle sabko group-mein Alias-wali-DTO bhejte-hain (jo-Student-ko-turant-mil-jaye)
+            var aliasedDto = new StudentComplaintPortal.Application.DTOs.InternalMessageDto
+            {
+                Id = messageDto.Id,
+                ConversationId = messageDto.ConversationId,
+                SenderId = messageDto.SenderId,
+                SenderName = alias,
+                Content = messageDto.Content,
+                SentAt = messageDto.SentAt,
+                ReadAt = messageDto.ReadAt,
+                Attachments = messageDto.Attachments
+            };
+
+            await Clients.Group($"conversation-{conversationId}").SendAsync("ReceiveQueryMessage", aliasedDto);
+
+            // Sender (Admin/Staff) ko khud apna-asal-naam-hi-dikhna-chahiye, isliye use alag-se real-naam-wali-DTO bhejo
+            await Clients.Caller.SendAsync("ReceiveQueryMessage", messageDto);
+        }
+        else
+        {
+            // Student ka apna-bheja-message — sabko-uska-asal-naam-hi-dikhna-chahiye (Student khud-anonymous-nahi-hai)
+            await Clients.Group($"conversation-{conversationId}").SendAsync("ReceiveQueryMessage", messageDto);
+        }
+    }
 
     public async Task MarkInternalMessagesAsRead(int conversationId)
     {

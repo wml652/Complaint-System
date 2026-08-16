@@ -21,4 +21,7 @@ public interface IConversationRepository : IGenericRepository<Conversation>
     Task<AppUser?> GetUserAsync(string userId);
     Task<Conversation?> GetPinnedGroupForUserAsync(string userId);
     Task<List<Conversation>> GetConversationsPagedForUserAsync(string userId, DateTime? cursorTimestamp, int pageSize, bool moveForward = true);
+    Task UpdateUserQueryAliasAsync(string userId, string alias);
+    Task<Conversation?> FindQueryConversationForStudentAsync(string studentId);
+    Task<List<Conversation>> GetQueryConversationsPagedAsync(DateTime? cursorTimestamp, int pageSize, bool moveForward = true);
 }

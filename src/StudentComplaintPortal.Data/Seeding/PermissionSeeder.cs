@@ -18,6 +18,7 @@ public static class PermissionSeeder
         ("Complaints.Delete",             "Delete complaints",           "Complaints"),
         ("Complaints.AssignToStaff",      "Assign complaints to staff",  "Complaints"),
         ("Roles.Manage",                  "Create/edit roles and permissions", "Roles"),
+        ("Queries.ViewRealNames", "View real staff/admin names in student queries", "Queries"),
     };//Users.add/delete/edit Complaints.Delete/AssignToStaff  Roles.Manage not yet implemented ...coming soon
 
     public static async Task SeedAsync(AppDbContext context)

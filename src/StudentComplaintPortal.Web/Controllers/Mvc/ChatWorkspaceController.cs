@@ -33,9 +33,10 @@ public class ChatWorkspaceController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(int? complaintId = null)
+    public async Task<IActionResult> Index(int? complaintId = null, bool openQuery = false)
     {
         ViewBag.PreselectedComplaintId = complaintId;
+        ViewBag.OpenQuery = openQuery;
 
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (User.IsInRole("Admin") || User.HasClaim("Permission", "Complaints.ViewAll"))
@@ -77,6 +78,29 @@ public class ChatWorkspaceController : Controller
         }
 
         var result = new List<object>();
+
+        // Sirf pehli-page par (cursor null hone par) Student ke liye pinned "Support" query-row add karo
+        if (User.IsInRole("Student") && string.IsNullOrEmpty(cursor))
+        {
+            var queryConversationId = await _conversationService.GetOrCreateQueryConversationAsync(userId);
+            var queryMessages = await _conversationService.GetQueryMessagesPagedAsync(queryConversationId, false, null, 1, false);
+            var lastQueryMessage = queryMessages.Items.LastOrDefault();
+            var queryUnreadCount = queryMessages.Items.Count(m => m.SenderId != userId && m.ReadAt == null);
+
+            result.Add(new
+            {
+                complaintId = (int?)null,
+                queryConversationId = queryConversationId,
+                isQueryRow = true,
+                studentName = "Support",
+                title = "Support",
+                status = (string?)null,
+                lastMessagePreview = lastQueryMessage?.Content,
+                lastMessageAt = lastQueryMessage?.SentAt,
+                unreadCount = queryUnreadCount
+            });
+        }
+
         foreach (var complaint in pagedComplaints.Items)
         {
             var messages = (await _messageService.GetConversationAsync(complaint.Id)).ToList();
@@ -85,7 +109,9 @@ public class ChatWorkspaceController : Controller
 
             result.Add(new
             {
-                complaintId = complaint.Id,
+                complaintId = (int?)complaint.Id,
+                queryConversationId = (int?)null,
+                isQueryRow = false,
                 studentName = User.IsInRole("Student") ? "Support Team" : complaint.StudentName,
                 studentId = complaint.StudentId,
                 isSupportTeamView = User.IsInRole("Student"),
@@ -149,5 +175,47 @@ public class ChatWorkspaceController : Controller
             updatedAt = complaint.UpdatedAt,
             studentInfo = studentInfo  // FIX 4: Dynamic student information
         });
+    }
+    //for student
+    [HttpGet]
+    public async Task<IActionResult> GetOrCreateMyQueryConversation()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Forbid();
+
+        var conversationId = await _conversationService.GetOrCreateQueryConversationAsync(userId);
+        return Json(new { conversationId });
+    }
+    //for staff/admin
+    [HttpGet]
+    public async Task<IActionResult> GetQueryChats(string? cursor = null, int pageSize = 20, bool moveForward = true)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Forbid();
+
+        var pagedQueries = await _conversationService.GetQueryConversationsPagedAsync(cursor, pageSize, moveForward);
+        return Json(new { items = pagedQueries.Items, nextCursor = pagedQueries.NextCursor, hasMore = pagedQueries.HasMore });
+    }
+    [HttpGet]
+    [HttpGet]
+    public async Task<IActionResult> GetQueryMessagesPaged(int conversationId, string? cursor = null, int pageSize = 20, bool moveForward = true)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Forbid();
+
+        if (User.IsInRole("Student"))
+        {
+            var myConversationId = await _conversationService.GetOrCreateQueryConversationAsync(userId);
+            if (myConversationId != conversationId)
+            {
+                return Forbid();
+            }
+        }
+
+        bool canSeeRealNames = !User.IsInRole("Student") &&
+            (User.IsInRole("Admin") || User.HasClaim("Permission", "Queries.ViewRealNames"));
+
+        var result = await _conversationService.GetQueryMessagesPagedAsync(conversationId, canSeeRealNames, cursor, pageSize, moveForward);
+        return Json(result);
     }
 }

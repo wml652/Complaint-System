@@ -14,4 +14,9 @@ public interface IConversationService
     Task<List<ParticipantDto>> GetContactsAsync(string currentUserId);
     Task<CursorResult<ConversationDto>> GetConversationsPagedForUserAsync(string userId, string? cursor, int pageSize = 20, bool moveForward = true);
     Task<InternalMessageDto> CreateMessageWithAttachmentAsync(int conversationId, string senderId, Stream fileStream, string fileName, string contentType, StudentComplaintPortal.Domain.Enums.FileType fileType, string? content = null);
+    Task<string> GetOrAssignQueryAliasAsync(string staffUserId);
+    Task<int> GetOrCreateQueryConversationAsync(string studentId);
+    Task<CursorResult<ConversationDto>> GetQueryConversationsPagedAsync(string? cursor, int pageSize = 20, bool moveForward = true);
+    Task EnsureParticipantAsync(int conversationId, string userId);
+    Task<CursorResult<InternalMessageDto>> GetQueryMessagesPagedAsync(int conversationId, bool viewerCanSeeRealNames, string? cursor, int pageSize = 20, bool moveForward = true);
 }
