@@ -94,7 +94,10 @@ public class ChatHub : Hub
                 Attachments = messageDto.Attachments
             };
 
-            await Clients.Group($"conversation-{conversationId}").SendAsync("ReceiveQueryMessage", aliasedDto);
+            // Sender ko chhod-kar-baaki-group-ko alias-wali-DTO bhejo (GroupExcept — warna agar sender khud
+            // is-conversation-ki-SignalR-group-mein-hai (JoinQueryGroup se, jab chat khuli-hoti-hai), use
+            // Clients.Group aur Clients.Caller dono-se-message-milta, jisse uska-apna-message 2x/duplicate dikhta)
+            await Clients.GroupExcept($"conversation-{conversationId}", Context.ConnectionId).SendAsync("ReceiveQueryMessage", aliasedDto);
 
             // Sender (Admin/Staff) ko khud apna-asal-naam-hi-dikhna-chahiye, isliye use alag-se real-naam-wali-DTO bhejo
             await Clients.Caller.SendAsync("ReceiveQueryMessage", messageDto);
