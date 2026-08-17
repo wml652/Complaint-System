@@ -1,0 +1,55 @@
+@model StudentComplaintPortal.Web.Models.LoginRequest
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">Student Complaint Portal</h2>
+                <h5 class="text-center mb-4">Login</h5>
+
+                <form asp-action="Login" method="post">
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label">Email</label>
+                        <input asp-for="Email" class="form-control" placeholder="student@test.com" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label">Password</label>
+                        <input asp-for="Password" type="password" class="form-control" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input asp-for="RememberMe" type="checkbox" class="form-check-input" />
+                        <label asp-for="RememberMe" class="form-check-label">Remember me</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 mb-3">Login</button>
+
+                    <div class="text-center">
+                        <p class="mb-0">Don't have an account? <a asp-action="Register">Register here</a></p>
+                    </div>
+                </form>
+
+                <hr class="my-4" />
+                <div class="alert alert-info mb-0">
+                    <small>
+                        <strong>Test Accounts:</strong><br />
+                        Student: student@test.com / Student123!<br />
+                        Admin: admin@test.com / Admin123!
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

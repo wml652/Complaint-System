@@ -1,0 +1,55 @@
+﻿@* Sidebar navigation — thin icon rail, per-role visibility *@
+<aside class="app-sidebar-icon-rail">
+    <div class="app-sidebar-brand-icon" title="Complaint Portal">CP</div>
+    <nav class="app-sidebar-nav-icons">
+        <a class="sidebar-icon-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")"
+           asp-controller="Dashboard" asp-action="Index" title="Dashboard">
+            <i class="bi bi-layout-text-window-reverse"></i>
+        </a>
+
+        <a class="sidebar-icon-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "ChatWorkspace" ? "active" : "")"
+           asp-controller="ChatWorkspace" asp-action="Index" title="Complaints">
+            <i class="bi bi-chat-dots"></i>
+        </a>
+
+        @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+        {
+            <a class="sidebar-icon-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Campaign" ? "active" : "")"
+               asp-controller="Campaign" asp-action="Index" title="Campaigns">
+                <i class="bi bi-calendar3"></i>
+            </a>
+        }
+
+        @if (User.IsInRole("Student"))
+        {
+            <a class="sidebar-icon-item @(ViewContext.RouteData.Values["action"]?.ToString() == "NewComplaint" ? "active" : "")"
+               asp-controller="Dashboard" asp-action="NewComplaint" title="New Complaint">
+                <i class="bi bi-plus-circle"></i>
+            </a>
+        }
+
+        @if (User.IsInRole("Admin"))
+        {
+            <a class="sidebar-icon-item @(ViewContext.RouteData.Values["action"]?.ToString() == "CategoryManagement" ? "active" : "")"
+               asp-controller="Dashboard" asp-action="CategoryManagement" title="Category Management">
+                <i class="bi bi-folder"></i>
+            </a>
+
+            <a class="sidebar-icon-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "RoleManagement" ? "active" : "")"
+               asp-controller="RoleManagement" asp-action="Index" title="Assign Roles">
+                <i class="bi bi-shield-check"></i>
+            </a>
+        }
+    </nav>
+    <div class="app-sidebar-icon-footer">
+        <a class="sidebar-icon-item" href="#" id="notificationBell" title="Notifications">
+            <i class="bi bi-bell"></i>
+            <span class="badge bg-danger rounded-pill icon-notification-badge" id="notificationCount" style="display:none;">0</span>
+        </a>
+        <form asp-controller="Account" asp-action="Logout" method="post">
+            <button type="submit" class="sidebar-icon-item logout-icon-btn" title="Log Out">
+                <i class="bi bi-box-arrow-right"></i>
+            </button>
+        </form>
+    </div>
+</aside>
