@@ -1,0 +1,151 @@
+﻿@{
+    ViewData["Title"] = "Messages";
+    bool isStaffOrAdmin = User.IsInRole("Admin") || User.IsInRole("Staff");
+    var userRole = User.FindFirstValue(System.Security.Claims.ClaimTypes.Role) ?? "Student";
+}
+@using System.Security.Claims
+@using StudentComplaintPortal.Domain.Enums
+@Html.AntiForgeryToken()
+
+<div class="chat-workspace" data-preselect-complaint-id="@ViewBag.PreselectedComplaintId" data-user-role="@userRole" data-open-query="@ViewBag.OpenQuery">
+    <div class="chat-list-column" id="chatListColumn">
+        @if (isStaffOrAdmin)
+        {
+            <div class="chat-tabs">
+                <div class="chat-tab active" id="tabStudents" onclick="ChatWorkspace.showTab('students')" title="Complaints">
+                    <i class="bi bi-mortarboard"></i>
+                </div>
+                <div class="chat-tab" id="tabQuery" onclick="ChatWorkspace.showTab('query')" title="Queries">
+                    <i class="bi bi-headset"></i>
+                </div>
+                <div class="chat-tab" id="tabStaff" onclick="ChatWorkspace.showTab('staff')" title="Team">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+            </div>
+
+            <div class="filterbar">
+                <div class="filter-row">
+                    <div class="chip-row" id="categoryChipRow">
+                        <div class="chip active" data-category-id="" onclick="ChatWorkspace.selectCategoryChip(this, null)">All</div>
+                        @foreach (var cat in (IEnumerable<StudentComplaintPortal.Application.DTOs.CategoryDto>)ViewBag.FilterCategories)
+                        {
+                            <div class="chip" data-category-id="@cat.Id" onclick="ChatWorkspace.selectCategoryChip(this, @cat.Id)">@cat.Name</div>
+                        }
+                    </div>
+                    <div class="filter-icon-wrap">
+                        <div class="filter-icon" id="filterGearIcon" onclick="ChatWorkspace.toggleFilterPopover()">
+                            <i class="bi bi-sliders"></i>
+                        </div>
+                        <div class="popover" id="filterPopover">
+                            <div class="popover-label">Status</div>
+                            <div class="status-opt sel" data-status="" onclick="ChatWorkspace.selectStatusOption(this, null)">All</div>
+                            @foreach (var s in Enum.GetValues<ComplaintStatus>())
+                            {
+                                var label = System.Text.RegularExpressions.Regex.Replace(s.ToString(), "([a-z])([A-Z])", "$1 $2");
+                                <div class="status-opt" data-status="@s" onclick="ChatWorkspace.selectStatusOption(this, '@s')">@label</div>
+                            }
+                            <div class="popover-label">Messages</div>
+                            <div class="popover-toggle">Unread only <div class="switch" id="unreadSwitch" onclick="ChatWorkspace.toggleUnreadSwitch()"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="chat-list" id="listStudents"></div>
+
+        @if (isStaffOrAdmin)
+        {
+            <div class="chat-list" id="listQuery" style="display:none;"></div>
+            <div class="chat-list" id="listStaff" style="display:none;"></div>
+            <button class="new-chat-fab" id="newChatFab" style="display:none;" onclick="ChatWorkspace.openNewChatPicker()" title="New chat">
+                <i class="bi bi-plus-lg"></i>
+            </button>
+            <div class="contact-picker" id="contactPicker" style="display:none;">
+                <div class="contact-picker-header">
+                    <i class="bi bi-arrow-left" onclick="ChatWorkspace.closeNewChatPicker()"></i>
+                    <span>Select contact</span>
+                </div>
+                <div class="chat-list" id="contactList"></div>
+            </div>
+        }
+    </div>
+
+    <div class="chat-main-column">
+        <div class="chat-header" id="chatHeader" style="display:none;">
+            <div class="chat-avatar" id="chatAvatar"></div>
+            <div class="chat-header-info">
+                <div class="chat-header-name" id="chatName"></div>
+                <div class="chat-header-status" id="chatStatus"></div>
+            </div>
+            <i class="bi bi-info-circle chat-info-toggle" id="infoToggle" onclick="ChatWorkspace.toggleInfo()"></i>
+        </div>
+
+        <div class="chat-body" id="chatBody"></div>
+
+        <!-- Typing Indicator -->
+        <div id="typingIndicator" class="typing-indicator" style="display:none;">
+            <span id="typingText"></span>
+        </div>
+
+        <div class="chat-input-bar" id="chatInputBar" style="display:none;">
+            <button class="btn btn-outline-secondary" id="attachButton" type="button" onclick="ChatWorkspace.toggleAttachMenu()">
+                <i class="bi bi-paperclip"></i>
+            </button>
+            <div id="attachMenu" class="attach-menu" style="display:none;">
+                <label class="attach-menu-item" for="photoInput"><i class="bi bi-image"></i> Photo</label>
+                <label class="attach-menu-item" for="videoInput"><i class="bi bi-camera-video"></i> Video</label>
+                @if (isStaffOrAdmin)
+                {
+                    <label class="attach-menu-item" for="voiceInput"><i class="bi bi-mic"></i> Voice Message</label>
+                }
+            </div>
+            <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="ChatWorkspace.handleFileSelected(this, 'Photo')" />
+            <input type="file" id="videoInput" accept="video/*" style="display:none;" onchange="ChatWorkspace.handleFileSelected(this, 'Video')" />
+            @if (isStaffOrAdmin)
+            {
+                <input type="file" id="voiceInput" accept="audio/*" style="display:none;" onchange="ChatWorkspace.handleFileSelected(this, 'VoiceNote')" />
+            }
+
+            <input type="text" id="messageInput" class="form-control" placeholder="Type a message" />
+
+            <div id="recordingBar" class="recording-bar" style="display:none;">
+                <button type="button" class="icon-btn trash-btn" onclick="ChatWorkspace.cancelRecording()">
+                    <i class="bi bi-trash"></i>
+                </button>
+                <div class="red-dot"></div>
+                <div class="waveform-container" id="waveformBars">
+                    @for (int i = 0; i < 20; i++)
+                    {
+                        <span class="wave-bar"></span>
+                    }
+                </div>
+                <span class="recording-timer" id="recordingTimer">0:00</span>
+            </div>
+
+            <button class="btn btn-primary" id="sendButton" style="display:none;" onclick="ChatWorkspace.sendMessage()">
+                <i class="bi bi-send"></i>
+            </button>
+            @if (isStaffOrAdmin)
+            {
+                <button class="btn btn-primary" id="micButton" style="display:flex;" title="Record voice message">
+                    <i class="bi bi-mic"></i>
+                </button>
+            }
+        </div>
+
+        <!-- IMPORTANT: closed-complaint UI guard - do not remove.
+             Shown instead of chatInputBar when the complaint's status is Closed. -->
+        <div class="chat-input-bar closed-banner" id="closedBanner" style="display:none;">
+            <i class="bi bi-lock-fill me-2"></i> This complaint is closed. The conversation is read-only.
+        </div>
+
+    </div>
+
+    <div class="chat-info-panel" id="infoPanel" style="display:none;"></div>
+</div>
+
+@section Scripts {
+    <script src="~/js/chat-workspace.js"></script>
+    <script src="~/js/audioRecorder.js" asp-append-version="true"></script>
+}

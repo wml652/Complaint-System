@@ -1,0 +1,261 @@
+@using System.Text.Json
+@model UpdateCategoryDto
+
+@{
+    ViewData["Title"] = "Edit Category";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    int categoryId = (int)(ViewData["CategoryId"] ?? 0);
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h2>Edit Category</h2>
+            <hr />
+
+            <form id="editCategoryForm" method="post" action="javascript:void(0);">
+                <!-- Basic Category Info -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Category Name <span class="text-danger">*</span></label>
+                    <input type="text" name="name" class="form-control" 
+                           value="@Model.Name" required />
+                    <span class="text-danger" id="nameError"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Description</label>
+                    <textarea name="description" class="form-control" rows="3" placeholder="Optional description">@Model.Description</textarea>
+                </div>
+
+                <!-- Category Icon Picker -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Category Icon</label>
+                    <input type="hidden" id="selectedIcon" name="icon" value="@Model.Icon" />
+                    <div class="d-flex flex-wrap gap-2" id="iconPicker">
+                        <button type="button" class="btn btn-outline-primary p-2 text-center icon-btn" style="width: 80px;" data-icon="academic" onclick="selectIcon('academic', this)">
+                            <div class="d-flex flex-column align-items-center">
+                                <span class="fs-3">🎓</span>
+                                <small class="mt-1" style="font-size: 0.75rem; line-height: 1.1;">Academic</small>
+                            </div>
+                        </button>
+                        <button type="button" class="btn btn-outline-primary p-2 text-center icon-btn" style="width: 80px;" data-icon="finance" onclick="selectIcon('finance', this)">
+                            <div class="d-flex flex-column align-items-center">
+                                <span class="fs-3">💰</span>
+                                <small class="mt-1" style="font-size: 0.75rem; line-height: 1.1;">Finance</small>
+                            </div>
+                        </button>
+                        <button type="button" class="btn btn-outline-primary p-2 text-center icon-btn" style="width: 80px;" data-icon="campus" onclick="selectIcon('campus', this)">
+                            <div class="d-flex flex-column align-items-center">
+                                <span class="fs-3">🏫</span>
+                                <small class="mt-1" style="font-size: 0.75rem; line-height: 1.1;">Campus</small>
+                            </div>
+                        </button>
+                        <button type="button" class="btn btn-outline-primary p-2 text-center icon-btn" style="width: 80px;" data-icon="security" onclick="selectIcon('security', this)">
+                            <div class="d-flex flex-column align-items-center">
+                                <span class="fs-3">🔒</span>
+                                <small class="mt-1" style="font-size: 0.75rem; line-height: 1.1;">Security</small>
+                            </div>
+                        </button>
+                        <button type="button" class="btn btn-outline-primary p-2 text-center icon-btn" style="width: 80px;" data-icon="hostel" onclick="selectIcon('hostel', this)">
+                            <div class="d-flex flex-column align-items-center">
+                                <span class="fs-3">🏠</span>
+                                <small class="mt-1" style="font-size: 0.75rem; line-height: 1.1;">Hostel</small>
+                            </div>
+                        </button>
+                        <button type="button" class="btn btn-outline-primary p-2 text-center icon-btn" style="width: 80px;" data-icon="exams" onclick="selectIcon('exams', this)">
+                            <div class="d-flex flex-column align-items-center">
+                                <span class="fs-3">📋</span>
+                                <small class="mt-1" style="font-size: 0.75rem; line-height: 1.1;">Exams</small>
+                            </div>
+                        </button>
+                        <button type="button" class="btn btn-outline-primary p-2 text-center icon-btn" style="width: 80px;" data-icon="other" onclick="selectIcon('other', this)">
+                            <div class="d-flex flex-column align-items-center">
+                                <span class="fs-3">❓</span>
+                                <small class="mt-1" style="font-size: 0.75rem; line-height: 1.1;">Other</small>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Category Color Picker -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Category Color</label>
+                    <input type="color" class="form-control form-control-color" id="categoryColor" name="color" value="@(Model.Color ?? "#0d6efd")" title="Choose your color">
+                </div>
+
+                <!-- Assignees Multi-Select -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Assign Staff Handlers</label>
+                    <select id="categoryAssignees" name="assigneeIds" class="form-select" multiple size="5">
+                        <!-- Will be populated by JavaScript -->
+                    </select>
+                    <small class="text-muted d-block mt-2">
+                        Hold Ctrl (Windows) or Cmd (Mac) to select multiple staff members.
+                    </small>
+                </div>
+
+                <!-- Dynamic Attachment Rules -->
+                <div class="mb-4">
+                    <h5 class="fw-bold">Attachment Rules</h5>
+                    <div id="rulesContainer">
+                        <!-- Existing rules will be populated here -->
+                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="addRuleRow()">
+                        <i class="bi bi-plus"></i> Add Attachment Rule
+                    </button>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="mb-3">
+                    <button type="button" class="btn btn-success" onclick="submitEditCategory(@categoryId)">
+                        <i class="bi bi-check-circle"></i> Save Changes
+                    </button>
+                    <a href="@Url.Action("Categories", "Dashboard")" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="~/js/category-management.js"></script>
+<script>
+    let ruleIndex = 0;
+
+    document.addEventListener("DOMContentLoaded", async () => {
+        try {
+            // Load staff users
+            const response = await fetch('/api/categories/staff');
+            const staff = await response.json();
+            const assigneeSelect = document.getElementById('categoryAssignees');
+            assigneeSelect.innerHTML = '';
+
+            staff.forEach(staffMember => {
+                const option = document.createElement('option');
+                option.value = staffMember.id;
+                option.textContent = staffMember.fullName;
+
+                // Check if this staff member is already assigned
+                const assignedIds = @Html.Raw(Json.Serialize(Model.AssigneeIds));
+                option.selected = assignedIds.includes(staffMember.id);
+
+                assigneeSelect.appendChild(option);
+            });
+
+            // Load existing attachment rules
+            loadExistingRules();
+        } catch (error) {
+            console.error('Error loading data:', error);
+        }
+    });
+
+    function loadExistingRules() {
+        const rulesContainer = document.getElementById('rulesContainer');
+        rulesContainer.innerHTML = '';
+
+        @if (Model.AttachmentRules.Count > 0)
+        {
+            @foreach (var rule in Model.AttachmentRules)
+            {
+                <text>
+                addRuleRow('@rule.FileType', @rule.MaxFileCount, @rule.MaxFileSizeBytes, @rule.IsRequired.ToString().ToLower());
+                </text>
+            }
+        }
+    }
+
+    function addRuleRow(fileType = '', maxCount = 1, maxSize = 5242880, isRequired = false) {
+        const container = document.getElementById('rulesContainer');
+        const ruleDiv = document.createElement('div');
+        ruleDiv.className = 'card mb-2 p-3 rule-row';
+        ruleDiv.innerHTML = `
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="form-label">File Type</label>
+                    <select class="form-select form-select-sm rule-type" required>
+                        <option value="" ${!fileType ? 'selected' : ''}>Select...</option>
+                        <option value="PDF" ${fileType === 'PDF' ? 'selected' : ''}>PDF</option>
+                        <option value="Image" ${fileType === 'Image' ? 'selected' : ''}>Image</option>
+                        <option value="Document" ${fileType === 'Document' ? 'selected' : ''}>Document</option>
+                        <option value="Video" ${fileType === 'Video' ? 'selected' : ''}>Video</option>
+                        <option value="Audio" ${fileType === 'Audio' ? 'selected' : ''}>Audio</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Max Count</label>
+                    <input type="number" class="form-control form-control-sm rule-max-count" value="${maxCount}" min="1" required />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Max Size (bytes)</label>
+                    <input type="number" class="form-control form-control-sm rule-max-size" value="${maxSize}" min="1" required />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Required</label>
+                    <div class="form-check mt-2">
+                        <input class="form-check-input rule-required" type="checkbox" ${isRequired ? 'checked' : ''} />
+                    </div>
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="removeRuleRow(this)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        container.appendChild(ruleDiv);
+    }
+
+    function removeRuleRow(btn) {
+        btn.closest('.rule-row').remove();
+    }
+
+    async function submitEditCategory(categoryId) {
+        const nameInput = document.querySelector('input[name="name"]');
+        if (!nameInput.value.trim()) {
+            document.getElementById('nameError').textContent = 'Category name is required.';
+            return;
+        }
+        document.getElementById('nameError').textContent = '';
+
+        const assignees = Array.from(document.getElementById('categoryAssignees').selectedOptions).map(o => o.value);
+        const rules = Array.from(document.querySelectorAll('.rule-row')).map(row => ({
+            fileType: row.querySelector('.rule-type').value,
+            maxFileCount: parseInt(row.querySelector('.rule-max-count').value),
+            maxFileSizeBytes: parseInt(row.querySelector('.rule-max-size').value),
+            isRequired: row.querySelector('.rule-required').checked
+        }));
+
+        const formData = {
+            name: nameInput.value,
+            description: document.querySelector('textarea[name="description"]').value || null,
+            icon: document.getElementById('selectedIcon').value || null,
+            color: document.getElementById('categoryColor').value || "#0d6efd",
+            assigneeIds: assignees,
+            attachmentRules: rules
+        };
+
+        try {
+            const response = await fetch(`/api/categories/${categoryId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                alert('Failed to update category');
+                return;
+            }
+
+            alert('Category updated successfully!');
+            window.location.href = '@Url.Action("Categories", "Dashboard")';
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while updating the category.');
+        }
+    }
+</script>
+}

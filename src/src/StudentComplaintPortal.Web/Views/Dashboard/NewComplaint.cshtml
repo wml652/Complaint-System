@@ -1,0 +1,62 @@
+@model StudentComplaintPortal.Application.DTOs.CreateComplaintDto
+@{
+    ViewData["Title"] = "New Complaint";
+    var categories = ViewBag.Categories as IEnumerable<StudentComplaintPortal.Application.DTOs.CategoryListItemDto>;
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Submit New Complaint</h2>
+
+                <form asp-action="NewComplaint" method="post">
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label">Title</label>
+                        <input asp-for="Title" class="form-control" placeholder="Brief description of the issue" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label">Description</label>
+                        <textarea asp-for="Description" class="form-control" rows="5" placeholder="Provide detailed information about your complaint"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Category" class="form-label">Category</label>
+                        <select asp-for="Category" class="form-select" id="categorySelect">
+                            <option value="">-- Select Category --</option>
+                            @if (categories != null && categories.Any())
+                            {
+                                foreach (var category in categories)
+                                {
+                                    <option value="@category.Name" data-icon="@category.Icon" data-color="@category.Color">
+                                        @category.Icon @category.Name
+                                    </option>
+                                }
+                            }
+                            else
+                            {
+                                <option value="" disabled>No categories available</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Category" class="text-danger"></span>
+                        <small class="form-text text-muted">Select the category that best describes your complaint</small>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Submit Complaint</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

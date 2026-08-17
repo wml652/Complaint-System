@@ -1,0 +1,57 @@
+@using System.Security.Claims
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <base href="/" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Student Complaint Portal</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/sidebar-icons.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/StudentComplaintPortal.Web.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/chat-workspace.css" />
+    <link rel="stylesheet" href="~/css/campaign.css" />
+</head>
+<body data-current-user-id="@User.FindFirstValue(ClaimTypes.NameIdentifier)"
+      data-user-role="@(User.FindFirstValue(ClaimTypes.Role) ?? "Student")"
+      data-can-change-status="@((User.IsInRole("Admin") || User.HasClaim("Permission", "Complaints.ChangeStatus")).ToString().ToLower())">
+    @{
+        var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+        var showSidebar = User.Identity?.IsAuthenticated == true && currentController != "Account";
+    }
+    @if (showSidebar)
+    {
+        <div class="app-shell">
+            <partial name="_Sidebar" />
+            <div class="app-content">
+                <main role="main" class="pb-3">
+                    @RenderBody()
+                </main>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="container mt-4">
+            <main role="main" class="pb-3">
+                @RenderBody()
+            </main>
+        </div>
+    }
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@7.0.0/dist/browser/signalr.min.js"></script>
+    <script src="~/js/signalr-connection.js"></script>
+
+    <script src="_framework/blazor.server.js"></script>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <script src="~/js/notifications.js" asp-append-version="true"></script>
+    }
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
