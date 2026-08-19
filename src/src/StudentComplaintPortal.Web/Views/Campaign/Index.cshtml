@@ -1,0 +1,76 @@
+﻿@model List<StudentComplaintPortal.Application.DTOs.CampaignSummaryDto>
+@{
+    ViewData["Title"] = "Campaigns";
+    var yearGroups = Model.GroupBy(c => c.Year).OrderByDescending(g => g.Key);
+}
+
+<div class="container-fluid py-4">
+    <div class="campaign-page-title">Campaigns</div>
+    <div class="campaign-page-sub">Complaints grouped by semester, based on when each complaint was filed.</div>
+
+    @if (!Model.Any())
+    {
+        <p class="text-muted">No complaints have been filed yet, so there are no campaigns to show.</p>
+    }
+
+    @foreach (var yearGroup in yearGroups)
+    {
+        <div class="campaign-year-group">
+            <div class="campaign-year-label">@yearGroup.Key</div>
+            <div class="campaign-grid">
+                @foreach (var c in yearGroup.OrderByDescending(x => x.Semester == "Fall"))
+                {
+                    var cardId = $"campaign-{c.Year}-{c.Semester}";
+                    <div class="campaign-card" onclick="toggleCampaignCard('@cardId')">
+                        <div class="campaign-card-top">
+                            <div>
+                                <div class="campaign-name">@c.Label</div>
+                                <div class="campaign-range">@c.StartDate.ToString("MMM") – @c.EndDate.ToString("MMM yyyy")</div>
+                            </div>
+                            <div class="campaign-icon"><i class="bi bi-calendar3"></i></div>
+                        </div>
+                        <div class="campaign-count">@c.Total</div>
+                        <div class="campaign-caption">complaints filed</div>
+                    </div>
+                }
+            </div>
+
+            @foreach (var c in yearGroup.OrderByDescending(x => x.Semester == "Fall"))
+            {
+                var cardId = $"campaign-{c.Year}-{c.Semester}";
+                <div class="campaign-expanded-panel" id="@cardId">
+                    <div class="campaign-expanded-title">@c.Label — quick overview</div>
+                    <div class="campaign-mini-stat-row">
+                        <div class="campaign-mini-stat">
+                            <div class="campaign-mini-stat-value">@c.Total</div>
+                            <div class="campaign-mini-stat-label">Total</div>
+                        </div>
+                        <div class="campaign-mini-stat">
+                            <div class="campaign-mini-stat-value">@c.Resolved</div>
+                            <div class="campaign-mini-stat-label">Resolved</div>
+                        </div>
+                        <div class="campaign-mini-stat">
+                            <div class="campaign-mini-stat-value">@c.Open</div>
+                            <div class="campaign-mini-stat-label">Open</div>
+                        </div>
+                        <div class="campaign-mini-stat">
+                            <div class="campaign-mini-stat-value">@c.InProgress</div>
+                            <div class="campaign-mini-stat-label">In Progress</div>
+                        </div>
+                    </div>
+                    <a class="campaign-view-btn" asp-controller="ChatWorkspace" asp-action="Index"
+                       asp-route-startDate="@c.StartDate.ToString("yyyy-MM-dd")"
+                       asp-route-endDate="@c.EndDate.ToString("yyyy-MM-dd")">View Complaints →</a>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function toggleCampaignCard(id) {
+            document.getElementById(id).classList.toggle('open');
+        }
+    </script>
+}
