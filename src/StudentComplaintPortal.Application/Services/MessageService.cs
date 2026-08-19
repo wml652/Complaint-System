@@ -171,6 +171,10 @@ public class MessageService : IMessageService
             SentAt = message.SentAt,
             IsRead = message.IsRead,
             ReadAt = message.ReadAt,
+            IsEdited = message.IsEdited,
+            EditedAt = message.EditedAt,
+            OriginalContent = message.OriginalContent,
+            DeletedAt = message.DeletedAt,
             Attachments = message.Attachments?.Select(a => new AttachmentDto
             {
                 Id = a.Id,

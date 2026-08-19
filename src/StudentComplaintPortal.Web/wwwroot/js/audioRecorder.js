@@ -1,13 +1,21 @@
-window.audioRecorder = (function() {
+window.audioRecorder = (function () {
     let mediaRecorder = null;
     let audioChunks = [];
     let recordingStartTime = null;
     let recordingTimeout = null;
+    let tickInterval = null;
     let activeStream = null;
-    const MAX_RECORDING_DURATION = 5 * 60 * 1000; // 5 minutes
+    let onTickCallback = null;
+    let onMaxDurationCallback = null;
+    const MAX_RECORDING_DURATION = 2 * 60 * 1000; // 2 minutes
 
-    async function start() {
+    // onTick(elapsedSeconds) — har-second-call-hota-hai taake UI-live-timer-update-kar-sake
+    // onMaxDuration() — jab-2-min-ki-limit-poori-ho-jaye, recording-auto-stop-hone-se-pehle-call-hota-hai
+    async function start(onTick, onMaxDuration) {
         try {
+            onTickCallback = onTick || null;
+            onMaxDurationCallback = onMaxDuration || null;
+
             activeStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             // Do not force webm. Let the browser use its native format.
             mediaRecorder = new MediaRecorder(activeStream);
@@ -20,7 +28,18 @@ window.audioRecorder = (function() {
 
             mediaRecorder.start(250);
 
-            recordingTimeout = setTimeout(() => { stop().catch(console.error); }, MAX_RECORDING_DURATION);
+            tickInterval = setInterval(() => {
+                const elapsedSeconds = Math.floor((Date.now() - recordingStartTime) / 1000);
+                if (onTickCallback) onTickCallback(elapsedSeconds);
+            }, 1000);
+
+            recordingTimeout = setTimeout(() => {
+                stop()
+                    .then((recordingData) => {
+                        if (onMaxDurationCallback) onMaxDurationCallback(recordingData);
+                    })
+                    .catch(console.error);
+            }, MAX_RECORDING_DURATION);
         } catch (error) {
             console.error('Microphone error:', error);
             alert('Could not access microphone. Please check browser permissions.');
@@ -31,6 +50,7 @@ window.audioRecorder = (function() {
     async function stop() {
         return new Promise((resolve, reject) => {
             if (recordingTimeout) clearTimeout(recordingTimeout);
+            if (tickInterval) clearInterval(tickInterval);
             if (!mediaRecorder || mediaRecorder.state === 'inactive') return reject(new Error('Not recording'));
 
             mediaRecorder.onstop = () => {

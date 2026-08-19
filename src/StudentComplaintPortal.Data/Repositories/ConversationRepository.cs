@@ -128,6 +128,7 @@ public class ConversationRepository : GenericRepository<Conversation>, IConversa
         var query = _dbSet
             .Include(c => c.Participants).ThenInclude(p => p.User)
             .Where(c => c.Participants.Any(p => p.UserId == userId))
+            .Where(c => c.Type != ConversationType.Query)
             .Where(c => !(c.Type == ConversationType.Group && c.Name == "Team"))
             .Where(c => c.Type != ConversationType.Direct || c.LastMessageAt != null)
             .AsQueryable();
