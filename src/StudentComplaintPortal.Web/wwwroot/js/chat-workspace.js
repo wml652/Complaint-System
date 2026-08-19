@@ -1321,6 +1321,12 @@ const ChatWorkspace = (function () {
         }
     }
 
+    function formatRecordingTime(totalSeconds) {
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+
     function startRecording() {
         const userRole = document.body.dataset.userRole;
 
@@ -1334,7 +1340,22 @@ const ChatWorkspace = (function () {
             return;
         }
 
-        audioRecorder.start()
+        const timerEl = document.getElementById('recordingTimer');
+        if (timerEl) timerEl.textContent = '0:00';
+
+        audioRecorder.start(
+            (elapsedSeconds) => {
+                // Live-timer — har-second-recordingTimer-span-update-karo
+                if (timerEl) timerEl.textContent = formatRecordingTime(elapsedSeconds);
+            },
+            (recordingData) => {
+                // 2-min-ki-max-duration-poori-ho-gayi — recording-already-audioRecorder.js-mein-stop-ho-chuki-hai,
+                // yahan-bata-do-user-ko, aur-jo-2-min-tak-record-hua-usi-ko-turant-send-kar-do
+                alert("Can't record a message longer than 2 min. Sending what was recorded.");
+                sendRecordedAudio(recordingData);
+            }
+        )
+
             .then(() => {
                 document.getElementById('messageInput').style.display = 'none';
                 document.getElementById('attachButton').style.display = 'none';
@@ -1365,21 +1386,30 @@ const ChatWorkspace = (function () {
     async function stopAndSendRecording() {
         try {
             const recordingData = await audioRecorder.stop();
-            resetRecordingUi();
-
-            const micBtn = document.getElementById('micButton');
-            micBtn.disabled = true;
-            micBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-
-            const messageDto = await audioRecorder.uploadVoiceMessage(currentChatId, recordingData.blob, currentChatType);
-
-            console.log('Voice message sent successfully');
-            micBtn.disabled = false;
-            micBtn.innerHTML = '<i class="bi bi-mic"></i>';
+            await sendRecordedAudio(recordingData);
         } catch (err) {
             console.error('Failed to send voice message:', err);
             alert(`Error sending voice message: ${err.message}`);
             resetRecordingUi();
+        }
+    }
+
+    async function sendRecordedAudio(recordingData) {
+        resetRecordingUi();
+
+        const micBtn = document.getElementById('micButton');
+        micBtn.disabled = true;
+        micBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+        try {
+            const messageDto = await audioRecorder.uploadVoiceMessage(currentChatId, recordingData.blob, currentChatType);
+            console.log('Voice message sent successfully');
+        } catch (err) {
+            console.error('Failed to send voice message:', err);
+            alert(`Error sending voice message: ${err.message}`);
+        } finally {
+            micBtn.disabled = false;
+            micBtn.innerHTML = '<i class="bi bi-mic"></i>';
         }
     }
 
